@@ -207,11 +207,6 @@ class DindyLogic {
 			return;
 		}
 
-		// Release the WakeLock in case we're still holding it from a previous 
-		// call
-		// releaseWakeLockIfHeld();
-
-		
 		// Do we care about this call:
 		// Is it a returning number? Should we treat as second call?
 		synchronized (mIncomingCalls) {
@@ -225,6 +220,8 @@ class DindyLogic {
 				// wasn't put in the map with an infinite timeout value
 				if (currentCallInfo.getAbsoluteWakeupTimeMillis() != Consts.INFINITE_TIME &&
 					currentCallInfo.getAbsoluteWakeupTimeMillis() > System.currentTimeMillis()) {
+					if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+							callerIdNumber + " will be removed in onRinging() because it wasn't removed by the timer thread");
 					removeIncomingCallInfo(callerIdNumber);
 				} else {
 					if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
@@ -256,6 +253,9 @@ class DindyLogic {
 			return;
 		}
 		
+		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+				"onRinging() - code should never get here");
+
 		if (mSettings.mTreatUnknownCallers.equals(
 			Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_NORMAL)) {
 			setRingerAndVibrateModes(mSettings.mUserSettings);
@@ -280,7 +280,6 @@ class DindyLogic {
 			// the call info
 			removeIncomingCallInfo(
 					PhoneNumberUtils.toCallerIDMinMatch(number));
-			// releaseWakeLockIfHeld();
 			return;
 		}
 
@@ -290,7 +289,6 @@ class DindyLogic {
 			mPreviousCallState == Consts.IncomingCallState.RINGING) {
 			removeIncomingCallInfo(mLastRingingNumber);
 			mLastRingingNumber = NOT_A_PHONE_NUMBER;
-			// releaseWakeLockIfHeld();
 			return;
 		}
 	}
@@ -318,18 +316,6 @@ class DindyLogic {
 	}
 
 	private void onMissedCall(String number) {
-		// TODO possible race here: let's say a caller called once, received the
-		// SMS and called again. onRinging() decides it's a second call so it 
-		// doesn't acquire the WakeLock but exactly after that the timer thread
-		// removes the call info from the map. When we get here we send the SMS
-		// again (OK) but also release the WakeLock that was never acquired
-		// (WRONG!)
-		// Possible solutions:
-		// 1. Check if the lock is really held in the BroadcastReceiver
-		// 2. Always lock in onRinging() and find ways to correctly release the
-		//    lock afterwards
-		// 3. 
-		
 		if (number == null || number.trim().length() <= 0) {
 			return;
 		}
@@ -380,7 +366,7 @@ class DindyLogic {
 		synchronized (mIncomingCalls) {
 			mIncomingCalls.put(callerIdNumber, newCallInfo);
 		}
-		// Schedule removal from list, but only if we're asked to use tmieouts
+		// Schedule removal from list, but only if we're asked to use timeouts
 		if (mSettings.mWakeupTimeoutMillis != Consts.INFINITE_TIME) {
 			mTimer.schedule(removalTask, mSettings.mWakeupTimeoutMillis);
 		}
@@ -520,20 +506,7 @@ class DindyLogic {
 					+ callerIdNumber + " not found");
 		}
 	}
-/*
-	private void releaseWakeLockIfHeld() {
-		if (mCurrentWakeLock != null) {
-			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"WakeLock != null");
-			if (mCurrentWakeLock.isHeld()) {
-				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"releasing WakeLock");
-				mCurrentWakeLock.release();
-			}
-			mCurrentWakeLock = null;
-		}
-	}
-	*/
+
 	private class IncomingCallInfo {
 		public IncomingCallInfo(String number,
 				String callerIdNumber,
