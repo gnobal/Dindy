@@ -72,7 +72,7 @@ public class DindyService extends Service {
 		if (extras != null) {
 			// Whoever started the service gave us a profile ID to use so we use
 			// it blindly
-			mCurrentProfileId = extras.getInt(EXTRA_PROFILE_ID);
+			mCurrentProfileId = extras.getLong(EXTRA_PROFILE_ID);
 			refreshSettings(mCurrentProfileId, firstStart);
 		} else {
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
@@ -158,7 +158,7 @@ public class DindyService extends Service {
 		mNM.notify(R.string.dindy_service_started, notification);
 	}
 
-	private void refreshSettings(int selectedProfileId, boolean firstStart) {
+	private void refreshSettings(long selectedProfileId, boolean firstStart) {
 		SharedPreferences profilePreferences = 
 			mPreferencesHelper.getPreferencesForProfile(selectedProfileId,
 					Context.MODE_PRIVATE);
@@ -346,7 +346,7 @@ public class DindyService extends Service {
 	private int mPreviousCursorCount = Integer.MAX_VALUE;
 	private ProfilePreferencesHelper mPreferencesHelper = null;
 	private DindySettings mSettings = new DindySettings();
-	private int mCurrentProfileId = Consts.NOT_A_PROFILE_ID;
+	private long mCurrentProfileId = Consts.NOT_A_PROFILE_ID;
 
 	private final IBinder mBinder = new LocalBinder();
 	private final String[] mCallLogProjection = 

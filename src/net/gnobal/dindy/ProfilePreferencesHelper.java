@@ -46,7 +46,7 @@ class ProfilePreferencesHelper {
 		return names;
 	}
 
-	String getProfielNameFromId(int profileId) {
+	String getProfielNameFromId(long profileId) {
 		SQLiteDatabase db = null;
 		Cursor cursor = null;
 		String name = null;
@@ -74,10 +74,10 @@ class ProfilePreferencesHelper {
 		return name;
 	}
 	
-	int getProfileIdFromName(String name) {
+	long getProfileIdFromName(String name) {
 		SQLiteDatabase db = null;
 		Cursor cursor = null;
-		int profileId = Consts.NOT_A_PROFILE_ID;
+		long profileId = Consts.NOT_A_PROFILE_ID;
 		
 		try {
 			db = mDatabaseHelper.getReadableDatabase();
@@ -85,7 +85,7 @@ class ProfilePreferencesHelper {
 					Profiles.NAME + " = '" + name + "'", null, null, null,
 					null, "1");
 			if (cursor.getCount() > 0 && cursor.moveToNext()) {
-				profileId = cursor.getInt(PROFILE_ID_INDEX);				
+				profileId = cursor.getLong(PROFILE_ID_INDEX);				
 			}
 		} finally {
 			if (cursor != null) {
@@ -106,7 +106,7 @@ class ProfilePreferencesHelper {
 		return getProfileIdFromName(name) != Consts.NOT_A_PROFILE_ID; 
 	}
 
-	boolean profileExists(int profileId) {
+	boolean profileExists(long profileId) {
 		return getProfielNameFromId(profileId) != null;
 	}
 
@@ -179,7 +179,7 @@ class ProfilePreferencesHelper {
 	String getPreferencesFileNameForProfile(String profileName) {
 		SQLiteDatabase db = null;
 		Cursor cursor = null;
-		int profileIdIndex = -1;
+		long profileIdIndex = Consts.NOT_A_PROFILE_ID;
 		try {
 			db = mDatabaseHelper.getReadableDatabase();
 			cursor = db.query(PROFILES_TABLE_NAME, PROFILE_ID_COLUMNS,
@@ -187,7 +187,7 @@ class ProfilePreferencesHelper {
 					null, null, null, "1");
 			if (cursor.getCount() > 0) {
 				cursor.moveToNext();
-				profileIdIndex = cursor.getInt(PROFILE_ID_INDEX);
+				profileIdIndex = cursor.getLong(PROFILE_ID_INDEX);
 			}
 		} finally {
 			if (cursor != null) {

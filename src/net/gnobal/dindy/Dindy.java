@@ -10,6 +10,8 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
+import android.util.Config;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -73,9 +75,19 @@ public class Dindy extends Activity {
 		}
 		
 		if (preferences.contains(Consts.Prefs.Main.LAST_USED_PROFILE_ID)) {
-			int lastSelectedProfile = preferences.getInt(
-					Consts.Prefs.Main.LAST_USED_PROFILE_ID,
-					Consts.NOT_A_PROFILE_ID);
+			long lastSelectedProfile = Consts.NOT_A_PROFILE_ID;
+			try {
+				lastSelectedProfile = preferences.getLong(
+						Consts.Prefs.Main.LAST_USED_PROFILE_ID,
+						Consts.NOT_A_PROFILE_ID);
+			} catch (Exception e) {
+				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+						"getting last used profile as int for backward compatibility");
+				lastSelectedProfile = preferences.getInt(
+						Consts.Prefs.Main.LAST_USED_PROFILE_ID,
+						(int) Consts.NOT_A_PROFILE_ID);
+			}
+					
 			if (mPreferencesHelper.profileExists(lastSelectedProfile)) {
 				mSelectedProfileId = lastSelectedProfile;
 			} else if (!Utils.isDindyServiceRunning(this)) {
@@ -247,7 +259,7 @@ public class Dindy extends Activity {
 		// The user didn't cancel and the list was in "select" mode so let's
 		// use the user's selection
 		if (requestCode == PROFILE_SELECT_REQUEST_CODE) {
-			final int previousProfile = mSelectedProfileId; 
+			final long previousProfile = mSelectedProfileId; 
 			mSelectedProfileId = data.getExtras().getInt(
 					ProfilesListActivity.EXTRA_SELECTED_PROFILE_ID);
 			if (mSelectedProfileId != previousProfile &&
@@ -409,7 +421,7 @@ public class Dindy extends Activity {
 		SharedPreferences preferences = getSharedPreferences(
 				Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
 		SharedPreferences.Editor editor = preferences.edit();
-		editor.putInt(Consts.Prefs.Main.LAST_USED_PROFILE_ID,
+		editor.putLong(Consts.Prefs.Main.LAST_USED_PROFILE_ID,
 				mSelectedProfileId);
 		editor.commit();
 		editor = null;
@@ -440,7 +452,7 @@ public class Dindy extends Activity {
 
 	private ProfilePreferencesHelper mPreferencesHelper =
 		ProfilePreferencesHelper.instance(this);
-	private int mSelectedProfileId = Consts.NOT_A_PROFILE_ID;
+	private long mSelectedProfileId = Consts.NOT_A_PROFILE_ID;
 	private static final int MENU_ID_PREFERENCES = 0;
 	private static final int PROFILE_SELECT_REQUEST_CODE = 1;
 	private static final int PROFILE_MANAGE_REQUEST_CODE = 2;

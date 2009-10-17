@@ -19,6 +19,8 @@ class Consts {
 		{
 			static final String NAME = "main_preferences";
 			static final String LAST_USED_PROFILE_ID = "last_profile_id";
+			//static final String LAST_USED_PROFILE_ID_LONG =
+			//	"last_profile_id_long";
 			
 			static final String KEY_PROFILES = "profiles";
 			static final String KEY_FIRST_STARTUP = "first_startup";
@@ -70,7 +72,7 @@ class Consts {
 		}
 	}
 	
-	static final int NOT_A_PROFILE_ID = -1;
+	static final long NOT_A_PROFILE_ID = -1;
 	static final long INFINITE_TIME = -1;
 	static final long MILLIS_IN_MINUTE = 60000;
 	static final String LOGTAG = "Dindy";
