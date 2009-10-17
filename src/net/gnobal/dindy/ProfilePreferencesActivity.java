@@ -233,7 +233,7 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 			// we're editing 
 			SharedPreferences preferences = getSharedPreferences(
 					Consts.Prefs.Main.NAME, Context.MODE_PRIVATE); 
-			if (preferences.getLong(Consts.Prefs.Main.LAST_USED_PROFILE_ID,
+			if (preferences.getInt(Consts.Prefs.Main.LAST_USED_PROFILE_ID,
 					Consts.NOT_A_PROFILE_ID) == mProfileId) {
 				// This means the profile we're editing is currently running, 
 				// so we trigger a settings refresh, as onPause() means the 
