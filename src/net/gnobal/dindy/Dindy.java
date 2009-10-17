@@ -260,7 +260,7 @@ public class Dindy extends Activity {
 		// use the user's selection
 		if (requestCode == PROFILE_SELECT_REQUEST_CODE) {
 			final long previousProfile = mSelectedProfileId; 
-			mSelectedProfileId = data.getExtras().getInt(
+			mSelectedProfileId = data.getExtras().getLong(
 					ProfilesListActivity.EXTRA_SELECTED_PROFILE_ID);
 			if (mSelectedProfileId != previousProfile &&
 				dindyServiceIsRunning) {
