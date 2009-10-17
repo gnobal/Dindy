@@ -60,30 +60,34 @@ public class DindyService extends Service {
 			// because of a null exception
 			mTM.listen(mStateListener, PhoneStateListener.LISTEN_CALL_STATE);
 		}
-		// Display a notification about us starting. We put an icon in the
-		// status bar.
-		showNotification();
 	}
 
 	@Override
 	public void onStart(Intent intent, int startId) {
 		super.onStart(intent, startId);
 
+		final boolean firstStart = 
+			(mCurrentProfileId == Consts.NOT_A_PROFILE_ID);
 		Bundle extras = intent.getExtras();
-		boolean firstStart = false;
 		if (extras != null) {
 			// Whoever started the service gave us a profile ID to use so we use
 			// it blindly
-			firstStart = (mCurrentProfileId == Consts.NOT_A_PROFILE_ID);
 			mCurrentProfileId = extras.getInt(EXTRA_PROFILE_ID);
 			refreshSettings(mCurrentProfileId, firstStart);
-		} else if (mPreferencesHelper.profileExists(mCurrentProfileId)) {
-			// If we weren't given a profile ID, make sure the one we got is 
-			// still a valid one
-			refreshSettings(mCurrentProfileId, firstStart);
+		} else {
+			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
+					"error! no extras sent to service");
 		}
 		
 		mLogic.start();
+
+		// Display a notification about us starting. We put an icon in the
+		// status bar.
+		if (firstStart) {
+			showNotification();
+		} else {
+			// TODO should we display a "Dindy refreshed" toast? 
+		}
 	}
 
 	@Override
@@ -214,6 +218,8 @@ public class DindyService extends Service {
 				Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_FIRST);
 		
 		if (firstStart) {
+			// Only if it's a first start we get the user's settings. Otherwise
+			// we might read our own settings
 			mSettings.mUserSettings.mVibrateModeNotification = 
 				mAM.getVibrateSetting(AudioManager.VIBRATE_TYPE_NOTIFICATION);
 			mSettings.mUserSettings.mVibrateModeRinger =
@@ -225,8 +231,6 @@ public class DindyService extends Service {
 	private class CallStateChangeListener extends PhoneStateListener {
 		@Override
 		public void onCallStateChanged(int state, String incomingNumber) {
-			//if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, "state: " + 
-			//		state + ", number: " + incomingNumber);
 			int incomingCallState = Consts.IncomingCallState.IDLE;
 			switch (state) {
 			case TelephonyManager.CALL_STATE_IDLE:

@@ -23,4 +23,15 @@ class Utils {
 
 		return false;
 	}
+	
+	static String incomingCallStateToString(int state) {
+		switch (state) {
+		case Consts.IncomingCallState.IDLE: return "IDLE";
+		case Consts.IncomingCallState.INCOMING: return "INCOMING";
+		case Consts.IncomingCallState.MISSED: return "MISSED";
+		case Consts.IncomingCallState.OFFHOOK: return "OFFHOOK";
+		case Consts.IncomingCallState.RINGING: return "RINGING";
+		default: return Integer.toString(state);
+		}
+	}
 }

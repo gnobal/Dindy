@@ -23,11 +23,8 @@ import java.util.LinkedList;
 
 // TODO fix for this version:
 // - test plan
-// - better name for "unknown notification"
-// - The timer thread wakes up only when the phone wakes up
 
 //TODO fix/add in future versions:
-// - see if editing a profile changes the service while it's working
 // - phone shutdown - restore to user's settings or restore Dindy by registering
 //   to start at boot time
 // - Allow parameters in SMS like {Caller} {Time}

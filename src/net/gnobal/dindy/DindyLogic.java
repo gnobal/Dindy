@@ -36,16 +36,20 @@ import java.util.TimerTask;
 //08-20 19:23:11.371: DEBUG/Dindy(809): state: 2, number: 
 //08-20 19:23:13.892: DEBUG/Dindy(809): state: 0, number: 
 
-// Sequences for incoming calls:
+// Sequences for incoming calls and the WakeLock:
 // 1. Missed call
-//    ringing (lock) -> idle -> missed -> SMS -> SMS confirmation (unlock)
+//    ringing (lock) -> idle -> missed -> SMS -> SMS result (unlock)
 // 2. Incoming call that was declined
 //    ringing (lock) -> idle -> incoming (unlock)
 // 3. Incoming call that was answered
 //    ringing (lock) -> off hook (unlock) -> idle -> incoming (do not unlock)
 // Sequences for outgoing calls:
-// 1. Outgoing call
-//    idle -> off hook (do not unlock) 
+// 4. Outgoing call
+//    idle -> off hook (do not unlock)
+// 
+// The biggest problem we have here is whether to unlock when we get an incoming
+// call in the calls DB - we don't know whether we got there from sequence 2 
+// (so we should unlock) or 3 (should _not_ unlock)
 
 class DindyLogic {
 	public DindyLogic(Context context, ContentResolver resolver,
@@ -92,7 +96,8 @@ class DindyLogic {
 
 	void onCallStateChange(int newState, String number) {
 		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, "newState: " + 
-				newState + ", number: " + number);
+				Utils.incomingCallStateToString(newState) + 
+				", number: " + number);
 		switch (newState) {
 		case Consts.IncomingCallState.IDLE:
 			onIdle(number);
@@ -112,7 +117,7 @@ class DindyLogic {
 			break;
 
 		case Consts.IncomingCallState.INCOMING:
-			onIncomingCall(number);
+			onIncomingCallInCallsDB(number);
 			break;
 
 		default:
@@ -309,10 +314,8 @@ class DindyLogic {
 		// know why we're idle - in most cases it will be because the user 
 		// didn't answer and we're about to get a missed call notification.
 		// But if the user declined the call we also get here without getting 
-		// the missed call notification, so for this case we acquired the lock 
-		// with a 2 minutes timeout 
-		// TODO fix this (for example by knowing when the user declined from 
-		// the call log) 
+		// the missed call notification (see "Sequences for incoming calls" at
+		// the top of this source file)
 	}
 
 	private void onMissedCall(String number) {
@@ -376,45 +379,25 @@ class DindyLogic {
 				newCallInfo.getCallerIdNumber() +
 				" has been added. Timeout is " +
 				mSettings.mWakeupTimeoutMillis);
-		/*
-		 * // The missed call was found - it's someone who either we've notified
-		 * // with an SMS before or we should notify if
-		 * (incomingCallInfo.getHasBeenNotifiedWithSMS()) {
-		 * Utils.LogD("onMissedCall: number \"" + number +
-		 * "\" has already been notified"); return; }
-		 */
+
 		if (mSettings.mEnableSms) {
-			/*
-			SmsManager smsManager = SmsManager.getDefault();
-			if (smsManager != null) {
-				// TODO use the intent parameter to learn whether the SMS
-				// sending succeeded
-				smsManager.sendTextMessage(number, null, mSettings.mMessage,
-						null, null);
-				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-						"number " + number + " has been notified with SMS.");
-			}
-			*/
-		    
-			
 			SmsSender.getInstance().sendMessage(number, mSettings.mMessage,
 					mSentPendingIntent);
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
 					"number " + number + " has been notified with SMS.");
 			// TODO should move to where we get a positive confirmation on
 			// the SMS sending
-			// newCallInfo.setHasBeenNotifiedWithSMS();
 		}
 	}
 
-	private void onIncomingCall(String number) {
+	private void onIncomingCallInCallsDB(String number) {
 		// Because of the sequences for incoming calls that were either
 		// answered or declined we can't tell the difference between the two, so
 		// we know we should unlock only according to the isHeld() status of
 		// the lock 
 		if (mWakeLock.isHeld()) {
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
-					"onIncomingCall: releasing WakeLock");
+					"onIncomingCallInCallsDB: releasing WakeLock");
 			mWakeLock.release();
 		}
 	}
@@ -534,13 +517,6 @@ class DindyLogic {
 			return mAbsoluteWakeupTimeMillis;
 		}
 		
-		/*
-		 * public void setHasBeenNotifiedWithSMS() { mHasBeenNotifiedWithSMS =
-		 * true; }
-		 * 
-		 * public boolean getHasBeenNotifiedWithSMS() { return
-		 * mHasBeenNotifiedWithSMS; }
-		 */
 		private String mNumber;
 		private String mCallerIdNumber;
 		// private boolean mHasBeenNotifiedWithSMS = false;
@@ -583,6 +559,8 @@ class DindyLogic {
 	private BroadcastReceiver mOnSentReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
+			// TODO use the result code to learn whether the SMS sending
+			// succeeded
 			// switch (getResultCode())
 			if (intent.getAction().equals(SMS_PENDING_INTENT_NAME)) {
 				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,

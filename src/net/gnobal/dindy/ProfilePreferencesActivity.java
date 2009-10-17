@@ -78,11 +78,11 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 		Bundle bundle = getIntent().getExtras();
 		mProfileName = bundle.getString(EXTRA_PROFILE_NAME);
 		setTitleWithCurrentProfile();
-		long profileId = bundle.getLong(EXTRA_PROFILE_ID);
+		mProfileId = bundle.getLong(EXTRA_PROFILE_ID);
 		// Root
 		PreferenceManager pm = getPreferenceManager();
 		final String sharedPreferencesName = 
-			mHelper.getPreferencesFileNameForProfileId(profileId);
+			mHelper.getPreferencesFileNameForProfileId(mProfileId);
 		pm.setSharedPreferencesName(sharedPreferencesName);
 		SharedPreferences sharedPreferences = getSharedPreferences(
 				sharedPreferencesName, Context.MODE_PRIVATE);
@@ -228,12 +228,21 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 	@Override
 	protected void onPause() {
 		super.onPause();
-		// Trigger a settings refresh - onPause() means the user is done 
-		// editing the profile
-		// TODO only do this if the edited profile is the active one
 		if (Utils.isDindyServiceRunning(this)) {
-			Intent serviceIntent = new Intent(this, DindyService.class);
-			startService(serviceIntent);
+			// The service is running so we check if it's running the profile
+			// we're editing 
+			SharedPreferences preferences = getSharedPreferences(
+					Consts.Prefs.Main.NAME, Context.MODE_PRIVATE); 
+			if (preferences.getLong(Consts.Prefs.Main.LAST_USED_PROFILE_ID,
+					Consts.NOT_A_PROFILE_ID) == mProfileId) {
+				// This means the profile we're editing is currently running, 
+				// so we trigger a settings refresh, as onPause() means the 
+				// user is done editing the profile
+				Intent serviceIntent = new Intent(this, DindyService.class);
+				serviceIntent.putExtra(DindyService.EXTRA_PROFILE_ID,
+						mProfileId);
+				startService(serviceIntent);
+			}
 		}
 	}
 	
@@ -390,6 +399,7 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 	private static final int MENU_ID_DELETE = 2;
 
 	private String mProfileName = null;
+	private long mProfileId = Consts.NOT_A_PROFILE_ID;
 	private ProfilePreferencesHelper mHelper =
 		ProfilePreferencesHelper.instance(this);
 	private RenameDialogListener mRenameListener = new RenameDialogListener(this);
