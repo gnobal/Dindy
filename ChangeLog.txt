@@ -1,6 +1,6 @@
 1.0.0 Initial release
 1.0.1 Fixed an issue where the SMS was rarely sent later than expected
-1.0.2 Even better wakelock granularity (keep the CPU working only for a few seconds, not a few minutes)
-      Fixed a rare race which would cause Dindy to treat a third call as a second call
-      Only refresh settings if you edit the currently active profile, not on every edit (slightly faster)
+1.0.2 Better wakelock granularity (keep the CPU working only for a few seconds, not a few minutes)
+      Fixed a rare race which would cause Dindy to treat a third late call as a second call
+      Only refresh settings if the currently active profile is edited, not on every edit (slightly faster UI)
       Show notification and status bar icon indicating that Dindy is running only after everything is actually started

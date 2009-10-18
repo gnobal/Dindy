@@ -12,7 +12,6 @@ import android.os.PowerManager;
 import android.provider.Contacts.Phones;
 import android.provider.Contacts.PhonesColumns;
 import android.telephony.PhoneNumberUtils;
-//import android.telephony.gsm.SmsManager;
 import android.util.Config;
 import android.util.Log;
 
@@ -37,14 +36,16 @@ import java.util.TimerTask;
 //08-20 19:23:13.892: DEBUG/Dindy(809): state: 0, number: 
 
 // Sequences for incoming calls and the WakeLock:
-// 1. Missed call
-//    ringing (lock) -> idle -> missed -> SMS -> SMS result (unlock)
+// 1. Missed call that should get an SMS
+//    ringing (lock) -> idle -> missed (should send) -> SMS -> SMS result (unlock)
 // 2. Incoming call that was declined
 //    ringing (lock) -> idle -> incoming (unlock)
 // 3. Incoming call that was answered
 //    ringing (lock) -> off hook (unlock) -> idle -> incoming (do not unlock)
+// 4. Missed call that shouldn't get an SMS
+//    ringing (lock) -> idle -> missed (shouldn't send) -> unlock 
 // Sequences for outgoing calls:
-// 4. Outgoing call
+// 5. Outgoing call
 //    idle -> off hook (do not unlock)
 // 
 // The biggest problem we have here is whether to unlock when we get an incoming
@@ -82,11 +83,7 @@ class DindyLogic {
 		synchronized (mIncomingCalls) {
 			mIncomingCalls.clear();
 		}
-		if (mWakeLock.isHeld()) {
-			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
-				"destroy: releasing WakeLock");
-			mWakeLock.release();
-		}
+		releaseWakeLockIfHeld("destroy");
 		mWakeLock = null;
 		mPM = null;
 		mAM = null;
@@ -199,10 +196,10 @@ class DindyLogic {
 	}
 */	
 	private void onRinging(String number) {
-		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-				"onRinging: acquiring WakeLock");
 		mWakeLock.acquire();
-
+		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+				"onRinging: WakeLock acquired, " + mWakeLock.toString());
+		
 		if (number == null || number.trim().length() == 0) {
 			// Got an empty number. Nothing to do about that
 			return;
@@ -275,9 +272,7 @@ class DindyLogic {
 		// There is another case where we go off hook: from idle. But in that 
 		// case we don't release the lock since we never acquired it
 		if (mPreviousCallState == Consts.IncomingCallState.RINGING) {
-			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
-				"onOffHook: releasing WakeLock");
-			mWakeLock.release();
+			releaseWakeLockIfHeld("onOffHook");
 		}
 		
 		if (number != null && number.trim().length() > 0) {
@@ -319,11 +314,16 @@ class DindyLogic {
 	}
 
 	private void onMissedCall(String number) {
+		// The wakelock was acquired when the phone was ringing, so unless we 
+		// send the SMS we _must_ release it on each return from the function
+		// because this is our last chance to do so
 		if (number == null || number.trim().length() <= 0) {
+			releaseWakeLockIfHeld("onMissedCall 1");
 			return;
 		}
 		String callerIdNumber = PhoneNumberUtils.toCallerIDMinMatch(number);
 		if (callerIdNumber == null || callerIdNumber.length() <= 0) {
+			releaseWakeLockIfHeld("onMissedCall 2");
 			return;
 		}
 		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
@@ -335,6 +335,7 @@ class DindyLogic {
 		// missed call and we should probably send the SMS
 		if (mPreviousCallState != Consts.IncomingCallState.IDLE ||
 			!callerIdNumber.equals(mLastRingingNumber)) {
+			releaseWakeLockIfHeld("onMissedCall 3");
 			return;
 		}
 
@@ -345,6 +346,7 @@ class DindyLogic {
 						" for number " + number + " already exists");
 				// TODO in this case should we extend the time during which we
 				// wait for the next call?
+				releaseWakeLockIfHeld("onMissedCall 4");
 				return;
 			}
 		}
@@ -352,6 +354,7 @@ class DindyLogic {
 		// A new missed call that we haven't saved yet
 		// Is it a number we need to remember?
 		if (!shouldRememberNumber(callerIdNumber)) {
+			releaseWakeLockIfHeld("onMissedCall 5");
 			return;
 		}
 
@@ -395,11 +398,7 @@ class DindyLogic {
 		// answered or declined we can't tell the difference between the two, so
 		// we know we should unlock only according to the isHeld() status of
 		// the lock 
-		if (mWakeLock.isHeld()) {
-			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
-					"onIncomingCallInCallsDB: releasing WakeLock");
-			mWakeLock.release();
-		}
+		releaseWakeLockIfHeld("onIncomingCallInCallsDB");
 	}
 
 	private boolean shouldRememberNumber(String callerIdNumber) {
@@ -490,6 +489,14 @@ class DindyLogic {
 		}
 	}
 
+	private void releaseWakeLockIfHeld(String context) {
+		while (mWakeLock.isHeld()) {
+			mWakeLock.release();
+			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
+					context + ": WakeLock released, " + mWakeLock.toString());
+		}		
+	}
+	
 	private class IncomingCallInfo {
 		public IncomingCallInfo(String number,
 				String callerIdNumber,
@@ -563,9 +570,7 @@ class DindyLogic {
 			// succeeded
 			// switch (getResultCode())
 			if (intent.getAction().equals(SMS_PENDING_INTENT_NAME)) {
-				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-						"onReceive: releasing WakeLock, SMS sent intent arrived");
-				mWakeLock.release();
+				releaseWakeLockIfHeld("onReceive (SMS sent)");
 			}
 		}
 	};
