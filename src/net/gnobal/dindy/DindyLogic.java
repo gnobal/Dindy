@@ -384,12 +384,15 @@ class DindyLogic {
 				mSettings.mWakeupTimeoutMillis);
 
 		if (mSettings.mEnableSms) {
+			// The intent will release the WakeLock
 			SmsSender.getInstance().sendMessage(number, mSettings.mMessage,
 					mSentPendingIntent);
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
 					"number " + number + " has been notified with SMS.");
 			// TODO should move to where we get a positive confirmation on
 			// the SMS sending
+		} else {
+			releaseWakeLockIfHeld("onMissedCall 6");
 		}
 	}
 
