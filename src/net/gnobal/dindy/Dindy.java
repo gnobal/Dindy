@@ -36,9 +36,10 @@ import java.util.LinkedList;
 // - auto stop Dindy in driving mode
 // - shortcuts for buttons
 // - Control screen flashing as well
-// - allow multiple messages per profile (from Yossi)
-// - Hang up on a caller if we know we want to send the SMS
-// - Voice response instead of SMS
+// - allow multiple messages per profile (Yossi)
+// - Hang up on a caller if we know we want to send the SMS (Albert)
+// - Voice response instead of SMS (Albert)
+// - Show a summary of the current profile on the main screen (Roman)
 
 public class Dindy extends Activity {
 	@Override
