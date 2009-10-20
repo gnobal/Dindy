@@ -76,5 +76,5 @@ class Consts {
 	static final long INFINITE_TIME = -1;
 	static final long MILLIS_IN_MINUTE = 60000;
 	static final String LOGTAG = "Dindy";
-	static final boolean DEBUG = true;
+	static final boolean DEBUG = false;
 }
