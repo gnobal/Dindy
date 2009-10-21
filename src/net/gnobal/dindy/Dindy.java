@@ -27,7 +27,7 @@ import java.util.LinkedList;
 // - test plan
 // - use alarm ( http://developer.android.com/reference/android/app/AlarmManager.html )
 //   instead of Java Timer because it wakes up even if the phone is sleeping
-//   (use one of the *_WAKEUP types)
+//   (use one of the *_WAKEUP types). Maybe use Handler.
 
 //TODO fix/add in future versions:
 // - phone shutdown - restore to user's settings or restore Dindy by registering
