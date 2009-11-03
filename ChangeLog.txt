@@ -4,3 +4,4 @@
       Fixed a rare race which would cause Dindy to treat a third late call as a second call
       Only refresh settings if the currently active profile is edited, not on every edit (slightly faster UI)
       Show notification and status bar icon indicating that Dindy is running only after everything is actually started
+1.0.3 Fixed an issue where sometimes a second call was considered as first
