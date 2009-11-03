@@ -40,6 +40,7 @@ import java.util.LinkedList;
 // - Hang up on a caller if we know we want to send the SMS (Albert)
 // - Voice response instead of SMS (Albert)
 // - Show a summary of the current profile on the main screen (Roman)
+// - know when in a car dock by using the intent ACTION_DOCK_EVENT/EXTRA_DOCK_STATE/EXTRA_DOCK_STATE_CAR/EXTRA_DOCK_STATE_DESK/EXTRA_DOCK_STATE_UNDOCKED 
 
 public class Dindy extends Activity {
 	@Override

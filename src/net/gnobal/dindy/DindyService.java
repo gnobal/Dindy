@@ -254,6 +254,7 @@ public class DindyService extends Service {
 			default:
 				break;
 			}
+			
 			mLogic.onCallStateChange(incomingCallState, incomingNumber);
 		}
 	}

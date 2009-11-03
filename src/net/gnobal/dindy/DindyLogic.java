@@ -220,10 +220,13 @@ class DindyLogic {
 				// even if its time was up because the phone was sleeping. So
 				// we do this cleanup here, but only if the call info structure
 				// wasn't put in the map with an infinite timeout value
+				long currentTimeMillis = System.currentTimeMillis();
 				if (currentCallInfo.getAbsoluteWakeupTimeMillis() != Consts.INFINITE_TIME &&
-					currentCallInfo.getAbsoluteWakeupTimeMillis() > System.currentTimeMillis()) {
+					currentTimeMillis > currentCallInfo.getAbsoluteWakeupTimeMillis()) {
 					if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-							callerIdNumber + " will be removed in onRinging() because it wasn't removed by the timer thread");
+							callerIdNumber + " will be removed in onRinging() because it wasn't removed by the timer thread" + 
+							"currentTimeMillis: " + currentTimeMillis + ", absoluteWakeupTime: " +
+							currentCallInfo.getAbsoluteWakeupTimeMillis());
 					removeIncomingCallInfo(callerIdNumber);
 				} else {
 					if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
@@ -389,8 +392,6 @@ class DindyLogic {
 					mSentPendingIntent);
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
 					"number " + number + " has been notified with SMS.");
-			// TODO should move to where we get a positive confirmation on
-			// the SMS sending
 		} else {
 			releaseWakeLockIfHeld("onMissedCall 6");
 		}
