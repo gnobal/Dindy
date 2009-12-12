@@ -13,8 +13,6 @@ import android.text.method.LinkMovementMethod;
 import android.util.Config;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -65,6 +63,14 @@ public class Dindy extends Activity {
 			SharedPreferences.Editor editor = preferences.edit();
 			editor.putBoolean(Consts.Prefs.Main.KEY_FIRST_STARTUP, false);
 			editor.commit();
+			createProfile(R.string.default_profile_away_name,
+					R.string.default_profile_away_sms_message, false, false,
+					false, false, Consts.INFINITE_TIME,
+					Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_FIRST);
+			createProfile(R.string.default_profile_busy_name,
+					R.string.default_profile_busy_sms_message, false, false,
+					false, false, Consts.INFINITE_TIME,
+					Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_FIRST);
 			createProfile(R.string.default_profile_car_name,
 					R.string.default_profile_car_sms_message, false, false,
 					true, false, 5,
@@ -126,28 +132,6 @@ public class Dindy extends Activity {
 	public void onResume() {
 		super.onResume();
 		setDynamicButtons(Utils.isDindyServiceRunning(this));
-	}
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		super.onCreateOptionsMenu(menu);
-
-		menu.add(0, MENU_ID_PREFERENCES, 0, R.string.main_menu_preferences)
-				.setIcon(android.R.drawable.ic_menu_preferences);
-		return true;
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		super.onOptionsItemSelected(item);
-
-		switch (item.getItemId()) {
-		case MENU_ID_PREFERENCES:
-			startProfileEditor();
-			return true;
-		}
-
-		return false;
 	}
 
 	@Override
@@ -458,7 +442,6 @@ public class Dindy extends Activity {
 	private ProfilePreferencesHelper mPreferencesHelper =
 		ProfilePreferencesHelper.instance(this);
 	private long mSelectedProfileId = Consts.NOT_A_PROFILE_ID;
-	private static final int MENU_ID_PREFERENCES = 0;
 	private static final int PROFILE_SELECT_REQUEST_CODE = 1;
 	private static final int PROFILE_MANAGE_REQUEST_CODE = 2;
 	private static final int DIALOG_STARTUP_MESSAGE = 0;

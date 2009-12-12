@@ -47,7 +47,7 @@
 <string name="main_stop">Stop</string>
 <string name="main_preferences">Preferences</string>
 
-<string name="main_menu_preferences">Manage profiles</string>
+
 <string name="preferences_profile_menu_rename">Rename</string>
 <string name="preferences_profile_menu_delete">Delete</string>
 <string name="preferences_profile_menu_done">Done</string>
@@ -70,7 +70,7 @@
 <string name="preferences_profile_unknown_caller_behavior_summary">Notification type to use for a non-mobile or unknown caller</string>
 <string name="preferences_profile_list_preference_current_prefix">current:</string>
 <string name="startup_message_dialog_checkbox_text">Do not show this message again</string>
-<string name="startup_message_dialog_text">This application is partly an automatic SMS responder and, according to your settings, may send text messages. Network charges apply. See the \&quot;Help\&quot; section for details.\n\nThree default profiles have been created: Car, Meeting and Night. Examine and modify them by choosing \&quot;Manage profiles\&quot;.</string>
+<string name="startup_message_dialog_text">This application is partly an automatic SMS responder and, according to your settings, may send text messages. Network charges apply. See the \&quot;Help\&quot; section for details.\n\nFive default profiles have been created: Away, Busy, Car, Meeting and Night. Examine and modify them by choosing \&quot;Manage profiles\&quot;.</string>
 <string name="startup_message_dialog_ok_text">OK</string>
 <string name="default_profile_car_name">Car</string>
 <string name="default_profile_car_sms_message">Hi. This is an automated reply. I\'m driving. Call again in the next 5 minutes if you want me to stop and take the call.</string>
@@ -86,4 +86,9 @@
 <string name="preferences_profiles_list_item_new">Add new profile...</string>
 
 <string name="main_profile">profile</string>
+<string name="main_menu_preferences">Manage profiles</string>
+<string name="default_profile_away_name">Away</string>
+<string name="default_profile_away_sms_message">Hi. This is an automated reply. I\'m away from my phone and will get back to you.</string>
+<string name="default_profile_busy_name">Busy</string>
+<string name="default_profile_busy_sms_message">Hi. This is an automated reply. I\'m busy and will get back to you.</string>
 </resources>

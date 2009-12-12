@@ -5,3 +5,5 @@
       Only refresh settings if the currently active profile is edited, not on every edit (slightly faster UI)
       Show notification and status bar icon indicating that Dindy is running only after everything is actually started
 1.0.3 Fixed an issue where sometimes a second call was considered as first
+1.0.4 Code + user interface cleanups
+      Added two new profiles to new installations: Away and Busy
