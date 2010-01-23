@@ -18,6 +18,32 @@ class ProfilePreferencesHelper {
 		return mInstance;
 	}
 	
+	boolean anyProfilesExist() {
+		SQLiteDatabase db = null;
+		Cursor cursor = null;
+		boolean exist = false;
+
+		try {
+			db = mDatabaseHelper.getReadableDatabase();
+			cursor = db.rawQuery(ANY_PROFILES_EXIST_QUERY, null);
+			if (cursor.getCount() > 0 && cursor.moveToNext()) {
+				exist = cursor.getLong(0) > 0;
+			}
+		} finally {
+			if (cursor != null) {
+				cursor.deactivate();
+				cursor.close();
+				cursor = null;
+			}
+			if (db != null) {
+				db.close();
+				db = null;
+			}
+		}
+		
+		return exist;
+	}
+	
 	LinkedList<String> getAllProfileNamesSorted() {
 		SQLiteDatabase db = null;
 		Cursor cursor = null;
@@ -257,6 +283,9 @@ class ProfilePreferencesHelper {
 	private static final String[] PROFILE_ID_COLUMNS = { Profiles._ID };
 	private static final int PROFILE_ID_INDEX = 0;
 
+	private static final String ANY_PROFILES_EXIST_QUERY =  
+		"SELECT COUNT(*) FROM " + PROFILES_TABLE_NAME + ";";
+	
 	private DatabaseHelper mDatabaseHelper;
 	private Context mContext;
 	

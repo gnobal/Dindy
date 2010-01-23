@@ -333,8 +333,7 @@ public class Dindy extends Activity {
 		// NOT_A_PROFILE_ID if the service is running but the profile used to
 		// run it was deleted, so we can't trust mSelectedProfileId to tell
 		// us whether there are profile to choose from or not
-		selectProfileButton.setEnabled(
-				!mPreferencesHelper.getAllProfileNamesSorted().isEmpty());
+		selectProfileButton.setEnabled(mPreferencesHelper.anyProfilesExist());
 		if (isDindyServiceRunning) {
 			startStopTextView.setText(getString(R.string.main_stop));
 
