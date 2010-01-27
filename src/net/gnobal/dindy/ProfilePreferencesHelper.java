@@ -284,7 +284,7 @@ class ProfilePreferencesHelper {
 	private static final int PROFILE_ID_INDEX = 0;
 
 	private static final String ANY_PROFILES_EXIST_QUERY =  
-		"SELECT COUNT(*) FROM " + PROFILES_TABLE_NAME + ";";
+		"SELECT COUNT(*) FROM " + PROFILES_TABLE_NAME;
 	
 	private DatabaseHelper mDatabaseHelper;
 	private Context mContext;

@@ -66,6 +66,7 @@ public class DindyService extends Service {
 	public void onStart(Intent intent, int startId) {
 		super.onStart(intent, startId);
 
+		mIsRunning = true;
 		final boolean firstStart = 
 			(mCurrentProfileId == Consts.NOT_A_PROFILE_ID);
 		Bundle extras = intent.getExtras();
@@ -114,6 +115,7 @@ public class DindyService extends Service {
 		mPreferencesHelper = null;
 		mLogic = null;
 		mCurrentProfileId = Consts.NOT_A_PROFILE_ID;
+		mIsRunning = false;
 	}
 
 	/**
@@ -131,6 +133,10 @@ public class DindyService extends Service {
 		return mBinder;
 	}
 
+	public static boolean isRunning() {
+		return mIsRunning;
+	}
+	
 	public static final String EXTRA_PROFILE_ID = "profile_id";
 
 	private void showNotification() {
@@ -146,8 +152,11 @@ public class DindyService extends Service {
 		// The PendingIntent to launch our activity if the user selects this
 		// notification
 		PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-				new Intent(this, Dindy.class), 0);
-
+				new Intent(this, Dindy.class)
+					.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+							| Intent.FLAG_ACTIVITY_CLEAR_TOP)
+					.setAction(Intent.ACTION_MAIN), 0);
+		
 		// Set the info for the views that show in the notification panel.
 		notification.setLatestEventInfo(this,
 				getText(R.string.dindy_service_label), text, contentIntent);
@@ -241,7 +250,8 @@ public class DindyService extends Service {
 				// HACK the following line exists so that we'll update the call
 				// log observer in case the user cleared the call log and we
 				// didn't get the notification about it because of a bug in
-				// Android
+				// Android.
+				// This is no longer needed starting with Android 2.0.1
 				mCallLogObserver.dispatchChange(true);
 				// HACK END
 				incomingCallState = Consts.IncomingCallState.RINGING;
@@ -348,6 +358,7 @@ public class DindyService extends Service {
 	private ProfilePreferencesHelper mPreferencesHelper = null;
 	private DindySettings mSettings = new DindySettings();
 	private long mCurrentProfileId = Consts.NOT_A_PROFILE_ID;
+	private static boolean mIsRunning = false;
 
 	private final IBinder mBinder = new LocalBinder();
 	private final String[] mCallLogProjection = 

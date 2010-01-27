@@ -101,7 +101,7 @@ public class Dindy extends Activity {
 					
 			if (mPreferencesHelper.profileExists(lastSelectedProfile)) {
 				mSelectedProfileId = lastSelectedProfile;
-			} else if (!Utils.isDindyServiceRunning(this)) {
+			} else if (!DindyService.isRunning()) {
 				// Why only if the service isn't running? Because the service is
 				// currently running with a profile that was deleted, so we
 				// don't want to "cheat" the user that a different profile is
@@ -123,7 +123,7 @@ public class Dindy extends Activity {
 			savedInstanceState == null ? true :
 				savedInstanceState.getBoolean(Consts.Prefs.Main.KEY_SHOW_STARTUP_MESSAGE, true);
 		if (userPreferenceShowMessage && thisInstanceShowMessage &&
-			!Utils.isDindyServiceRunning(this)) {
+			!DindyService.isRunning()) {
 			showDialog(DIALOG_STARTUP_MESSAGE);
 		}
 	}
@@ -131,7 +131,7 @@ public class Dindy extends Activity {
 	@Override
 	public void onResume() {
 		super.onResume();
-		setDynamicButtons(Utils.isDindyServiceRunning(this));
+		setDynamicButtons(DindyService.isRunning());
 	}
 
 	@Override
@@ -222,7 +222,7 @@ public class Dindy extends Activity {
 			return;
 		}
 		
-		boolean dindyServiceIsRunning = Utils.isDindyServiceRunning(this);
+		boolean dindyServiceIsRunning = DindyService.isRunning();
 
 		// The currently selected profile may have been deleted so in this case
 		// first we update mSelectedProfileId to NOT_A_PROFILE_ID  
@@ -387,8 +387,7 @@ public class Dindy extends Activity {
 
 	private OnClickListener mStartStopListener = new OnClickListener() {
 		public void onClick(View v) {
-			final boolean isServiceRunning = Utils.isDindyServiceRunning(
-					Dindy.this);
+			final boolean isServiceRunning = DindyService.isRunning();
 			if (isServiceRunning) {
 				stopService(new Intent(Dindy.this, DindyService.class));
 				// If the selected profile was deleted while the service was 

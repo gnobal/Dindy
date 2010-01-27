@@ -228,7 +228,7 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 	@Override
 	protected void onPause() {
 		super.onPause();
-		if (Utils.isDindyServiceRunning(this)) {
+		if (DindyService.isRunning()) {
 			// The service is running so we check if it's running the profile
 			// we're editing 
 			SharedPreferences preferences = getSharedPreferences(
