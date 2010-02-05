@@ -8,3 +8,6 @@
 1.0.4 Code + user interface cleanups
       Added two new profiles to new installations: Away and Busy
 1.0.5 Speed improvement for the main screen
+1.0.6 Clicking the notification now shows the existing main screen instead of opening a new one
+      Speed improvement for the main screen
+      Use a little less memory

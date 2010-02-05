@@ -42,7 +42,7 @@ class ProfileNameDialogHelper {
 				.setTitle(mTitle)
 				.setView(textEntryView)
 				.setPositiveButton(R.string.dialog_profile_name_ok,
-						new OkClickListener(context, listener))
+						new OkClickListener(listener))
 				.setNegativeButton(R.string.dialog_profile_name_cancel,
 						new CancelClickListener())
 				.create();
@@ -99,8 +99,7 @@ class ProfileNameDialogHelper {
 	}
 	
 	private static class OkClickListener implements DialogInterface.OnClickListener {
-		OkClickListener(Context context, Listener listener) {
-			mContext = context;
+		OkClickListener(Listener listener) {
 			mListener = listener;
 		}
 		
@@ -111,7 +110,7 @@ class ProfileNameDialogHelper {
 					R.id.dialog_profile_name_edit_box);
 			String newProfileName = edit.getText().toString();
 			ProfilePreferencesHelper preferencesHelper =
-				ProfilePreferencesHelper.instance(mContext);
+				ProfilePreferencesHelper.instance();
 			if (preferencesHelper.profileExists(newProfileName)) {
 				// TODO issue an error
 				return;
@@ -138,7 +137,6 @@ class ProfileNameDialogHelper {
 			mListener.onSuccess(newProfileName, newProfileId);
 		}
 		
-		private Context mContext;
 		private Listener mListener;
 	}
 	

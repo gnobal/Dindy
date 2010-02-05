@@ -21,7 +21,7 @@ public class ProfilesListActivity extends ListActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		mPreferencesHelper = ProfilePreferencesHelper.instance(this);
+		mPreferencesHelper = ProfilePreferencesHelper.instance();
 
 		Bundle extras = getIntent().getExtras();
 		if (extras != null) {
@@ -37,9 +37,9 @@ public class ProfilesListActivity extends ListActivity {
 		mContextMenuIndexEdit = mContextMenuIndexSelect + 1;
 		mContextMenuIndexRename = mContextMenuIndexEdit + 1;
 		mContextMenuIndexDelete = mContextMenuIndexRename + 1;
-		mContextMEnuNumEntries = mContextMenuIndexDelete + 1;
+		mContextMenuNumEntries = mContextMenuIndexDelete + 1;
 
-		mContextMenuStrings.setSize(mContextMEnuNumEntries);
+		mContextMenuStrings.setSize(mContextMenuNumEntries);
 		if (mListMode == EXTRA_MODE_SELECT) {
 			mContextMenuStrings.set(mContextMenuIndexSelect, getString(
 					R.string.preferences_profiles_list_context_menu_select));
@@ -54,7 +54,6 @@ public class ProfilesListActivity extends ListActivity {
 		mArrayAdapter = new ArrayAdapter<String>(this,
 				android.R.layout.simple_list_item_1, mListItems);
 		setListAdapter(mArrayAdapter);
-		fillList();
 	}
 
 	@Override
@@ -68,6 +67,8 @@ public class ProfilesListActivity extends ListActivity {
 			ContextMenu.ContextMenuInfo menuInfo) {
 		AdapterContextMenuInfo adapterMenuInfo = (AdapterContextMenuInfo) menuInfo;
 		if (adapterMenuInfo.position == 0) {
+			// The first position is the "Add new profile..." item, so do not
+			// create a context menu for it
 			return;
 		}
 		super.onCreateContextMenu(menu, v, menuInfo);
@@ -143,7 +144,7 @@ public class ProfilesListActivity extends ListActivity {
 			return true;
 		} else if (selectedItemId == mContextMenuIndexDelete) {
 			String profileToRemove = mArrayAdapter.getItem(mCurrentSelection);
-			mPreferencesHelper.deleteProfile(profileToRemove);
+			mPreferencesHelper.deleteProfile(this, profileToRemove);
 			mArrayAdapter.remove(profileToRemove);
 			return true;
 		} else if (selectedItemId == mContextMenuIndexEdit) {
@@ -191,7 +192,7 @@ public class ProfilesListActivity extends ListActivity {
 		switch (dialogId) {
 		case ProfileNameDialogHelper.DIALOG_NEW_PROFILE:
 			title = getString(R.string.preferences_profiles_list_menu_new);
-			oldProfileName = "";
+			oldProfileName = Consts.EMPTY_STRING;
 			break;
 		
 		case ProfileNameDialogHelper.DIALOG_RENAME_PROFILE:
@@ -210,14 +211,14 @@ public class ProfilesListActivity extends ListActivity {
 	}
 	
 	private void fillList() {
+		// Be careful not to change the list returned from 
+		// mPreferencesHelper.getAllProfileNamesSorted() because it may
+		// be the cached list
 		mListItems.clear();
-		LinkedList<String> listItems =
-			mPreferencesHelper.getAllProfileNamesSorted();
-		listItems.addFirst(getString(R.string.preferences_profiles_list_item_new));
-		mListItems.addAll(listItems);
+		mListItems.addAll(mPreferencesHelper.getAllProfileNamesSorted());
+		mListItems.addFirst(getString(R.string.preferences_profiles_list_item_new));
 		mArrayAdapter.notifyDataSetChanged();
 	}
-
 
 	private void finishWithSelectedProfile(String profileName) {
 		setResult(RESULT_OK, new Intent().putExtra(
@@ -291,9 +292,8 @@ public class ProfilesListActivity extends ListActivity {
 	private int mContextMenuIndexEdit = -1;
 	private int mContextMenuIndexRename = -1;
 	private int mContextMenuIndexDelete = -1;
-	private int mContextMEnuNumEntries = -1;
+	private int mContextMenuNumEntries = -1;
 	private int mListMode = EXTRA_MODE_EDIT;
-	// Constants
 	private static final int MENU_ID_NEW = 0;
 	private RenameDialogListener mRenameListener = 
 		new RenameDialogListener(this);

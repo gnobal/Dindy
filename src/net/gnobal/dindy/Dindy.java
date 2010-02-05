@@ -44,6 +44,8 @@ public class Dindy extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		ProfilePreferencesHelper.createInstance(getApplicationContext());
+		mPreferencesHelper = ProfilePreferencesHelper.instance();
 		setContentView(R.layout.main);
 		ImageButton powerButton = (ImageButton)
 			findViewById(R.id.main_power_button);
@@ -131,7 +133,10 @@ public class Dindy extends Activity {
 	@Override
 	public void onResume() {
 		super.onResume();
-		setDynamicButtons(DindyService.isRunning());
+		if (mRefreshUI) {
+			setDynamicButtons(DindyService.isRunning());
+			mRefreshUI = false;
+		}
 	}
 
 	@Override
@@ -260,7 +265,9 @@ public class Dindy extends Activity {
 	}
 
 	private void startProfileEditor() {
-		Intent profileManagerIntent = new Intent(Dindy.this, 
+		mRefreshUI = true;
+		Intent profileManagerIntent = new Intent(
+				getApplicationContext(), 
 				ProfilesListActivity.class);
 		profileManagerIntent.putExtra(
 				ProfilesListActivity.EXTRA_MODE_NAME,
@@ -283,7 +290,7 @@ public class Dindy extends Activity {
 			return;
 		}
 		SharedPreferences newProfilePrefs =
-			mPreferencesHelper.getPreferencesForProfile(newProfileId,
+			mPreferencesHelper.getPreferencesForProfile(this, newProfileId,
 					MODE_PRIVATE);
 		SharedPreferences.Editor editor = newProfilePrefs.edit();
 		editor.putBoolean(Consts.Prefs.Profile.KEY_ENABLE_SMS, true);
@@ -324,8 +331,8 @@ public class Dindy extends Activity {
 				R.id.main_profile_text);
 		TextView profileNameView = (TextView) findViewById(
 				R.id.main_profile_name);
-		Button selectProfileButton = (Button) findViewById(
-				R.id.profile_select_button);
+		//Button selectProfileButton = (Button) findViewById(
+		//		R.id.profile_select_button);
 		// TODO rework this. Now that both buttons are almost always enabled,
 		// it matters less whether the service is running or not.
 
@@ -333,39 +340,23 @@ public class Dindy extends Activity {
 		// NOT_A_PROFILE_ID if the service is running but the profile used to
 		// run it was deleted, so we can't trust mSelectedProfileId to tell
 		// us whether there are profile to choose from or not
-		selectProfileButton.setEnabled(mPreferencesHelper.anyProfilesExist());
+		//selectProfileButton.setEnabled(mPreferencesHelper.anyProfilesExist());
+		//selectProfileButton.setEnabled(true);
 		if (isDindyServiceRunning) {
 			startStopTextView.setText(getString(R.string.main_stop));
 
 			if (mSelectedProfileId != Consts.NOT_A_PROFILE_ID) {
 				profileTextView.setText(" " + getString(R.string.main_profile) 
 						+ " ");
-				//startStopText += " (" + 
-				//mPreferencesHelper.getProfielNameFromId(mSelectedProfileId) + 
-				//")";
 				profileNameView.setText(mPreferencesHelper.getProfielNameFromId(
 						mSelectedProfileId)); 
 			} else {
-				profileTextView.setText("");
-				profileNameView.setText("");
-				//selectProfileButton.setText(
-				//		R.string.main_button_add_new_profile);
+				profileTextView.setText(Consts.EMPTY_STRING);
+				profileNameView.setText(Consts.EMPTY_STRING);
 			}
 			powerButton.setEnabled(true);
 			powerButton.setImageResource(R.drawable.power_button_off);
 		} else {
-			/*
-			 * no need for this code, as we're doing this work in 
-			 * onActivityResult()
-
-			// It can happen that mSelectedProfileId != NOT_A_PROFILE_ID and 
-			// the profile doesn't exist if the user went to the profile 
-			// manager and deleted it. The service still runs fine, but when 
-			// we stop it we need to update correctly
-			if (mSelectedProfileId == Consts.NOT_A_PROFILE_ID ||
-				!mPreferencesHelper.profileExists(mSelectedProfileId)) {
-				setFirstAvailableProfile();
-			}*/
 			if (mSelectedProfileId != Consts.NOT_A_PROFILE_ID) {
 				startStopTextView.setText(getString(R.string.main_start));
 				profileTextView.setText(" " + getString(R.string.main_profile) +
@@ -377,8 +368,8 @@ public class Dindy extends Activity {
 				powerButton.setImageResource(R.drawable.power_button_on);
 			} else {
 				startStopTextView.setText(R.string.main_no_available_profile);
-				profileTextView.setText("");
-				profileNameView.setText("");
+				profileTextView.setText(Consts.EMPTY_STRING);
+				profileNameView.setText(Consts.EMPTY_STRING);
 				powerButton.setEnabled(false);
 				powerButton.setImageResource(R.drawable.power_button_disabled);
 			}			
@@ -389,7 +380,8 @@ public class Dindy extends Activity {
 		public void onClick(View v) {
 			final boolean isServiceRunning = DindyService.isRunning();
 			if (isServiceRunning) {
-				stopService(new Intent(Dindy.this, DindyService.class));
+				stopService(new Intent(getApplicationContext(),
+						DindyService.class));
 				// If the selected profile was deleted while the service was 
 				// running, set a new profile for the user to select
 				if (mSelectedProfileId == Consts.NOT_A_PROFILE_ID ||
@@ -413,7 +405,7 @@ public class Dindy extends Activity {
 		editor.commit();
 		editor = null;
 		preferences = null;
-		Intent serviceIntent = new Intent(Dindy.this,
+		Intent serviceIntent = new Intent(getApplicationContext(),
 				DindyService.class);
 		serviceIntent.putExtra(DindyService.EXTRA_PROFILE_ID,
 				mSelectedProfileId);
@@ -422,7 +414,8 @@ public class Dindy extends Activity {
 	
 	private OnClickListener mSelectProfileListener = new OnClickListener() {
 		public void onClick(View v) {
-			Intent profilesListIntent = new Intent(Dindy.this,
+			mRefreshUI = true;
+			Intent profilesListIntent = new Intent(getApplicationContext(),
 					ProfilesListActivity.class);
 			profilesListIntent.putExtra(ProfilesListActivity.EXTRA_MODE_NAME,
 					ProfilesListActivity.EXTRA_MODE_SELECT);
@@ -437,9 +430,9 @@ public class Dindy extends Activity {
 		}
 	};
 
-	private ProfilePreferencesHelper mPreferencesHelper =
-		ProfilePreferencesHelper.instance(this);
+	private ProfilePreferencesHelper mPreferencesHelper = null;
 	private long mSelectedProfileId = Consts.NOT_A_PROFILE_ID;
+	private boolean mRefreshUI = true;
 	private static final int PROFILE_SELECT_REQUEST_CODE = 1;
 	private static final int PROFILE_MANAGE_REQUEST_CODE = 2;
 	private static final int DIALOG_STARTUP_MESSAGE = 0;

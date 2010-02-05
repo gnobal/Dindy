@@ -55,7 +55,7 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 		
 		 case MENU_ID_DELETE:
 		 {
-			 mHelper.deleteProfile(mProfileName);
+			 mHelper.deleteProfile(this, mProfileName);
 			 finish();
 			 return true;
 		 }
@@ -74,7 +74,8 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 		
 		// TODO maybe use a shared resource after all, as in here:
 		// http://google.com/codesearch/p?hl=en&sa=N&cd=3&ct=rc#kZ0MkhnKNzw/trunk/Photostream/src/com/google/android/photostream/SettingsActivity.java&q=setSharedPreferencesName&l=30
-
+		mHelper = ProfilePreferencesHelper.instance();
+		
 		Bundle bundle = getIntent().getExtras();
 		mProfileName = bundle.getString(EXTRA_PROFILE_NAME);
 		setTitleWithCurrentProfile();
@@ -129,7 +130,7 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 								sharedPreferencesName, Context.MODE_PRIVATE)
 								.getString(
 										Consts.Prefs.Profile.KEY_SMS_MESSAGE,
-										"");
+										Consts.EMPTY_STRING);
 						smsPref.getEditText().setText(text);
 						smsPref.getEditText().setSelection(text.length());
 						return true;
@@ -139,7 +140,7 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 		// Example on inheriting EditTextPreference:
 		// http://google.com/codesearch/p?hl=en&sa=N&cd=8&ct=rc#r4Q5vzOJY9U/src/com/android/phone/EditPinPreference.java&q=EditTextPreference
 		String currMessage = sharedPreferences.getString(
-				Consts.Prefs.Profile.KEY_SMS_MESSAGE, "");
+				Consts.Prefs.Profile.KEY_SMS_MESSAGE, Consts.EMPTY_STRING);
 		smsMessagePref.setSummary(currMessage);
 		smsCat.addPreference(smsMessagePref);
 		// Setting the dependency must happen after both involved preferences 
@@ -238,7 +239,8 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 				// This means the profile we're editing is currently running, 
 				// so we trigger a settings refresh, as onPause() means the 
 				// user is done editing the profile
-				Intent serviceIntent = new Intent(this, DindyService.class);
+				Intent serviceIntent = new Intent(getApplicationContext(),
+						DindyService.class);
 				serviceIntent.putExtra(DindyService.EXTRA_PROFILE_ID,
 						mProfileId);
 				startService(serviceIntent);
@@ -400,7 +402,6 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 
 	private String mProfileName = null;
 	private long mProfileId = Consts.NOT_A_PROFILE_ID;
-	private ProfilePreferencesHelper mHelper =
-		ProfilePreferencesHelper.instance(this);
+	private ProfilePreferencesHelper mHelper = null;
 	private RenameDialogListener mRenameListener = new RenameDialogListener(this);
 }

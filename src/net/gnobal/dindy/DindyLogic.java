@@ -64,7 +64,8 @@ class DindyLogic {
 	    mSentPendingIntent = PendingIntent.getBroadcast(
 	    		mContext, 0, new Intent(SMS_PENDING_INTENT_NAME), 0);
 	    mContext.registerReceiver(mOnSentReceiver, new IntentFilter(
-	    		SMS_PENDING_INTENT_NAME)); 
+	    		SMS_PENDING_INTENT_NAME));
+	    mSmsSender = new SmsSender();
 	}
 
 	void start() {
@@ -77,6 +78,7 @@ class DindyLogic {
 	
 	void destroy() {
 		mContext.unregisterReceiver(mOnSentReceiver);
+		mSmsSender = null;
 		mOnSentReceiver = null;
 		mContext = null;
 		mTimer.cancel();
@@ -388,7 +390,7 @@ class DindyLogic {
 
 		if (mSettings.mEnableSms) {
 			// The intent will release the WakeLock
-			SmsSender.getInstance().sendMessage(number, mSettings.mMessage,
+			mSmsSender.sendMessage(number, mSettings.mMessage,
 					mSentPendingIntent);
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
 					"number " + number + " has been notified with SMS.");
@@ -554,6 +556,7 @@ class DindyLogic {
 	private static final String SMS_PENDING_INTENT_NAME = "DindySMS";
 	private String mLastRingingNumber = NOT_A_PHONE_NUMBER;
 	private DindySettings mSettings = null;
+	private SmsSender mSmsSender = null;
 	private Timer mTimer = new Timer();
 	private HashMap<String, IncomingCallInfo> mIncomingCalls =
 		new HashMap<String, IncomingCallInfo>();

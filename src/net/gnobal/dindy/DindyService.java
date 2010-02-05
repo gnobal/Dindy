@@ -27,39 +27,38 @@ public class DindyService extends Service {
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		if (mLogic == null) {
-			SmsSender.getInstance(); // have the instance ready
-			mStateListener = new CallStateChangeListener();
-			mBroadcastReceiver = new DindyBroadcastReceiver();
-			mNM = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-			mTM = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
-			mAM = (AudioManager) getSystemService(AUDIO_SERVICE);
-			mPM = (PowerManager) getSystemService(POWER_SERVICE);
-			// Start listening to call state change events
-			mCallLogObserver = new CallLogObserver();
-			mCallLogCursor = getContentResolver().query(
-					CallLog.Calls.CONTENT_URI, mCallLogProjection,
-					CallLog.Calls.TYPE + " = " + CallLog.Calls.MISSED_TYPE + 
-					" OR " + CallLog.Calls.TYPE + " = " +
-					CallLog.Calls.INCOMING_TYPE,
-					null, CallLog.Calls.DATE + " DESC");
-			mPreviousCursorCount = mCallLogCursor.getCount();
-			mCallLogCursor.registerContentObserver(mCallLogObserver);
-			IntentFilter filter = new IntentFilter();
-			filter.addAction(Intent.ACTION_NEW_OUTGOING_CALL);
-			//filter.addAction(AudioManager.RINGER_MODE_CHANGED_ACTION);
-			//filter.addAction(AudioManager.VIBRATE_SETTING_CHANGED_ACTION);
-			registerReceiver(mBroadcastReceiver, filter);
-			mPreferencesHelper = ProfilePreferencesHelper.instance(this);
-			mLogic = new DindyLogic(this, getContentResolver(), mSettings, mAM,
-					mPM);
-			// TODO must be after setting mLogic, since registration 
-			// immediately sends us an IDLE notification that goes straight to 
-			// mLogic. If the user is clicking fast enough on the start/stop 
-			// button and this line was before setting mLogic, we would crash
-			// because of a null exception
-			mTM.listen(mStateListener, PhoneStateListener.LISTEN_CALL_STATE);
+		if (mLogic != null) {
+			// already created
+			return;
 		}
+
+		mStateListener = new CallStateChangeListener();
+		mBroadcastReceiver = new DindyBroadcastReceiver();
+		mNM = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+		mTM = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+		mAM = (AudioManager) getSystemService(AUDIO_SERVICE);
+		mPM = (PowerManager) getSystemService(POWER_SERVICE);
+		// Start listening to call state change events
+		mCallLogObserver = new CallLogObserver();
+		mCallLogCursor = getContentResolver().query(
+				CallLog.Calls.CONTENT_URI, mCallLogProjection,
+				CALL_LOG_QUERY, null, CallLog.Calls.DATE + " DESC");
+		mPreviousCursorCount = mCallLogCursor.getCount();
+		mCallLogCursor.registerContentObserver(mCallLogObserver);
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(Intent.ACTION_NEW_OUTGOING_CALL);
+		//filter.addAction(AudioManager.RINGER_MODE_CHANGED_ACTION);
+		//filter.addAction(AudioManager.VIBRATE_SETTING_CHANGED_ACTION);
+		registerReceiver(mBroadcastReceiver, filter);
+		mPreferencesHelper = ProfilePreferencesHelper.instance();
+		mLogic = new DindyLogic(getApplicationContext(), getContentResolver(),
+				mSettings, mAM, mPM);
+		// TODO must be after setting mLogic, since registration 
+		// immediately sends us an IDLE notification that goes straight to 
+		// mLogic. If the user is clicking fast enough on the start/stop 
+		// button and this line was before setting mLogic, we would crash
+		// because of a null exception
+		mTM.listen(mStateListener, PhoneStateListener.LISTEN_CALL_STATE);
 	}
 
 	@Override
@@ -151,14 +150,15 @@ public class DindyService extends Service {
 
 		// The PendingIntent to launch our activity if the user selects this
 		// notification
-		PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-				new Intent(this, Dindy.class)
+		PendingIntent contentIntent = PendingIntent.getActivity(
+				getApplicationContext(), 0,
+				new Intent(getApplicationContext(), Dindy.class)
 					.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
 							| Intent.FLAG_ACTIVITY_CLEAR_TOP)
 					.setAction(Intent.ACTION_MAIN), 0);
 		
 		// Set the info for the views that show in the notification panel.
-		notification.setLatestEventInfo(this,
+		notification.setLatestEventInfo(getApplicationContext(),
 				getText(R.string.dindy_service_label), text, contentIntent);
 
 		// Send the notification.
@@ -169,7 +169,7 @@ public class DindyService extends Service {
 
 	private void refreshSettings(long selectedProfileId, boolean firstStart) {
 		SharedPreferences profilePreferences = 
-			mPreferencesHelper.getPreferencesForProfile(selectedProfileId,
+			mPreferencesHelper.getPreferencesForProfile(this, selectedProfileId,
 					Context.MODE_PRIVATE);
 
 		final boolean firstRingSound = profilePreferences.getBoolean(
@@ -203,7 +203,7 @@ public class DindyService extends Service {
 		mSettings.mEnableSms = profilePreferences.getBoolean(
 				Consts.Prefs.Profile.KEY_ENABLE_SMS, true);
 		mSettings.mMessage = profilePreferences.getString(
-				Consts.Prefs.Profile.KEY_SMS_MESSAGE, "");
+				Consts.Prefs.Profile.KEY_SMS_MESSAGE, Consts.EMPTY_STRING);
 		
 		// First let's see what the new value is. We need to notify DindyLogic
 		// about this change so we need to keep the new setting in a different
@@ -368,4 +368,7 @@ public class DindyService extends Service {
 	};
 	private final int CALL_LOG_FIELD_NUMBER = 0;
 	private final int CALL_LOG_FIELD_TYPE = 1;
+	private final String CALL_LOG_QUERY = 
+		CallLog.Calls.TYPE + " = " + CallLog.Calls.MISSED_TYPE + 
+		" OR " + CallLog.Calls.TYPE + " = " + CallLog.Calls.INCOMING_TYPE; 
 }

@@ -8,17 +8,7 @@ import android.util.Config;
 import android.util.Log;
 
 public class SmsSender {
-
-	public static SmsSender getInstance() {
-		if (mInstance == null) {
-			mInstance = new SmsSender();
-		}
-		
-		return mInstance;
-	}
-	
-	
-	public void sendMessage(String number, String message,
+	void sendMessage(String number, String message,
 			PendingIntent sentPendingIntent) {
 		if (mSmsManager == null || mSendTextMessageMethod == null) {
 			return;
@@ -37,7 +27,7 @@ public class SmsSender {
 		}
 	}
 	
-	private SmsSender() {
+	SmsSender() {
 		Class<?> smsManagerClass = null;
 		try {
 			// Try to get newer implementation
@@ -100,5 +90,4 @@ public class SmsSender {
 		"failed to initialize sms sender class";
 	private static String ERROR_FAILED_TO_SEND_SMS_MESSAGE =
 		"failed to send sms message";
-	private static SmsSender mInstance = null;
 }

@@ -77,4 +77,5 @@ class Consts {
 	static final long MILLIS_IN_MINUTE = 60000;
 	static final String LOGTAG = "Dindy";
 	static final boolean DEBUG = false;
+	static final String EMPTY_STRING = "";
 }

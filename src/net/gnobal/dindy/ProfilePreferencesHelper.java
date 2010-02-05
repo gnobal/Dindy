@@ -7,18 +7,28 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
+
+import java.util.Collections;
 import java.util.LinkedList;
 
 class ProfilePreferencesHelper {
-	static ProfilePreferencesHelper instance(Context context) {
-		if (mInstance == null) {
-			return new ProfilePreferencesHelper(context);
+	static void createInstance(Context context) {
+		if (mInstance != null) {
+			// This should not happen - should be created only once
+			return;
 		}
-		
+		mInstance = new ProfilePreferencesHelper(context);
+	}
+
+	static ProfilePreferencesHelper instance() {
 		return mInstance;
 	}
-	
+
 	boolean anyProfilesExist() {
+		if (!mCacheIsOutdated) {
+			return !mCachedNames.isEmpty();
+		}
+		
 		SQLiteDatabase db = null;
 		Cursor cursor = null;
 		boolean exist = false;
@@ -45,31 +55,11 @@ class ProfilePreferencesHelper {
 	}
 	
 	LinkedList<String> getAllProfileNamesSorted() {
-		SQLiteDatabase db = null;
-		Cursor cursor = null;
-		LinkedList<String> names = null;
-
-		try {
-			db = mDatabaseHelper.getReadableDatabase();
-			cursor = db.query(PROFILES_TABLE_NAME, PROFILE_NAME_COLUMNS,
-					null, null, null, null, Profiles.NAME + " ASC");
-			names = new LinkedList<String>();
-			while (cursor.moveToNext()) {
-				names.add(cursor.getString(PROFILE_NAME_INDEX));
-			}
-		} finally {
-			if (cursor != null) {
-				cursor.deactivate();
-				cursor.close();
-				cursor = null;
-			}
-			if (db != null) {
-				db.close();
-				db = null;
-			}
+		if (mCacheIsOutdated) {
+			loadCache();
 		}
-		
-		return names;
+
+		return mCachedNames;
 	}
 
 	String getProfielNameFromId(long profileId) {
@@ -129,6 +119,9 @@ class ProfilePreferencesHelper {
 	}
 	
 	boolean profileExists(String name) {
+		if (!mCacheIsOutdated) {
+			return mCachedNames.contains(name);
+		}
 		return getProfileIdFromName(name) != Consts.NOT_A_PROFILE_ID; 
 	}
 
@@ -136,10 +129,10 @@ class ProfilePreferencesHelper {
 		return getProfielNameFromId(profileId) != null;
 	}
 
-	
 	long createNewProfile(String name) {
 		SQLiteDatabase db = null;
 		long profileId = Consts.NOT_A_PROFILE_ID;
+		boolean success = true;
 		
 		try {
 			db = mDatabaseHelper.getWritableDatabase();
@@ -149,25 +142,39 @@ class ProfilePreferencesHelper {
 			if (profileId == -1) {
 				profileId = Consts.NOT_A_PROFILE_ID;
 			}
+		} catch (Throwable t) {
+			success = false;
 		} finally {
 			if (db != null) {
 				db.close();
 				db = null;
-			}
+			}			
 		}
-		
+
+		if (mCacheIsOutdated) {
+			// no reason to even try update the cache
+			return profileId;
+		}
+		if (!success) {
+			mCacheIsOutdated = true;
+			return profileId;
+		}
+		mCachedNames.add(name);
+		Collections.sort(mCachedNames);
 		return profileId;
 	}
 
-	void deleteProfile(String name) {
+	void deleteProfile(Context context, String name) {
 		// First get the preferences object because getPreferencesForProfile()
 		// tries to access the database and if we delete the profile name we
 		// will fail
 		SharedPreferences profilePreferences = null;
 		SQLiteDatabase db = null;
 		SharedPreferences.Editor editor = null;
+		boolean success = true;
+		
 		try {
-			profilePreferences = getPreferencesForProfile(name,
+			profilePreferences = getPreferencesForProfile(context, name,
 					Context.MODE_PRIVATE);
 			db = mDatabaseHelper.getWritableDatabase();
 			/* int numDeleted = */db.delete(PROFILES_TABLE_NAME, Profiles.NAME
@@ -176,6 +183,8 @@ class ProfilePreferencesHelper {
 			editor = profilePreferences.edit();
 			editor.clear();
 			editor.commit();
+		} catch (Throwable t) {
+			success = false;
 		} finally {
 			editor = null;
 			if (db != null) {
@@ -183,10 +192,20 @@ class ProfilePreferencesHelper {
 				db = null;
 			}
 		}
+		
+		if (mCacheIsOutdated) {
+			// no reason to even try update the cache
+			return;
+		}
+		if (!success || !mCachedNames.remove(name)) {
+			mCacheIsOutdated = true;
+		}
 	}
 
 	void renameProfile(String oldName, String newName) {
-		SQLiteDatabase db = null; 
+		SQLiteDatabase db = null;
+		boolean success = true;
+		
 		try {
 			db = mDatabaseHelper.getWritableDatabase();
 			ContentValues contentValues = new ContentValues();
@@ -194,27 +213,61 @@ class ProfilePreferencesHelper {
 			// TODO make sure only one row was affected
 			db.update(PROFILES_TABLE_NAME, contentValues, Profiles.NAME + " = '"
 					+ oldName + "'", null);
+		} catch (Throwable t) {
+			success = false;
 		} finally {
 			if (db != null) {
 				db.close();
 				db = null;
 			}
 		}
+		
+		if (mCacheIsOutdated) {
+			// no reason to even try update the cache
+			return;
+		}
+		if (!success || !mCachedNames.remove(oldName)) {
+			mCacheIsOutdated = true;
+			return;
+		}
+		mCachedNames.add(newName);
+		Collections.sort(mCachedNames);
 	}
 
 	String getPreferencesFileNameForProfile(String profileName) {
+		long profileId  = getProfileIdFromName(profileName);
+		return getPreferencesFileNameForProfileId(profileId);
+	}
+
+	String getPreferencesFileNameForProfileId(long profileId) {
+		return Consts.Prefs.Profile.PREFIX + profileId;
+	}
+
+	SharedPreferences getPreferencesForProfile(Context context, long profileId,
+			int mode) {
+		return context.getSharedPreferences(
+				getPreferencesFileNameForProfileId(profileId), mode);
+	}
+
+	static final class Profiles implements BaseColumns {
+		public static final String NAME = "name";
+	}
+
+	private boolean loadCache() {
 		SQLiteDatabase db = null;
 		Cursor cursor = null;
-		long profileIdIndex = Consts.NOT_A_PROFILE_ID;
+		boolean success = true;
+		
 		try {
 			db = mDatabaseHelper.getReadableDatabase();
-			cursor = db.query(PROFILES_TABLE_NAME, PROFILE_ID_COLUMNS,
-					Profiles.NAME + " = '" + profileName + "'", null, 
-					null, null, null, "1");
-			if (cursor.getCount() > 0) {
-				cursor.moveToNext();
-				profileIdIndex = cursor.getLong(PROFILE_ID_INDEX);
+			cursor = db.query(PROFILES_TABLE_NAME, PROFILE_NAME_COLUMNS,
+					null, null, null, null, Profiles.NAME + " ASC");
+			mCachedNames.clear();
+			while (cursor.moveToNext()) {
+				mCachedNames.add(cursor.getString(PROFILE_NAME_INDEX));
 			}
+		} catch (Throwable t) {
+			success = false;
 		} finally {
 			if (cursor != null) {
 				cursor.deactivate();
@@ -226,27 +279,17 @@ class ProfilePreferencesHelper {
 				db = null;
 			}
 		}
-
-		return getPreferencesFileNameForProfileId(profileIdIndex);
+		
+		if (success) {
+			mCacheIsOutdated = false;
+		}
+		
+		return success;
 	}
-
-	String getPreferencesFileNameForProfileId(long profileId) {
-		return Consts.Prefs.Profile.PREFIX + profileId;
-	}
-
-	SharedPreferences getPreferencesForProfile(long profileId,
-			int mode) {
-		return mContext.getSharedPreferences(
-				getPreferencesFileNameForProfileId(profileId), mode);
-	}
-
-	static final class Profiles implements BaseColumns {
-		public static final String NAME = "name";
-	}
-
-	private SharedPreferences getPreferencesForProfile(String profileName,
-			int mode) {
-		return mContext.getSharedPreferences(
+	
+	private SharedPreferences getPreferencesForProfile(Context context,
+			String profileName,	int mode) {
+		return context.getSharedPreferences(
 				getPreferencesFileNameForProfile(profileName), mode);
 	}
 
@@ -270,7 +313,7 @@ class ProfilePreferencesHelper {
 
 	private ProfilePreferencesHelper(Context context) {
 		mDatabaseHelper = new DatabaseHelper(context);
-		mContext = context;
+		// mContext = context;
 	}
 	
 	private static final String DATABASE_NAME = "dindy.db";
@@ -287,7 +330,9 @@ class ProfilePreferencesHelper {
 		"SELECT COUNT(*) FROM " + PROFILES_TABLE_NAME;
 	
 	private DatabaseHelper mDatabaseHelper;
-	private Context mContext;
+	// private Context mContext;
+	private boolean mCacheIsOutdated = true;
+	private LinkedList<String> mCachedNames = new LinkedList<String>(); 
 	
 	private static ProfilePreferencesHelper mInstance = null;
 }
