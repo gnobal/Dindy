@@ -260,15 +260,15 @@ class DindyLogic {
 			return;
 		}
 		
-		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-				"onRinging() - code should never get here");
-
 		if (mSettings.mTreatUnknownCallers.equals(
 			Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_NORMAL)) {
 			setRingerAndVibrateModes(mSettings.mUserSettings);
 			return;
 		}
 		
+		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+			"onRinging() - code should never get here");
+
 		// Should never get here, but just in case - let's behave
 		setRingerAndVibrateModes(mSettings.mFirstRingSettings);		
 	}

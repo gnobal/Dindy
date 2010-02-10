@@ -11,3 +11,5 @@
 1.0.6 Clicking the notification now shows the existing main screen instead of opening a new one
       Speed improvement for the main screen
       Use a little less memory
+1.0.7 Better app behavior
+      Even more memory and speed improvements
