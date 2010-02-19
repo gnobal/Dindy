@@ -158,8 +158,8 @@ public class ProfilesListActivity extends ListActivity {
 	}
 
 	static final String EXTRA_MODE_NAME = "mode";
-	static final int EXTRA_MODE_SELECT = 0;
-	static final int EXTRA_MODE_EDIT = 1;
+	static final int EXTRA_MODE_SELECT = 1;
+	static final int EXTRA_MODE_EDIT = 2;
 	static final String EXTRA_SELECTED_PROFILE_ID = 
 		"selected_profile_id";
 

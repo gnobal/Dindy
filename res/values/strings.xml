@@ -91,4 +91,6 @@
 <string name="default_profile_away_sms_message">Hi. This is an automated reply. I\'m away from my phone and will get back to you.</string>
 <string name="default_profile_busy_name">Busy</string>
 <string name="default_profile_busy_sms_message">Hi. This is an automated reply. I\'m busy and will get back to you.</string>
+<string name="preferences_single_profile_app_widget_name">Dindy profile</string>
+<string name="preferences_all_profiles_app_widget_name">Dindy</string>
 </resources>

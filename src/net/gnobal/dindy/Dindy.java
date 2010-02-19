@@ -44,7 +44,7 @@ public class Dindy extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		ProfilePreferencesHelper.createInstance(getApplicationContext());
+		//ProfilePreferencesHelper.createInstance(getApplicationContext());
 		mPreferencesHelper = ProfilePreferencesHelper.instance();
 		setContentView(R.layout.main);
 		ImageButton powerButton = (ImageButton)
@@ -61,32 +61,6 @@ public class Dindy extends Activity {
 		
 		SharedPreferences preferences = getSharedPreferences(
 				Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
-		if (preferences.getBoolean(Consts.Prefs.Main.KEY_FIRST_STARTUP, true)) {
-			SharedPreferences.Editor editor = preferences.edit();
-			editor.putBoolean(Consts.Prefs.Main.KEY_FIRST_STARTUP, false);
-			editor.commit();
-			createProfile(R.string.default_profile_away_name,
-					R.string.default_profile_away_sms_message, false, false,
-					false, false, Consts.INFINITE_TIME,
-					Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_FIRST);
-			createProfile(R.string.default_profile_busy_name,
-					R.string.default_profile_busy_sms_message, false, false,
-					false, false, Consts.INFINITE_TIME,
-					Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_FIRST);
-			createProfile(R.string.default_profile_car_name,
-					R.string.default_profile_car_sms_message, false, false,
-					true, false, 5,
-					Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_NORMAL);
-			createProfile(R.string.default_profile_meeting_name,
-					R.string.default_profile_meeting_sms_message, false, false,
-					false, true, 10,
-					Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_FIRST);
-			createProfile(R.string.default_profile_night_name,
-					R.string.default_profile_night_sms_message, false, false,
-					true, true, Consts.INFINITE_TIME,
-					Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_SECOND);
-		}
-		
 		if (preferences.contains(Consts.Prefs.Main.LAST_USED_PROFILE_ID)) {
 			long lastSelectedProfile = Consts.NOT_A_PROFILE_ID;
 			try {
@@ -134,8 +108,12 @@ public class Dindy extends Activity {
 	public void onResume() {
 		super.onResume();
 		if (mRefreshUI) {
-			setDynamicButtons(DindyService.isRunning());
-			mRefreshUI = false;
+			final boolean serviceRunning = DindyService.isRunning();
+			if (serviceRunning) {
+				mSelectedProfileId = DindyService.getCurrentProfileId();
+			}
+			setDynamicButtons(serviceRunning);
+			//mRefreshUI = false;
 		}
 	}
 
@@ -276,41 +254,6 @@ public class Dindy extends Activity {
 				PROFILE_MANAGE_REQUEST_CODE);
 	}
 	
-	private void createProfile(int profileNameResource, int textMessageResource, 
-			boolean firstRingPlaySound, boolean firstRingVibrate,
-			boolean secondRingPlaySound, boolean secondRingVibrate,
-			long timeBetweenCallsMinutes, String treatUnknownCallers) {
-		String profileName = getString(profileNameResource);
-		if (mPreferencesHelper.profileExists(profileName)) {
-			return;
-		}
-		long newProfileId = mPreferencesHelper.createNewProfile(
-				profileName);
-		if (newProfileId == Consts.NOT_A_PROFILE_ID) {
-			return;
-		}
-		SharedPreferences newProfilePrefs =
-			mPreferencesHelper.getPreferencesForProfile(this, newProfileId,
-					MODE_PRIVATE);
-		SharedPreferences.Editor editor = newProfilePrefs.edit();
-		editor.putBoolean(Consts.Prefs.Profile.KEY_ENABLE_SMS, true);
-		editor.putString(Consts.Prefs.Profile.KEY_SMS_MESSAGE,
-				getString(textMessageResource));
-		editor.putBoolean(Consts.Prefs.Profile.KEY_FIRST_RING_SOUND,
-				firstRingPlaySound);
-		editor.putBoolean(Consts.Prefs.Profile.KEY_FIRST_RING_VIBRATE,
-				firstRingVibrate);
-		editor.putBoolean(Consts.Prefs.Profile.KEY_SECOND_RING_SOUND,
-				secondRingPlaySound);
-		editor.putBoolean(Consts.Prefs.Profile.KEY_SECOND_RING_VIBRATE,
-				secondRingVibrate);
-		editor.putString(Consts.Prefs.Profile.KEY_TIME_BETWEEN_CALLS_MINUTES,
-				Long.toString(timeBetweenCallsMinutes));
-		editor.putString(Consts.Prefs.Profile.KEY_TREAT_UNKNOWN_CALLERS,
-				treatUnknownCallers);
-		editor.commit();
-	}
-	
 	private void setFirstAvailableProfile() {
 		LinkedList<String> allProfiles = 
 			mPreferencesHelper.getAllProfileNamesSorted();
@@ -342,6 +285,10 @@ public class Dindy extends Activity {
 		// us whether there are profile to choose from or not
 		//selectProfileButton.setEnabled(mPreferencesHelper.anyProfilesExist());
 		//selectProfileButton.setEnabled(true);
+		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+			"profile ID=" + mSelectedProfileId + ", name=" +
+			mPreferencesHelper.getProfielNameFromId(mSelectedProfileId));
+
 		if (isDindyServiceRunning) {
 			startStopTextView.setText(getString(R.string.main_stop));
 
@@ -355,7 +302,7 @@ public class Dindy extends Activity {
 				profileNameView.setText(Consts.EMPTY_STRING);
 			}
 			powerButton.setEnabled(true);
-			powerButton.setImageResource(R.drawable.power_button_off);
+			powerButton.setImageResource(R.drawable.power_button_selector_off);
 		} else {
 			if (mSelectedProfileId != Consts.NOT_A_PROFILE_ID) {
 				startStopTextView.setText(getString(R.string.main_start));
@@ -365,7 +312,7 @@ public class Dindy extends Activity {
 						mPreferencesHelper.getProfielNameFromId(
 								mSelectedProfileId));
 				powerButton.setEnabled(true);
-				powerButton.setImageResource(R.drawable.power_button_on);
+				powerButton.setImageResource(R.drawable.power_button_selector_on);
 			} else {
 				startStopTextView.setText(R.string.main_no_available_profile);
 				profileTextView.setText(Consts.EMPTY_STRING);
@@ -396,15 +343,6 @@ public class Dindy extends Activity {
 	};
 
 	private void startDindyServiceWithSelectedProfileId() {
-		// Remember last profile we started with
-		SharedPreferences preferences = getSharedPreferences(
-				Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
-		SharedPreferences.Editor editor = preferences.edit();
-		editor.putLong(Consts.Prefs.Main.LAST_USED_PROFILE_ID,
-				mSelectedProfileId);
-		editor.commit();
-		editor = null;
-		preferences = null;
 		Intent serviceIntent = new Intent(getApplicationContext(),
 				DindyService.class);
 		serviceIntent.putExtra(DindyService.EXTRA_PROFILE_ID,
