@@ -1,5 +1,7 @@
 package net.gnobal.dindy;
 
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -192,6 +194,15 @@ class ProfilePreferencesHelper {
 				db = null;
 			}
 		}
+		
+		// Update all widgets
+		AppWidgetManager appWidgetMgr = AppWidgetManager.getInstance(context);
+		int[] appWidgetIds = appWidgetMgr.getAppWidgetIds(
+				new ComponentName(context,
+						DindySingleProfileAppWidgetProvider.class));
+		DindySingleProfileAppWidgetProvider.updateAllSingleProfileWidgets(
+				context, appWidgetMgr, appWidgetIds,
+				DindyService.getCurrentProfileId(), Consts.NOT_A_PROFILE_ID);
 		
 		if (mCacheIsOutdated) {
 			// no reason to even try update the cache
