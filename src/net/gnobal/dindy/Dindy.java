@@ -110,9 +110,16 @@ public class Dindy extends Activity {
 		super.onResume();
 		if (mRefreshUI) {
 			final boolean serviceRunning = DindyService.isRunning();
-			if (serviceRunning) {
-				mSelectedProfileId = DindyService.getCurrentProfileId();
+			if (mPendingStartServiceRequest) {
+				// Just turn it off for next time. We'll use mSelectedProfileId
+				// that the user selected
+				mPendingStartServiceRequest = false;				
+			} else {
+				if (serviceRunning) {
+					mSelectedProfileId = DindyService.getCurrentProfileId();	
+				}
 			}
+			
 			setDynamicButtons(serviceRunning);
 			//mRefreshUI = false;
 		}
@@ -248,6 +255,7 @@ public class Dindy extends Activity {
 				dindyServiceIsRunning) {
 				// Make the service use the new profile
 				startDindyServiceWithSelectedProfileId();
+				mPendingStartServiceRequest = true;
 			}
 		}
 	}
@@ -381,6 +389,10 @@ public class Dindy extends Activity {
 	private ProfilePreferencesHelper mPreferencesHelper = null;
 	private long mSelectedProfileId = Consts.NOT_A_PROFILE_ID;
 	private boolean mRefreshUI = true;
+	// We use this indicator to know whether to rely on what 
+	// DindyService.getCurrentProfileId() returns or on our own 
+	// mSelectedProfileId (see onResume()) 
+	private boolean mPendingStartServiceRequest = false;
 	private static final int PROFILE_SELECT_REQUEST_CODE = 1;
 	private static final int PROFILE_MANAGE_REQUEST_CODE = 2;
 	private static final int DIALOG_STARTUP_MESSAGE = 0;
