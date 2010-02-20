@@ -76,7 +76,7 @@ public class DindySingleProfileAppWidgetProvider extends AppWidgetProvider {
     		}
     		if (widgetSettings.mWidgetType == Consts.Prefs.Widget.Type.SINGLE_PROFILE) {
     			updateOneSingleProfileWidget(context, appWidgetManager, packageName,
-    					widgetSettings, appWidgetIds[i],
+    					prefsHelper, widgetSettings, appWidgetIds[i],
     					activeProfileId, previousProfileId);
     		}
     	}
@@ -84,53 +84,82 @@ public class DindySingleProfileAppWidgetProvider extends AppWidgetProvider {
 
 	static void updateOneSingleProfileWidget(Context context,
     		AppWidgetManager appWidgetManager, String packageName, 
+    		ProfilePreferencesHelper prefsHelper,
     		DindySettings.WidgetSettings widgetSettings, int widgetId,
     		long activeProfileId, long previousProfileId) {
     	RemoteViews views = null;
-    	Intent serviceIntent = null;
+    	Intent intent = null;
     	PendingIntent pendingIntent = null;
-    	// NOTE: the order of this if-else clause matters! When called from the
-    	// DindySingleProfileAppWidgetConfigure class
-    	// widgetSettings.mProfileId == previousProfileId is always (!) true, 
-    	// but if widgetSettings.mProfileId == activeProfileId is true then we 
-    	// want the if branch to happen (not the else branch)
+    	boolean profileExists = true;
+    	// NOTE: the order of this if-else clause matters:
+    	// First, we want to check whether the widget's profile ID is the active
+    	// one. If it is, we draw an active widget
+    	// Second, we check whether the profile ID even exists. If it doesn't,
+    	// we disable the widget entirely
+    	// Third, if it's not currently running, we draw an inactive widget 
+    	// that can be clicked.
+    	//
+    	// When called from the DindySingleProfileAppWidgetConfigure class
+    	// widgetSettings.mProfileId == previousProfileId is always (!) true
     	if (widgetSettings.mProfileId == activeProfileId) {
     		views = new RemoteViews(packageName,
     				R.layout.single_profile_appwidget);
     		views.setImageViewResource(R.id.single_profile_app_widget_image_button,
     				R.drawable.app_widget_button_selector_off);
-    		serviceIntent = new Intent(DindyService.ACTION_STOP_DINDY_SERVICE);
+    		intent = new Intent(DindyService.ACTION_STOP_DINDY_SERVICE);
     		pendingIntent = PendingIntent.getBroadcast(context, 0,
-    				serviceIntent, 0);
+    				intent, 0);
+    	} else if (!(profileExists = prefsHelper.profileExists(widgetSettings.mProfileId))) {
+    		views = new RemoteViews(packageName,
+    				R.layout.single_profile_appwidget);
+    		views.setImageViewResource(
+    				R.id.single_profile_app_widget_image_button,
+    				R.drawable.app_widget_power_button_disabled);
+    		// Doesn't work. Only methods with the annotation 
+    		// RemotableViewMethod work
+    		//views.setBoolean(R.id.single_profile_app_widget, "setEnabled",
+    		//		false);
+    		
+    		// Prepare an activity intent even though we're disabling the 
+    		// widget. This is required so that the test for 
+    		// (pendingIntent != null) later won't fail
+    		pendingIntent = Dindy.getPendingIntent(context);
     	} else if (widgetSettings.mProfileId == previousProfileId ||
     			   Consts.NOT_A_PROFILE_ID == previousProfileId) {
     		views = new RemoteViews(packageName,
     				R.layout.single_profile_appwidget);
     		views.setImageViewResource(R.id.single_profile_app_widget_image_button,
     				R.drawable.app_widget_button_selector_on);
-            serviceIntent = new Intent(context, DindyService.class);
-    		serviceIntent.putExtra(DindyService.EXTRA_PROFILE_ID,
+            intent = new Intent(context, DindyService.class);
+    		intent.putExtra(DindyService.EXTRA_PROFILE_ID,
     				widgetSettings.mProfileId);
     		// See:
     		// http://www.developer.com/ws/article.php/3837531/Handling-User-Interaction-with-Android-App-Widgets.htm
-    		serviceIntent.setData(
+    		intent.setData(
     				Uri.withAppendedPath(Uri.parse("dindy://profile/id/"),
     				String.valueOf(widgetSettings.mProfileId)));
         	pendingIntent = PendingIntent.getService(context, 0, 
-            		serviceIntent, 0);
+            		intent, 0);
     	} else {
     		return;
     	}
     	
     	if (pendingIntent != null) {
-        	String profileName = ProfilePreferencesHelper.instance().getProfielNameFromId(
-        			widgetSettings.mProfileId);
-        	views.setTextViewText(R.id.single_profile_app_widget_text,
-        			profileName);
+    		String profileName = null;
+    		if (profileExists) {
+    			profileName = ProfilePreferencesHelper.instance().getProfielNameFromId(
+    					widgetSettings.mProfileId);
+    		} else {
+    			profileName = context.getString(
+    					R.string.app_widget_profile_deleted);
+        	}
+    		views.setTextViewText(R.id.single_profile_app_widget_text,
+    				profileName);
+    		views.setOnClickPendingIntent(R.id.single_profile_app_widget,
+    				pendingIntent);
     		views.setOnClickPendingIntent(
     				R.id.single_profile_app_widget_image_button,
     				pendingIntent);
-
     		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
     				"updating widget with profile " + profileName);
     		appWidgetManager.updateAppWidget(widgetId, views);

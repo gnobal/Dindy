@@ -65,7 +65,7 @@ public class DindySingleProfileAppWidgetConfigure extends Activity {
 				getApplicationContext());
 		DindySingleProfileAppWidgetProvider.updateOneSingleProfileWidget(
 				getApplicationContext(), appWidgetManager,
-				getPackageName(), widgetSettings, mAppWidgetId,
+				getPackageName(), prefs, widgetSettings, mAppWidgetId,
 				DindyService.getCurrentProfileId(), widgetSettings.mProfileId);
 		Intent resultValue = new Intent();
 		resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);

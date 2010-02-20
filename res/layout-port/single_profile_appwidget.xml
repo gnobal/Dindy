@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout android:id="@+id/LinearLayout01" xmlns:android="http://schemas.android.com/apk/res/android" 
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" 
 	android:orientation="vertical" 
 	android:layout_height="98dp" 
 	android:layout_width="78dp" 
-	android:gravity="center">
+	android:gravity="center" android:id="@+id/single_profile_app_widget">
 	<ImageButton android:id="@+id/single_profile_app_widget_image_button" 
 		android:clickable="true" 
 		android:background="#00000000" 

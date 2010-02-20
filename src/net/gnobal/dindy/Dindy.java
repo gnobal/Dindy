@@ -3,6 +3,7 @@ package net.gnobal.dindy;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -117,6 +118,15 @@ public class Dindy extends Activity {
 		}
 	}
 
+	static PendingIntent getPendingIntent(Context context) {
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0,
+				new Intent(context, Dindy.class)
+					.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+							| Intent.FLAG_ACTIVITY_CLEAR_TOP)
+					.setAction(Intent.ACTION_MAIN), 0);
+		return pendingIntent;
+	}
+	
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);

@@ -26,17 +26,18 @@ public final class R {
     public static final class drawable {
         public static final int app_widget_button_selector_off=0x7f020000;
         public static final int app_widget_button_selector_on=0x7f020001;
-        public static final int app_widget_power_button_off=0x7f020002;
-        public static final int app_widget_power_button_on=0x7f020003;
-        public static final int app_widget_power_button_pressed=0x7f020004;
-        public static final int icon=0x7f020005;
-        public static final int notification_icon=0x7f020006;
-        public static final int power_button_disabled=0x7f020007;
-        public static final int power_button_off=0x7f020008;
-        public static final int power_button_on=0x7f020009;
-        public static final int power_button_pressed=0x7f02000a;
-        public static final int power_button_selector_off=0x7f02000b;
-        public static final int power_button_selector_on=0x7f02000c;
+        public static final int app_widget_power_button_disabled=0x7f020002;
+        public static final int app_widget_power_button_off=0x7f020003;
+        public static final int app_widget_power_button_on=0x7f020004;
+        public static final int app_widget_power_button_pressed=0x7f020005;
+        public static final int icon=0x7f020006;
+        public static final int notification_icon=0x7f020007;
+        public static final int power_button_disabled=0x7f020008;
+        public static final int power_button_off=0x7f020009;
+        public static final int power_button_on=0x7f02000a;
+        public static final int power_button_pressed=0x7f02000b;
+        public static final int power_button_selector_off=0x7f02000c;
+        public static final int power_button_selector_on=0x7f02000d;
     }
     public static final class id {
         public static final int LinearLayout01=0x7f070001;
@@ -54,22 +55,23 @@ public final class R {
         public static final int main_profile_text=0x7f070006;
         public static final int main_start_stop_text=0x7f070005;
         public static final int profile_select_button=0x7f07000a;
-        public static final int single_profile_app_widget_image_button=0x7f07000f;
-        public static final int single_profile_app_widget_text=0x7f070010;
-        public static final int startup_message_dialog_checkbox=0x7f070013;
-        public static final int startup_message_dialog_scroller=0x7f070011;
-        public static final int startup_message_dialog_text=0x7f070012;
+        public static final int single_profile_app_widget=0x7f07000f;
+        public static final int single_profile_app_widget_image_button=0x7f070010;
+        public static final int single_profile_app_widget_text=0x7f070011;
+        public static final int startup_message_dialog_checkbox=0x7f070014;
+        public static final int startup_message_dialog_scroller=0x7f070012;
+        public static final int startup_message_dialog_text=0x7f070013;
     }
     public static final class layout {
         public static final int help_dialog=0x7f030000;
         public static final int main=0x7f030001;
         public static final int profile_name_dialog=0x7f030002;
         public static final int single_profile_appwidget=0x7f030003;
-        public static final int single_profile_appwidget_configure=0x7f030004;
-        public static final int startup_message_dialog=0x7f030005;
+        public static final int startup_message_dialog=0x7f030004;
     }
     public static final class string {
         public static final int app_name=0x7f060000;
+        public static final int app_widget_profile_deleted=0x7f06004b;
         public static final int default_profile_away_name=0x7f060045;
         public static final int default_profile_away_sms_message=0x7f060046;
         public static final int default_profile_busy_name=0x7f060047;

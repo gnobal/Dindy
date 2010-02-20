@@ -77,6 +77,14 @@ public class DindyService extends Service {
 			// Whoever started the service gave us a profile ID to use so we use
 			// it blindly
 			mCurrentProfileId = extras.getLong(EXTRA_PROFILE_ID);
+			if (!mPreferencesHelper.profileExists(mCurrentProfileId)) {
+				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
+					"profile ID " + mCurrentProfileId + " doesn't exist");
+				if (firstStart) {
+					stopSelf();
+					return;
+				}
+			}
 			if (previousProfileId != mCurrentProfileId) {
 				AppWidgetManager appWidgetMgr = 
 					AppWidgetManager.getInstance(getApplicationContext());
@@ -198,12 +206,8 @@ public class DindyService extends Service {
 
 		// The PendingIntent to launch our activity if the user selects this
 		// notification
-		PendingIntent contentIntent = PendingIntent.getActivity(
-				getApplicationContext(), 0,
-				new Intent(getApplicationContext(), Dindy.class)
-					.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-							| Intent.FLAG_ACTIVITY_CLEAR_TOP)
-					.setAction(Intent.ACTION_MAIN), 0);
+		PendingIntent contentIntent =
+			Dindy.getPendingIntent(getApplicationContext());
 		
 		// Set the info for the views that show in the notification panel.
 		notification.setLatestEventInfo(getApplicationContext(),
