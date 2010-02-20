@@ -157,11 +157,9 @@ public class ProfilesListActivity extends ListActivity {
 		return super.onContextItemSelected(item);
 	}
 
-	static final String EXTRA_MODE_NAME = "mode";
-	static final int EXTRA_MODE_SELECT = 0;
-	static final int EXTRA_MODE_EDIT = 1;
-	static final String EXTRA_SELECTED_PROFILE_ID = 
-		"selected_profile_id";
+	public static final String EXTRA_MODE_NAME = "mode";
+	public static final int EXTRA_MODE_SELECT = 0;
+	public static final int EXTRA_MODE_EDIT = 1;
 
 	@Override
 	protected void onPrepareDialog(int id, Dialog dialog) {
@@ -222,7 +220,7 @@ public class ProfilesListActivity extends ListActivity {
 
 	private void finishWithSelectedProfile(String profileName) {
 		setResult(RESULT_OK, new Intent().putExtra(
-				EXTRA_SELECTED_PROFILE_ID,
+				Consts.EXTRA_SELECTED_PROFILE_ID,
 				mPreferencesHelper.getProfileIdFromName(profileName)));
 		finish();
 	}

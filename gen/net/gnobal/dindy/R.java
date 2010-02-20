@@ -77,6 +77,7 @@ public final class R {
         public static final int help_dialog_ok_text=0x7f050040;
         public static final int help_dialog_text=0x7f05003f;
         public static final int help_dialog_title=0x7f050041;
+        public static final int locale_plugin_name=0x7f050049;
         public static final int main_button_add_new_profile=0x7f050025;
         public static final int main_button_select_profile=0x7f050023;
         public static final int main_help_button_text=0x7f05003e;

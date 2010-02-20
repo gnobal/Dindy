@@ -1,6 +1,6 @@
 package net.gnobal.dindy;
 
-class Consts {
+public class Consts {
 
 	class IncomingCallState
 	{
@@ -72,10 +72,12 @@ class Consts {
 		}
 	}
 	
-	static final long NOT_A_PROFILE_ID = -1;
+	public static final long NOT_A_PROFILE_ID = -1;
 	static final long INFINITE_TIME = -1;
 	static final long MILLIS_IN_MINUTE = 60000;
 	static final String LOGTAG = "Dindy";
-	static final boolean DEBUG = false;
+	static final boolean DEBUG = true;
 	static final String EMPTY_STRING = "";
+	public static final String EXTRA_SELECTED_PROFILE_ID = 
+		"selected_profile_id";
 }

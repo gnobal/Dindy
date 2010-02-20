@@ -255,7 +255,7 @@ public class Dindy extends Activity {
 		if (requestCode == PROFILE_SELECT_REQUEST_CODE) {
 			final long previousProfile = mSelectedProfileId; 
 			mSelectedProfileId = data.getExtras().getLong(
-					ProfilesListActivity.EXTRA_SELECTED_PROFILE_ID);
+					Consts.EXTRA_SELECTED_PROFILE_ID);
 			if (mSelectedProfileId != previousProfile &&
 				dindyServiceIsRunning) {
 				// Make the service use the new profile

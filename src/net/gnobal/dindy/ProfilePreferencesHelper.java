@@ -11,7 +11,7 @@ import android.provider.BaseColumns;
 import java.util.Collections;
 import java.util.LinkedList;
 
-class ProfilePreferencesHelper {
+public class ProfilePreferencesHelper {
 	static void createInstance(Context context) {
 		if (mInstance != null) {
 			// This should not happen - should be created only once
@@ -20,7 +20,7 @@ class ProfilePreferencesHelper {
 		mInstance = new ProfilePreferencesHelper(context);
 	}
 
-	static ProfilePreferencesHelper instance() {
+	public static ProfilePreferencesHelper instance() {
 		return mInstance;
 	}
 
@@ -62,7 +62,7 @@ class ProfilePreferencesHelper {
 		return mCachedNames;
 	}
 
-	String getProfielNameFromId(long profileId) {
+	public String getProfielNameFromId(long profileId) {
 		SQLiteDatabase db = null;
 		Cursor cursor = null;
 		String name = null;
