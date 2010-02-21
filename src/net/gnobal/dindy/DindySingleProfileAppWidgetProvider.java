@@ -3,6 +3,7 @@ package net.gnobal.dindy;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -22,8 +23,8 @@ public class DindySingleProfileAppWidgetProvider extends AppWidgetProvider {
 			Log.d(Consts.LOGTAG, "onUpdate: " + ids);
 		}
 
-		updateAllSingleProfileWidgets(context, appWidgetManager, appWidgetIds,
-				Consts.NOT_A_PROFILE_ID, Consts.NOT_A_PROFILE_ID);
+		updateAllSingleProfileWidgets(context, Consts.NOT_A_PROFILE_ID, 
+				Consts.NOT_A_PROFILE_ID);
     }
     
     @Override
@@ -58,8 +59,13 @@ public class DindySingleProfileAppWidgetProvider extends AppWidgetProvider {
 	}
 
 	static void updateAllSingleProfileWidgets(Context context,
-			AppWidgetManager appWidgetManager, int[] appWidgetIds,
 			long activeProfileId, long previousProfileId) {
+		AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(
+				context);
+		int[] appWidgetIds = appWidgetManager.getAppWidgetIds(
+				new ComponentName(context,
+						DindySingleProfileAppWidgetProvider.class));
+		
     	SharedPreferences widgetPrefs = context.getSharedPreferences(
     			Consts.Prefs.Widget.NAME, Context.MODE_PRIVATE);
     	ProfilePreferencesHelper prefsHelper = 

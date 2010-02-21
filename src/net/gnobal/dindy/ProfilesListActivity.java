@@ -146,6 +146,9 @@ public class ProfilesListActivity extends ListActivity {
 			String profileToRemove = mArrayAdapter.getItem(mCurrentSelection);
 			mPreferencesHelper.deleteProfile(this, profileToRemove);
 			mArrayAdapter.remove(profileToRemove);
+			DindySingleProfileAppWidgetProvider.updateAllSingleProfileWidgets(
+					getApplicationContext(), DindyService.getCurrentProfileId(),
+					Consts.NOT_A_PROFILE_ID);
 			return true;
 		} else if (selectedItemId == mContextMenuIndexEdit) {
 			String profileToEdit = mArrayAdapter.getItem(mCurrentSelection);
@@ -249,6 +252,9 @@ public class ProfilesListActivity extends ListActivity {
 	
 		public void onSuccess(String newProfileName, long newProfileId) {
 			mParent.fillList();
+			DindySingleProfileAppWidgetProvider.updateAllSingleProfileWidgets(
+					getApplicationContext(), DindyService.getCurrentProfileId(),
+					Consts.NOT_A_PROFILE_ID);
 		}
 		
 		public Activity getOwnerActivity() {

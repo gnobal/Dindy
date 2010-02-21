@@ -4,9 +4,7 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.appwidget.AppWidgetManager;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -86,14 +84,9 @@ public class DindyService extends Service {
 				}
 			}
 			if (previousProfileId != mCurrentProfileId) {
-				AppWidgetManager appWidgetMgr = 
-					AppWidgetManager.getInstance(getApplicationContext());
-				int[] appWidgetIds = appWidgetMgr.getAppWidgetIds(
-						new ComponentName(getApplicationContext(),
-								DindySingleProfileAppWidgetProvider.class));
 				DindySingleProfileAppWidgetProvider.updateAllSingleProfileWidgets(
-						getApplicationContext(), appWidgetMgr, appWidgetIds,
-						mCurrentProfileId, previousProfileId);
+						getApplicationContext(), mCurrentProfileId,
+						previousProfileId);
 			}
 			refreshSettings(mCurrentProfileId, firstStart);
 			saveLastUsedProfileId();
@@ -122,14 +115,9 @@ public class DindyService extends Service {
 		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
 				"stopping profile " + mCurrentProfileId);
 
-		AppWidgetManager appWidgetMgr = 
-			AppWidgetManager.getInstance(getApplicationContext());
-		int[] appWidgetIds = appWidgetMgr.getAppWidgetIds(
-				new ComponentName(getApplicationContext(),
-						DindySingleProfileAppWidgetProvider.class));
 		DindySingleProfileAppWidgetProvider.updateAllSingleProfileWidgets(
-				getApplicationContext(), appWidgetMgr, appWidgetIds,
-				Consts.NOT_A_PROFILE_ID, mCurrentProfileId);
+				getApplicationContext(), Consts.NOT_A_PROFILE_ID,
+				mCurrentProfileId);
 
 		// Stop listening to call state change events
 		unregisterReceiver(mBroadcastReceiver);
