@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="net.gnobal.dindy"
       android:versionName="1.0.8" android:versionCode="9">
-    <application android:icon="@drawable/icon" android:label="@string/app_name" android:debuggable="true" android:name=".DindyApplication">
+    <application android:icon="@drawable/icon" android:label="@string/app_name" android:name=".DindyApplication" android:debuggable="false">
         <activity android:label="@string/app_name" android:name=".Dindy">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
