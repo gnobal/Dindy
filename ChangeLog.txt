@@ -13,3 +13,5 @@
       Use a little less memory
 1.0.7 Better app behavior
       Even more memory and speed improvements
+1.0.8 Introducing single profile widgets
+
