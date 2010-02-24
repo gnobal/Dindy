@@ -1,36 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
-    <string name="app_name">Dindy</string>
-
+<string name="app_name">Dindy</string>
 <string name="dindy_service_started">Dindy is running</string>
 <string name="dindy_service_label">Dindy</string>
-
-
-
 <string name="preferences_profile_editor">Dindy profile editor</string>
 <string name="preferences_new_profile">New profile</string>
 <string name="preferences_new_profile_summary">Add a new profile</string>
 <string name="preferences_main">Dindy Preferences</string>
-
 <string name="preferences_profile_first_ring">First call notification</string>
 <string name="preferences_profile_first_ring_sound">Play ringtone</string>
 <string name="preferences_profile_first_ring_vibrate">Vibrate</string>
 <string name="preferences_profile_first_ring_flash">Flash screen</string>
 <string name="preferences_name">Dindy Preferences</string>
 <string name="preferences_profiles_list_summary">Add, remove and edit profiles</string>
-
-
-
-
-
-
 <string name="preferences_profile_second_ring">Second call notification</string>
 <string name="preferences_profile_second_ring_sound">Play ringtone</string>
 <string name="preferences_profile_second_ring_vibrate">Vibrate</string>
 <string name="preferences_profile_second_ring_flash">Flash screen</string>
 <string name="preferences_profiles_list">Dindy profiles manager</string>
-
 <string name="preferences_profiles_list_context_menu_edit">Edit</string>
 <string name="preferences_profiles_list_context_menu_rename">Rename</string>
 <string name="preferences_profiles_list_context_menu_delete">Delete</string>
@@ -41,13 +28,10 @@
 <string name="preferences_profiles_list_context_menu_select">Select</string>
 <string name="preferences_profiles_list_menu_new">New profile</string>
 <string name="preferences_profile_sms_message">SMS message</string>
-
 <string name="preferences_profile_sms_message_default_unset_value">Hi. This is an automated message. I\'m occupied. Call again in the next 5 minutes if it\'s urgent.</string>
 <string name="main_start">Start</string>
 <string name="main_stop">Stop</string>
 <string name="main_preferences">Preferences</string>
-
-
 <string name="preferences_profile_menu_rename">Rename</string>
 <string name="preferences_profile_menu_delete">Delete</string>
 <string name="preferences_profile_menu_done">Done</string>
@@ -62,7 +46,6 @@
 <string name="preferences_profile_time_between_calls_title">Time between calls</string>
 <string name="preferences_profile_time_between_calls_summary">Time period between first and second call</string>
 <string name="preferences_profile_call_settings">General settings</string>
-
 <string name="preferences_profiles_list_no_profiles_text">No profiles are currently defined.&lt;br/&gt;&lt;br/&gt;To create a new profile, press &lt;font color=&quot;white&quot;&gt;&lt;b&gt;Menu&lt;/b&gt;&lt;/font&gt; and select &lt;font color=&quot;white&quot;&gt;&lt;b&gt;New profile&lt;/b&gt;&lt;/font&gt;.</string>
 <string name="preferences_profile_unknown_caller_behavior_dialog_title">Notify as</string>
 <string name="preferences_profile_unknown_caller_behavior_title">Unknown caller notification</string>
@@ -84,7 +67,6 @@
 <string name="help_dialog_ok_text">OK</string>
 <string name="help_dialog_title">Help/About</string>
 <string name="preferences_profiles_list_item_new">Add new profile...</string>
-
 <string name="main_profile">profile</string>
 <string name="main_menu_preferences">Manage profiles</string>
 <string name="default_profile_away_name">Away</string>
@@ -92,4 +74,8 @@
 <string name="default_profile_busy_name">Busy</string>
 <string name="default_profile_busy_sms_message">Hi. This is an automated reply. I\'m busy and will get back to you.</string>
 <string name="locale_plugin_name">Dindy</string>
+<string name="preferences_single_profile_app_widget_name">Dindy profile</string>
+<string name="preferences_all_profiles_app_widget_name">Dindy</string>
+<string name="app_widget_profile_deleted">DELETED</string>
 </resources>
+

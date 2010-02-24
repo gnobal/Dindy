@@ -234,6 +234,69 @@ public class ProfilePreferencesHelper {
 		Collections.sort(mCachedNames);
 	}
 
+	DindySettings.WidgetSettings getWidgetSettings(
+			SharedPreferences widgetPreferences, int widgetId) {
+		DindySettings.WidgetSettings settings = 
+			new DindySettings.WidgetSettings();
+		
+		// See:
+		// http://blog.elsdoerfer.name/2009/06/03/writing-an-android-widget-what-the-docs-dont-tell-you/
+		settings.mWidgetType = widgetPreferences.getInt(
+				getWidgetPrefKey(widgetId, Consts.Prefs.Widget.KEY_TYPE),
+				Consts.Prefs.Widget.Type.INVALID);
+		if (settings.mWidgetType == Consts.Prefs.Widget.Type.INVALID) {
+			return null;
+		}
+		settings.mProfileId = widgetPreferences.getLong(
+				getWidgetPrefKey(widgetId, Consts.Prefs.Widget.KEY_PROFILE_ID),
+				Consts.NOT_A_PROFILE_ID);
+		if (settings.mProfileId == Consts.NOT_A_PROFILE_ID) {
+			return null;
+		}
+		
+		return settings;
+	}
+	
+	void setWidgetSettings(SharedPreferences widgetPreferences, int widgetId,
+			DindySettings.WidgetSettings settings) {
+		SharedPreferences.Editor editor = null;
+		try {
+			editor = widgetPreferences.edit();
+			
+			editor.putInt(
+					getWidgetPrefKey(widgetId, Consts.Prefs.Widget.KEY_TYPE),
+					settings.mWidgetType);
+			editor.putLong(
+					getWidgetPrefKey(widgetId, Consts.Prefs.Widget.KEY_PROFILE_ID),
+					settings.mProfileId);
+
+			editor.commit();
+		} finally {
+			editor = null;
+		}
+	}
+	
+	void deleteWidgetSettings(SharedPreferences widgetPreferences,
+			int widgetId) {
+		SharedPreferences.Editor editor = null;
+		try {
+			editor = widgetPreferences.edit();
+			
+			editor.remove(getWidgetPrefKey(widgetId,
+					Consts.Prefs.Widget.KEY_TYPE));
+			editor.remove(getWidgetPrefKey(widgetId,
+					Consts.Prefs.Widget.KEY_PROFILE_ID));
+
+			editor.commit();
+		} finally {
+			editor = null;
+		}
+	}
+
+	String getWidgetPrefKey(int widgetId, String key) {
+		return widgetId + key;
+	}
+	
 	String getPreferencesFileNameForProfile(String profileName) {
 		long profileId  = getProfileIdFromName(profileName);
 		return getPreferencesFileNameForProfileId(profileId);
