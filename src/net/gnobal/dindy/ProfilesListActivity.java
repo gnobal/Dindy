@@ -146,6 +146,9 @@ public class ProfilesListActivity extends ListActivity {
 			String profileToRemove = mArrayAdapter.getItem(mCurrentSelection);
 			mPreferencesHelper.deleteProfile(this, profileToRemove);
 			mArrayAdapter.remove(profileToRemove);
+			DindySingleProfileAppWidgetProvider.updateAllSingleProfileWidgets(
+					getApplicationContext(), DindyService.getCurrentProfileId(),
+					Consts.NOT_A_PROFILE_ID);
 			return true;
 		} else if (selectedItemId == mContextMenuIndexEdit) {
 			String profileToEdit = mArrayAdapter.getItem(mCurrentSelection);
@@ -158,8 +161,8 @@ public class ProfilesListActivity extends ListActivity {
 	}
 
 	static final String EXTRA_MODE_NAME = "mode";
-	static final int EXTRA_MODE_SELECT = 0;
-	static final int EXTRA_MODE_EDIT = 1;
+	static final int EXTRA_MODE_SELECT = 1;
+	static final int EXTRA_MODE_EDIT = 2;
 	static final String EXTRA_SELECTED_PROFILE_ID = 
 		"selected_profile_id";
 
@@ -249,6 +252,9 @@ public class ProfilesListActivity extends ListActivity {
 	
 		public void onSuccess(String newProfileName, long newProfileId) {
 			mParent.fillList();
+			DindySingleProfileAppWidgetProvider.updateAllSingleProfileWidgets(
+					getApplicationContext(), DindyService.getCurrentProfileId(),
+					Consts.NOT_A_PROFILE_ID);
 		}
 		
 		public Activity getOwnerActivity() {

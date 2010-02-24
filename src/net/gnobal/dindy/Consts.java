@@ -19,13 +19,24 @@ class Consts {
 		{
 			static final String NAME = "main_preferences";
 			static final String LAST_USED_PROFILE_ID = "last_profile_id";
-			//static final String LAST_USED_PROFILE_ID_LONG =
-			//	"last_profile_id_long";
-			
-			static final String KEY_PROFILES = "profiles";
 			static final String KEY_FIRST_STARTUP = "first_startup";
 			static final String KEY_SHOW_STARTUP_MESSAGE =
 				"show_startup_message";
+		}
+		
+		class Widget
+		{
+			static final String NAME = "widget_preferences";
+			static final String KEY_TYPE = "_type";
+			static final String KEY_PROFILE_ID = "_profile";
+			
+			class Type
+			{
+			    // Never change these values - they're kept in preferences
+			    final static int INVALID = -1;
+			    final static int SINGLE_PROFILE = 1;
+			    final static int ALL_PROFILES = 2;
+			}
 		}
 		
 		class Profile
@@ -71,7 +82,14 @@ class Consts {
 
 		}
 	}
-	
+	/*
+	class Action
+	{
+		static final String PROFILE_STARTED =
+			"net.gnobal.dindy.action.PROFILE_STARTED";
+		static final String PROFILE_STOPPED =
+			"net.gnobal.dindy.action.PROFILE_STARTED";
+	}*/
 	static final long NOT_A_PROFILE_ID = -1;
 	static final long INFINITE_TIME = -1;
 	static final long MILLIS_IN_MINUTE = 60000;

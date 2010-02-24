@@ -47,6 +47,7 @@ public class DindyService extends Service {
 		mCallLogCursor.registerContentObserver(mCallLogObserver);
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(Intent.ACTION_NEW_OUTGOING_CALL);
+		filter.addAction(ACTION_STOP_DINDY_SERVICE);
 		//filter.addAction(AudioManager.RINGER_MODE_CHANGED_ACTION);
 		//filter.addAction(AudioManager.VIBRATE_SETTING_CHANGED_ACTION);
 		registerReceiver(mBroadcastReceiver, filter);
@@ -66,6 +67,7 @@ public class DindyService extends Service {
 		super.onStart(intent, startId);
 
 		mIsRunning = true;
+		final long previousProfileId = mCurrentProfileId;
 		final boolean firstStart = 
 			(mCurrentProfileId == Consts.NOT_A_PROFILE_ID);
 		Bundle extras = intent.getExtras();
@@ -73,12 +75,28 @@ public class DindyService extends Service {
 			// Whoever started the service gave us a profile ID to use so we use
 			// it blindly
 			mCurrentProfileId = extras.getLong(EXTRA_PROFILE_ID);
+			if (!mPreferencesHelper.profileExists(mCurrentProfileId)) {
+				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
+					"profile ID " + mCurrentProfileId + " doesn't exist");
+				if (firstStart) {
+					stopSelf();
+					return;
+				}
+			}
+			if (previousProfileId != mCurrentProfileId) {
+				DindySingleProfileAppWidgetProvider.updateAllSingleProfileWidgets(
+						getApplicationContext(), mCurrentProfileId,
+						previousProfileId);
+			}
 			refreshSettings(mCurrentProfileId, firstStart);
+			saveLastUsedProfileId();
 		} else {
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
 					"error! no extras sent to service");
 		}
 		
+		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
+			"starting profile " + mCurrentProfileId);
 		mLogic.start();
 
 		// Display a notification about us starting. We put an icon in the
@@ -93,6 +111,14 @@ public class DindyService extends Service {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
+		
+		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
+				"stopping profile " + mCurrentProfileId);
+
+		DindySingleProfileAppWidgetProvider.updateAllSingleProfileWidgets(
+				getApplicationContext(), Consts.NOT_A_PROFILE_ID,
+				mCurrentProfileId);
+
 		// Stop listening to call state change events
 		unregisterReceiver(mBroadcastReceiver);
 		mTM.listen(mStateListener, PhoneStateListener.LISTEN_NONE);
@@ -113,6 +139,7 @@ public class DindyService extends Service {
 		mBroadcastReceiver = null;
 		mPreferencesHelper = null;
 		mLogic = null;
+		// Must happen last because it's used here
 		mCurrentProfileId = Consts.NOT_A_PROFILE_ID;
 		mIsRunning = false;
 	}
@@ -136,8 +163,25 @@ public class DindyService extends Service {
 		return mIsRunning;
 	}
 	
+	public static long getCurrentProfileId() {
+		return mCurrentProfileId;
+	}
+	
 	public static final String EXTRA_PROFILE_ID = "profile_id";
+	public static final String ACTION_STOP_DINDY_SERVICE =
+		"net.gnobal.dindy.ACTION_STOP_DINDY_SERVICE";
 
+	private void saveLastUsedProfileId() {
+		SharedPreferences preferences = getSharedPreferences(
+				Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
+		SharedPreferences.Editor editor = preferences.edit();
+		editor.putLong(Consts.Prefs.Main.LAST_USED_PROFILE_ID,
+				mCurrentProfileId);
+		editor.commit();
+		editor = null;
+		preferences = null;
+	}
+	
 	private void showNotification() {
 		// In this sample, we'll use the same text for the ticker and the
 		// expanded notification
@@ -150,12 +194,8 @@ public class DindyService extends Service {
 
 		// The PendingIntent to launch our activity if the user selects this
 		// notification
-		PendingIntent contentIntent = PendingIntent.getActivity(
-				getApplicationContext(), 0,
-				new Intent(getApplicationContext(), Dindy.class)
-					.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-							| Intent.FLAG_ACTIVITY_CLEAR_TOP)
-					.setAction(Intent.ACTION_MAIN), 0);
+		PendingIntent contentIntent =
+			Dindy.getPendingIntent(getApplicationContext());
 		
 		// Set the info for the views that show in the notification panel.
 		notification.setLatestEventInfo(getApplicationContext(),
@@ -279,6 +319,8 @@ public class DindyService extends Service {
 				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
 						"outgoing call number: " + phoneNumber);
 				mLogic.onOutgoingCall(phoneNumber);
+			} else if (action.equals(ACTION_STOP_DINDY_SERVICE)) {
+				DindyService.this.stopSelf();
 			}/* else if (action.equals(AudioManager.RINGER_MODE_CHANGED_ACTION)) {
 				mLogic.onRingerModeChanged(extras.getInt(
 					AudioManager.EXTRA_RINGER_MODE));
@@ -357,7 +399,7 @@ public class DindyService extends Service {
 	private int mPreviousCursorCount = Integer.MAX_VALUE;
 	private ProfilePreferencesHelper mPreferencesHelper = null;
 	private DindySettings mSettings = new DindySettings();
-	private long mCurrentProfileId = Consts.NOT_A_PROFILE_ID;
+	private static long mCurrentProfileId = Consts.NOT_A_PROFILE_ID;
 	private static boolean mIsRunning = false;
 
 	private final IBinder mBinder = new LocalBinder();

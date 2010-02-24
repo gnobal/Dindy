@@ -7,6 +7,12 @@ class DindySettings {
 		int mRingerMode;
 	}
 	
+	static class WidgetSettings {
+		int mWidgetType = Consts.Prefs.Widget.Type.INVALID;
+		// Single profile settings
+		long mProfileId = Consts.NOT_A_PROFILE_ID;
+	}
+	
 	RingerVibrateSettings mUserSettings = new RingerVibrateSettings(); 
 	RingerVibrateSettings mFirstRingSettings = new RingerVibrateSettings(); 
 	RingerVibrateSettings mSecondRingSettings = new RingerVibrateSettings(); 

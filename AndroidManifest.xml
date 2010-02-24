@@ -2,26 +2,41 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="net.gnobal.dindy"
       android:versionName="1.0.8" android:versionCode="9">
-    <application android:icon="@drawable/icon" android:label="@string/app_name" android:debuggable="true">
-        <activity android:label="@string/app_name" android:name="Dindy">
+    <application android:icon="@drawable/icon" android:label="@string/app_name" android:debuggable="true" android:name=".DindyApplication">
+        <activity android:label="@string/app_name" android:name=".Dindy">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-    <service android:name="DindyService"></service>
+        <activity android:name=".ProfilesListActivity" android:label="@string/preferences_profiles_list"></activity>
+        <activity android:name=".ProfilePreferencesActivity"></activity>
+        <activity android:name=".DindySingleProfileAppWidgetConfigure">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
 
-<activity android:name="ProfilesListActivity" android:label="@string/preferences_profiles_list"></activity>
-<activity android:name="ProfilePreferencesActivity"></activity>
+        <service android:name=".DindyService"></service>
 
-</application>
+        <receiver android:name=".DindySingleProfileAppWidgetProvider" android:label="@string/preferences_single_profile_app_widget_name">
+            <meta-data android:name="android.appwidget.provider"
+                    android:resource="@xml/single_profile_appwidget_provider" />
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+
     <uses-sdk android:minSdkVersion="3" android:targetSdkVersion="4"/>
 
-<uses-permission android:name="android.permission.READ_PHONE_STATE"></uses-permission>
-<uses-permission android:name="android.permission.PROCESS_OUTGOING_CALLS"></uses-permission>
-<uses-permission android:name="android.permission.SEND_SMS"></uses-permission>
-<uses-permission android:name="android.permission.READ_CONTACTS"></uses-permission>
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"></uses-permission>
+    <uses-permission android:name="android.permission.PROCESS_OUTGOING_CALLS"></uses-permission>
+    <uses-permission android:name="android.permission.SEND_SMS"></uses-permission>
+    <uses-permission android:name="android.permission.READ_CONTACTS"></uses-permission>
+    <uses-permission android:name="android.permission.WAKE_LOCK"></uses-permission>
 
-<supports-screens android:anyDensity="true" android:largeScreens="true" android:smallScreens="true" android:resizeable="true" android:normalScreens="true"></supports-screens>
-<uses-permission android:name="android.permission.WAKE_LOCK"></uses-permission>
+    <supports-screens android:anyDensity="true" android:largeScreens="true" android:smallScreens="true" android:resizeable="true" android:normalScreens="true"></supports-screens>
+
 </manifest> 

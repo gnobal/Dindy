@@ -56,6 +56,9 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 		 case MENU_ID_DELETE:
 		 {
 			 mHelper.deleteProfile(this, mProfileName);
+			DindySingleProfileAppWidgetProvider.updateAllSingleProfileWidgets(
+					getApplicationContext(), DindyService.getCurrentProfileId(),
+					Consts.NOT_A_PROFILE_ID);
 			 finish();
 			 return true;
 		 }
@@ -340,6 +343,9 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 	
 		public void onSuccess(String newProfileName,
 				long newProfileId) {
+			DindySingleProfileAppWidgetProvider.updateAllSingleProfileWidgets(
+					getApplicationContext(), DindyService.getCurrentProfileId(),
+					Consts.NOT_A_PROFILE_ID);
 			mParent.mProfileName = newProfileName;
 			mParent.setTitleWithCurrentProfile();
 		}
