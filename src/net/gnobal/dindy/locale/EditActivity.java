@@ -2,6 +2,8 @@ package net.gnobal.dindy.locale;
 
 import java.util.LinkedList;
 
+import com.twofortyfouram.SharedResources;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -18,6 +20,14 @@ public class EditActivity extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setResult(RESULT_CANCELED);
+		final String breadcrumbString = getIntent().getStringExtra(
+				com.twofortyfouram.Intent.EXTRA_STRING_BREADCRUMB);
+		if (breadcrumbString != null) {
+			setTitle(String.format("%s%s%s", breadcrumbString,
+					com.twofortyfouram.Intent.BREADCRUMB_SEPARATOR,
+					getString(R.string.locale_plugin_name)));
+		}
+		
 		mArrayAdapter = new ArrayAdapter<String>(this,
 			android.R.layout.select_dialog_item, mListItems);
 		showDialog(DIALOG_SELECT);
@@ -43,7 +53,13 @@ public class EditActivity extends Activity {
 					mOnCancelListener)
 				.create();
 
+			// Only good if we were showing an actual activity and not just a
+			// dialog
+			//dialog.getWindow().setBackgroundDrawable(
+			//		SharedResources.getDrawableResource(getPackageManager(),
+			//				SharedResources.DRAWABLE_LOCALE_BORDER));
 			dialog.setOwnerActivity(this);
+			//dialog.getListView().set
 			dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
 				@Override
 				public void onDismiss(DialogInterface dialog) {
