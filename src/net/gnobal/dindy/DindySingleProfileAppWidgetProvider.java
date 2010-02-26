@@ -7,7 +7,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.util.Config;
 import android.util.Log;
 import android.widget.RemoteViews;
@@ -94,7 +93,6 @@ public class DindySingleProfileAppWidgetProvider extends AppWidgetProvider {
     		DindySettings.WidgetSettings widgetSettings, int widgetId,
     		long activeProfileId, long previousProfileId) {
     	RemoteViews views = null;
-    	Intent intent = null;
     	PendingIntent pendingIntent = null;
     	boolean profileExists = true;
     	// NOTE: the order of this if-else clause matters:
@@ -112,9 +110,8 @@ public class DindySingleProfileAppWidgetProvider extends AppWidgetProvider {
     				R.layout.single_profile_appwidget);
     		views.setImageViewResource(R.id.single_profile_app_widget_image_button,
     				R.drawable.app_widget_button_selector_off);
-    		intent = new Intent(DindyService.ACTION_STOP_DINDY_SERVICE);
     		pendingIntent = PendingIntent.getBroadcast(context, 0,
-    				intent, 0);
+    				DindyService.getStopServiceBroadcastIntent(), 0);	
     	} else if (!(profileExists = prefsHelper.profileExists(widgetSettings.mProfileId))) {
     		views = new RemoteViews(packageName,
     				R.layout.single_profile_appwidget);
@@ -136,16 +133,9 @@ public class DindySingleProfileAppWidgetProvider extends AppWidgetProvider {
     				R.layout.single_profile_appwidget);
     		views.setImageViewResource(R.id.single_profile_app_widget_image_button,
     				R.drawable.app_widget_button_selector_on);
-            intent = new Intent(context, DindyService.class);
-    		intent.putExtra(DindyService.EXTRA_PROFILE_ID,
-    				widgetSettings.mProfileId);
-    		// See:
-    		// http://www.developer.com/ws/article.php/3837531/Handling-User-Interaction-with-Android-App-Widgets.htm
-    		intent.setData(
-    				Uri.withAppendedPath(Uri.parse("dindy://profile/id/"),
-    				String.valueOf(widgetSettings.mProfileId)));
         	pendingIntent = PendingIntent.getService(context, 0, 
-            		intent, 0);
+            		DindyService.getStartServiceIntent(context,
+            				widgetSettings.mProfileId), 0);
     	} else {
     		return;
     	}

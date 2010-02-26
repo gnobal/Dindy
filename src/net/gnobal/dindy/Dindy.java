@@ -345,8 +345,8 @@ public class Dindy extends Activity {
 		public void onClick(View v) {
 			final boolean isServiceRunning = DindyService.isRunning();
 			if (isServiceRunning) {
-				stopService(new Intent(getApplicationContext(),
-						DindyService.class));
+				stopService(DindyService.getStopServiceIntent(
+						getApplicationContext()));
 				// If the selected profile was deleted while the service was 
 				// running, set a new profile for the user to select
 				if (mSelectedProfileId == Consts.NOT_A_PROFILE_ID ||
@@ -361,11 +361,8 @@ public class Dindy extends Activity {
 	};
 
 	private void startDindyServiceWithSelectedProfileId() {
-		Intent serviceIntent = new Intent(getApplicationContext(),
-				DindyService.class);
-		serviceIntent.putExtra(DindyService.EXTRA_PROFILE_ID,
-				mSelectedProfileId);
-		startService(serviceIntent);
+		startService(DindyService.getStartServiceIntent(getApplicationContext(),
+				mSelectedProfileId));
 	}
 	
 	private OnClickListener mSelectProfileListener = new OnClickListener() {
@@ -383,6 +380,9 @@ public class Dindy extends Activity {
 	private OnClickListener mHelpListener = new OnClickListener() {
 		public void onClick(View v) {
 			Dindy.this.showDialog(DIALOG_HELP);
+//			Intent i = new Intent(getApplicationContext(),
+//					net.gnobal.dindy.locale.EditActivity.class);
+//			Dindy.this.startActivity(i);
 		}
 	};
 

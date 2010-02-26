@@ -54,7 +54,7 @@ public class ProfilePreferencesHelper {
 		return exist;
 	}
 	
-	LinkedList<String> getAllProfileNamesSorted() {
+	public LinkedList<String> getAllProfileNamesSorted() {
 		if (mCacheIsOutdated) {
 			loadCache();
 		}
@@ -90,7 +90,7 @@ public class ProfilePreferencesHelper {
 		return name;
 	}
 	
-	long getProfileIdFromName(String name) {
+	public long getProfileIdFromName(String name) {
 		SQLiteDatabase db = null;
 		Cursor cursor = null;
 		long profileId = Consts.NOT_A_PROFILE_ID;

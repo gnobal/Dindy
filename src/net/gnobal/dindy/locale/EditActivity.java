@@ -1,65 +1,115 @@
 package net.gnobal.dindy.locale;
 
+import java.util.LinkedList;
+
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import net.gnobal.dindy.ProfilePreferencesHelper;
-import net.gnobal.dindy.ProfilesListActivity;
+import android.widget.ArrayAdapter;
 import net.gnobal.dindy.Consts;
+import net.gnobal.dindy.ProfilePreferencesHelper;
+import net.gnobal.dindy.R;
 
 public class EditActivity extends Activity {
 	@Override
-	public void onCreate(Bundle savedInstanceState)
-	{
+	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
 		setResult(RESULT_CANCELED);
-		
-		Intent profilesListIntent = new Intent(getApplicationContext(),
-				ProfilesListActivity.class);
-		profilesListIntent.putExtra(ProfilesListActivity.EXTRA_MODE_NAME,
-				ProfilesListActivity.EXTRA_MODE_SELECT);
-		startActivityForResult(profilesListIntent, PROFILE_SELECT_REQUEST_CODE);
-
+		mArrayAdapter = new ArrayAdapter<String>(this,
+			android.R.layout.select_dialog_item, mListItems);
+		showDialog(DIALOG_SELECT);
 	}
 	
 	@Override
-	protected void onActivityResult(int requestCode, int resultCode,
-			Intent data) {
-		super.onActivityResult(requestCode, resultCode, data);
-		if (resultCode == RESULT_CANCELED) {
-			finish();
-			return;
-		}
+	protected Dialog onCreateDialog(int id) {
+		super.onCreateDialog(id);
 		
-		if (requestCode != PROFILE_SELECT_REQUEST_CODE) {
-			return;
-		}
-		
-		Intent returnIntent = new Intent();
-		final Bundle storeAndForwardExtras = new Bundle();
-		final long selectedProfileId =
-			data.getExtras().getLong(Consts.EXTRA_SELECTED_PROFILE_ID);
-		storeAndForwardExtras.putLong(Consts.EXTRA_SELECTED_PROFILE_ID,
-				selectedProfileId);
-		ProfilePreferencesHelper prefsHelper = 
-			ProfilePreferencesHelper.instance();
-		final String selectedProfileName = prefsHelper.getProfielNameFromId(
-				selectedProfileId);
-		if (selectedProfileName.length() >
-			com.twofortyfouram.Intent.MAXIMUM_BLURB_LENGTH) {
-			returnIntent.putExtra(com.twofortyfouram.Intent.EXTRA_STRING_BLURB,
-					selectedProfileName.substring(0,
-							com.twofortyfouram.Intent.MAXIMUM_BLURB_LENGTH));
-		} else {
-			returnIntent.putExtra(com.twofortyfouram.Intent.EXTRA_STRING_BLURB,
-					selectedProfileName);
-		}
-		returnIntent.putExtra(com.twofortyfouram.Intent.EXTRA_BUNDLE,
-				storeAndForwardExtras);
-		setResult(RESULT_OK, returnIntent);
-		finish();
-	}
+		switch (id) {
+		case DIALOG_SELECT:
+			ProfilePreferencesHelper prefsHelper = 
+				ProfilePreferencesHelper.instance(); 
+			mListItems.clear();
+			mListItems.addAll(prefsHelper.getAllProfileNamesSorted());
+			mListItems.addFirst(getString(R.string.locale_dialog_stop_dindy_text));
+			mArrayAdapter.notifyDataSetChanged();
+				
+			AlertDialog dialog = new AlertDialog.Builder(this)
+				.setTitle(R.string.app_name)
+				.setAdapter(mArrayAdapter, mOnItemClickListener)
+				.setNegativeButton(R.string.locale_dialog_cancel_text,
+					mOnCancelListener)
+				.create();
 
-	private final int PROFILE_SELECT_REQUEST_CODE = 1;
+			dialog.setOwnerActivity(this);
+			dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+				@Override
+				public void onDismiss(DialogInterface dialog) {
+					setResult(RESULT_CANCELED);
+					finish();
+					removeDialog(DIALOG_SELECT);
+				}
+			});
+			
+			return dialog;
+			
+		default:
+			return null;	
+		}
+	}
+	
+	private DialogInterface.OnClickListener mOnCancelListener =
+		new  DialogInterface.OnClickListener() {
+		@Override
+		public void onClick(DialogInterface dialog, int which) {
+			setResult(RESULT_CANCELED);
+			finish();
+		}
+	};  
+	
+	private DialogInterface.OnClickListener mOnItemClickListener = 
+		new DialogInterface.OnClickListener() {
+		@Override
+		public void onClick(DialogInterface dialog, int which) {
+			String text = mListItems.get(which);
+			Intent returnIntent = new Intent();
+			final Bundle storeAndForwardExtras = new Bundle();
+			// Intent = 
+			if (which == STOP_DINDY_ITEM_POSITION) {
+				storeAndForwardExtras.putString(Consts.EXTRA_LOCALE_ACTION,
+					Consts.EXTRA_LOCALE_ACTION_STOP_SERVICE);
+			} else {
+				storeAndForwardExtras.putString(Consts.EXTRA_LOCALE_ACTION,
+					Consts.EXTRA_LOCALE_ACTION_START_SERVICE);
+				ProfilePreferencesHelper prefsHelper = 
+					ProfilePreferencesHelper.instance();
+				final long profileId = prefsHelper.getProfileIdFromName(text);
+				storeAndForwardExtras.putLong(Consts.EXTRA_SELECTED_PROFILE_ID,
+					profileId);	
+			}
+
+			if (text.length() >
+				com.twofortyfouram.Intent.MAXIMUM_BLURB_LENGTH) {
+				returnIntent.putExtra(
+					com.twofortyfouram.Intent.EXTRA_STRING_BLURB,
+					text.substring(
+						0, com.twofortyfouram.Intent.MAXIMUM_BLURB_LENGTH));
+			} else {
+				returnIntent.putExtra(
+					com.twofortyfouram.Intent.EXTRA_STRING_BLURB, text);
+			}
+
+			returnIntent.putExtra(com.twofortyfouram.Intent.EXTRA_BUNDLE,
+				storeAndForwardExtras);
+			setResult(RESULT_OK, returnIntent);
+			finish();
+		}		
+	};  
+	
+	private ArrayAdapter<String> mArrayAdapter = null;
+	private LinkedList<String> mListItems = new LinkedList<String>();
+	private static final int DIALOG_SELECT = 1;
+	private static final int STOP_DINDY_ITEM_POSITION = 0; 
 }

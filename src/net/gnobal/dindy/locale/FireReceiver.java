@@ -13,16 +13,21 @@ public class FireReceiver extends BroadcastReceiver {
 			return;
 		}
 
-		final long profileId = intent.getLongExtra(
-				Consts.EXTRA_SELECTED_PROFILE_ID, Consts.NOT_A_PROFILE_ID);
-
-		if (profileId == Consts.NOT_A_PROFILE_ID) {
-			return;
-		}
-
-		Intent serviceIntent = new Intent(context, DindyService.class);
-		serviceIntent.putExtra(DindyService.EXTRA_PROFILE_ID,
-				profileId);
-		context.startService(serviceIntent);
+		final String action = intent.getStringExtra(Consts.EXTRA_LOCALE_ACTION);
+		Intent serviceIntent = null;
+		if (action.equals(Consts.EXTRA_LOCALE_ACTION_START_SERVICE)) {
+			final long profileId = intent.getLongExtra(Consts.EXTRA_SELECTED_PROFILE_ID,
+					Consts.NOT_A_PROFILE_ID);
+			if (profileId == Consts.NOT_A_PROFILE_ID) {
+				return;
+			}
+			serviceIntent = DindyService.getStartServiceIntent(
+				context, profileId);
+			context.startService(serviceIntent);
+		} else if (action.equals(Consts.EXTRA_LOCALE_ACTION_STOP_SERVICE)) {
+			context.stopService(DindyService.getStopServiceIntent(context));
+		} 
+		
+		return;
 	}
 }

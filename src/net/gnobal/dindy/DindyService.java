@@ -12,6 +12,7 @@ import android.content.SharedPreferences;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
@@ -165,6 +166,24 @@ public class DindyService extends Service {
 	
 	public static long getCurrentProfileId() {
 		return mCurrentProfileId;
+	}
+	
+	public static Intent getStartServiceIntent(Context context,
+			long profileId) {
+		return new Intent(context, DindyService.class)
+			.putExtra(DindyService.EXTRA_PROFILE_ID, profileId)
+		// See:
+		// http://www.developer.com/ws/article.php/3837531/Handling-User-Interaction-with-Android-App-Widgets.htm
+			.setData(Uri.withAppendedPath(Uri.parse("dindy://profile/id/"),
+				String.valueOf(profileId)));
+	}
+	
+	public static Intent getStopServiceBroadcastIntent() {
+		return new Intent(DindyService.ACTION_STOP_DINDY_SERVICE);
+	}
+	
+	public static Intent getStopServiceIntent(Context context) {
+		return new Intent(context, DindyService.class);
 	}
 	
 	public static final String EXTRA_PROFILE_ID = "profile_id";

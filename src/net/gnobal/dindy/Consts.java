@@ -99,4 +99,12 @@ public class Consts {
 	static final String EMPTY_STRING = "";
 	public static final String EXTRA_SELECTED_PROFILE_ID = 
 		"selected_profile_id";
+	// NOTE that Locale actions are save in Locale so we must never change these
+	// values
+	public static final String EXTRA_LOCALE_ACTION = "locale_action";
+	public static final String EXTRA_LOCALE_ACTION_START_SERVICE =
+		"locale_action_start_service";
+	public static final String EXTRA_LOCALE_ACTION_STOP_SERVICE =
+		"locale_action_stop_service";
+	
 }

@@ -91,6 +91,8 @@ public final class R {
         public static final int help_dialog_ok_text=0x7f060040;
         public static final int help_dialog_text=0x7f06003f;
         public static final int help_dialog_title=0x7f060041;
+        public static final int locale_dialog_cancel_text=0x7f06004d;
+        public static final int locale_dialog_stop_dindy_text=0x7f06004e;
         public static final int locale_plugin_name=0x7f060049;
         public static final int main_button_add_new_profile=0x7f060025;
         public static final int main_button_select_profile=0x7f060023;
