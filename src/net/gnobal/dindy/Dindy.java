@@ -108,21 +108,18 @@ public class Dindy extends Activity {
 	@Override
 	public void onResume() {
 		super.onResume();
-		if (mRefreshUI) {
-			final boolean serviceRunning = DindyService.isRunning();
-			if (mPendingStartServiceRequest) {
-				// Just turn it off for next time. We'll use mSelectedProfileId
-				// that the user selected
-				mPendingStartServiceRequest = false;				
-			} else {
-				if (serviceRunning) {
-					mSelectedProfileId = DindyService.getCurrentProfileId();	
-				}
+		final boolean serviceRunning = DindyService.isRunning();
+		if (mPendingStartServiceRequest) {
+			// Just turn it off for next time. We'll use mSelectedProfileId
+			// that the user selected
+			mPendingStartServiceRequest = false;				
+		} else {
+			if (serviceRunning) {
+				mSelectedProfileId = DindyService.getCurrentProfileId();	
 			}
-			
-			setDynamicButtons(serviceRunning);
-			//mRefreshUI = false;
 		}
+		
+		setDynamicButtons(serviceRunning);
 	}
 
 	static PendingIntent getPendingIntent(Context context) {
@@ -261,7 +258,6 @@ public class Dindy extends Activity {
 	}
 
 	private void startProfileEditor() {
-		mRefreshUI = true;
 		Intent profileManagerIntent = new Intent(
 				getApplicationContext(), 
 				ProfilesListActivity.class);
@@ -367,7 +363,6 @@ public class Dindy extends Activity {
 	
 	private OnClickListener mSelectProfileListener = new OnClickListener() {
 		public void onClick(View v) {
-			mRefreshUI = true;
 			Intent profilesListIntent = new Intent(getApplicationContext(),
 					ProfilesListActivity.class);
 			profilesListIntent.putExtra(ProfilesListActivity.EXTRA_MODE_NAME,
@@ -388,7 +383,6 @@ public class Dindy extends Activity {
 
 	private ProfilePreferencesHelper mPreferencesHelper = null;
 	private long mSelectedProfileId = Consts.NOT_A_PROFILE_ID;
-	private boolean mRefreshUI = true;
 	// We use this indicator to know whether to rely on what 
 	// DindyService.getCurrentProfileId() returns or on our own 
 	// mSelectedProfileId (see onResume()) 

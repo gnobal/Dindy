@@ -13,15 +13,16 @@ public class Consts {
 		static final int INCOMING = 4;
 	}
 
-	class Prefs
+	public class Prefs
 	{
-		class Main
+		public class Main
 		{
-			static final String NAME = "main_preferences";
+			public static final String NAME = "main_preferences";
 			static final String LAST_USED_PROFILE_ID = "last_profile_id";
 			static final String KEY_FIRST_STARTUP = "first_startup";
 			static final String KEY_SHOW_STARTUP_MESSAGE =
 				"show_startup_message";
+			public static final String KEY_SHOW_LOCALE_USAGE = "show_locale_usage";
 		}
 		
 		class Widget

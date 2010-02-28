@@ -3,7 +3,6 @@ package net.gnobal.dindy;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
@@ -235,18 +234,21 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 		if (DindyService.isRunning()) {
 			// The service is running so we check if it's running the profile
 			// we're editing 
-			SharedPreferences preferences = getSharedPreferences(
-					Consts.Prefs.Main.NAME, Context.MODE_PRIVATE); 
-			if (preferences.getLong(Consts.Prefs.Main.LAST_USED_PROFILE_ID,
-					(int) Consts.NOT_A_PROFILE_ID) == mProfileId) {
+			//SharedPreferences preferences = getSharedPreferences(
+			//		Consts.Prefs.Main.NAME, Context.MODE_PRIVATE); 
+			//if (preferences.getLong(Consts.Prefs.Main.LAST_USED_PROFILE_ID,
+			//		Consts.NOT_A_PROFILE_ID) == mProfileId) {
+			if (DindyService.getCurrentProfileId() == mProfileId) {
 				// This means the profile we're editing is currently running, 
 				// so we trigger a settings refresh, as onPause() means the 
 				// user is done editing the profile
-				Intent serviceIntent = new Intent(getApplicationContext(),
-						DindyService.class);
-				serviceIntent.putExtra(DindyService.EXTRA_PROFILE_ID,
-						mProfileId);
-				startService(serviceIntent);
+				//Intent serviceIntent = new Intent(getApplicationContext(),
+				//		DindyService.class);
+				//serviceIntent.putExtra(DindyService.EXTRA_PROFILE_ID,
+				//		mProfileId);
+				//startService(serviceIntent);
+				startService(DindyService.getStartServiceIntent(
+						getApplicationContext(), mProfileId));
 			}
 		}
 	}
