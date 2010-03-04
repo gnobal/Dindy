@@ -223,7 +223,7 @@ public class ProfilesListActivity extends ListActivity {
 
 	private void finishWithSelectedProfile(String profileName) {
 		setResult(RESULT_OK, new Intent().putExtra(
-				Consts.EXTRA_SELECTED_PROFILE_ID,
+				Consts.EXTRA_PROFILE_ID,
 				mPreferencesHelper.getProfileIdFromName(profileName)));
 		finish();
 	}

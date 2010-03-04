@@ -84,28 +84,25 @@ public class Consts {
 		}
 	}
 
-	/*
-	class Action
-	{
-		static final String PROFILE_STARTED =
-			"net.gnobal.dindy.action.PROFILE_STARTED";
-		static final String PROFILE_STOPPED =
-			"net.gnobal.dindy.action.PROFILE_STARTED";
-	}*/
 	public static final long NOT_A_PROFILE_ID = -1;
 	static final long INFINITE_TIME = -1;
 	static final long MILLIS_IN_MINUTE = 60000;
 	static final String LOGTAG = "Dindy";
 	static final boolean DEBUG = true;
 	static final String EMPTY_STRING = "";
-	public static final String EXTRA_SELECTED_PROFILE_ID = 
-		"selected_profile_id";
-	// NOTE that Locale actions are save in Locale so we must never change these
-	// values
-	public static final String EXTRA_LOCALE_ACTION = "locale_action";
-	public static final String EXTRA_LOCALE_ACTION_START_SERVICE =
-		"locale_action_start_service";
-	public static final String EXTRA_LOCALE_ACTION_STOP_SERVICE =
-		"locale_action_stop_service";
+	// NOTE these constants are used from outside (e.g. Locale) and cannot be 
+	// changed. External actions are for when you the action isn't really the
+	// intent's action, but is stored under a different intent (like in Locale)
+	// NEVER CHANGE THIS VALUES OR THEIR MEANING
+	public static final String ACTION_STOP_DINDY_SERVICE =
+		"net.gnobal.dindy.ACTION_STOP_DINDY_SERVICE";
+	public static final String EXTRA_PROFILE_ID = 
+		"profile_id";
+	public static final String EXTRA_EXTERNAL_ACTION =
+		"net.gnobal.dindy.EXTERNAL_ACTION";
+	public static final String EXTRA_EXTERNAL_ACTION_START_SERVICE =
+		"net.gnobal.dindy.EXTERNAL_ACTION_START_SERVICE";
+	public static final String EXTRA_EXTERNAL_ACTION_STOP_SERVICE =
+		"net.gnobal.dindy.EXTERNAL_ACTION_STOP_SERVICE";
 	
 }

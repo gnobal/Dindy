@@ -53,7 +53,7 @@ public class DindySingleProfileAppWidgetConfigure extends Activity {
 		DindySettings.WidgetSettings widgetSettings =
 			new DindySettings.WidgetSettings();
 		widgetSettings.mProfileId = data.getExtras().getLong(
-				Consts.EXTRA_SELECTED_PROFILE_ID);
+				Consts.EXTRA_PROFILE_ID);
 		widgetSettings.mWidgetType = Consts.Prefs.Widget.Type.SINGLE_PROFILE;
 		ProfilePreferencesHelper prefs = ProfilePreferencesHelper.instance();
 		SharedPreferences widgetPreferences = getSharedPreferences(

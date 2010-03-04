@@ -48,7 +48,7 @@ public class DindyService extends Service {
 		mCallLogCursor.registerContentObserver(mCallLogObserver);
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(Intent.ACTION_NEW_OUTGOING_CALL);
-		filter.addAction(ACTION_STOP_DINDY_SERVICE);
+		filter.addAction(Consts.ACTION_STOP_DINDY_SERVICE);
 		//filter.addAction(AudioManager.RINGER_MODE_CHANGED_ACTION);
 		//filter.addAction(AudioManager.VIBRATE_SETTING_CHANGED_ACTION);
 		registerReceiver(mBroadcastReceiver, filter);
@@ -75,7 +75,7 @@ public class DindyService extends Service {
 		if (extras != null) {
 			// Whoever started the service gave us a profile ID to use so we use
 			// it blindly
-			mCurrentProfileId = extras.getLong(EXTRA_PROFILE_ID);
+			mCurrentProfileId = extras.getLong(Consts.EXTRA_PROFILE_ID);
 			if (!mPreferencesHelper.profileExists(mCurrentProfileId)) {
 				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
 					"profile ID " + mCurrentProfileId + " doesn't exist");
@@ -94,6 +94,8 @@ public class DindyService extends Service {
 		} else {
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
 					"error! no extras sent to service");
+			stopSelf();
+			return;
 		}
 		
 		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
@@ -171,7 +173,7 @@ public class DindyService extends Service {
 	public static Intent getStartServiceIntent(Context context,
 			long profileId) {
 		return new Intent(context, DindyService.class)
-			.putExtra(DindyService.EXTRA_PROFILE_ID, profileId)
+			.putExtra(Consts.EXTRA_PROFILE_ID, profileId)
 		// See:
 		// http://www.developer.com/ws/article.php/3837531/Handling-User-Interaction-with-Android-App-Widgets.htm
 			.setData(Uri.withAppendedPath(Uri.parse("dindy://profile/id/"),
@@ -179,16 +181,18 @@ public class DindyService extends Service {
 	}
 	
 	public static Intent getStopServiceBroadcastIntent() {
-		return new Intent(DindyService.ACTION_STOP_DINDY_SERVICE);
+		return new Intent(Consts.ACTION_STOP_DINDY_SERVICE);
 	}
 	
 	public static Intent getStopServiceIntent(Context context) {
 		return new Intent(context, DindyService.class);
 	}
 	
-	public static final String EXTRA_PROFILE_ID = "profile_id";
-	public static final String ACTION_STOP_DINDY_SERVICE =
-		"net.gnobal.dindy.ACTION_STOP_DINDY_SERVICE";
+	// DO NOT EVER CHANGE THESE VALUES!! Widgets will stop working if you do
+	// moved to Consts!
+	// public static final String EXTRA_PROFILE_ID = "profile_id";
+	//public static final String ACTION_STOP_DINDY_SERVICE =
+	//	"net.gnobal.dindy.ACTION_STOP_DINDY_SERVICE";
 
 	private void saveLastUsedProfileId() {
 		SharedPreferences preferences = getSharedPreferences(
@@ -338,7 +342,7 @@ public class DindyService extends Service {
 				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
 						"outgoing call number: " + phoneNumber);
 				mLogic.onOutgoingCall(phoneNumber);
-			} else if (action.equals(ACTION_STOP_DINDY_SERVICE)) {
+			} else if (Consts.ACTION_STOP_DINDY_SERVICE.equals(action)) {
 				DindyService.this.stopSelf();
 			}/* else if (action.equals(AudioManager.RINGER_MODE_CHANGED_ACTION)) {
 				mLogic.onRingerModeChanged(extras.getInt(

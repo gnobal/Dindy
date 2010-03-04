@@ -13,11 +13,11 @@ public class FireReceiver extends BroadcastReceiver {
 			return;
 		}
 
-		final String action = intent.getStringExtra(Consts.EXTRA_LOCALE_ACTION);
+		final String action = intent.getStringExtra(Consts.EXTRA_EXTERNAL_ACTION);
 		Intent serviceIntent = null;
-		if (Consts.EXTRA_LOCALE_ACTION_START_SERVICE.equals(action)) {
+		if (Consts.EXTRA_EXTERNAL_ACTION_START_SERVICE.equals(action)) {
 			final long profileId = intent.getLongExtra(
-					Consts.EXTRA_SELECTED_PROFILE_ID,
+					Consts.EXTRA_PROFILE_ID,
 					Consts.NOT_A_PROFILE_ID);
 			if (profileId == Consts.NOT_A_PROFILE_ID) {
 				return;
@@ -25,7 +25,7 @@ public class FireReceiver extends BroadcastReceiver {
 			serviceIntent = DindyService.getStartServiceIntent(
 				context, profileId);
 			context.startService(serviceIntent);
-		} else if (Consts.EXTRA_LOCALE_ACTION_STOP_SERVICE.equals(action)) {
+		} else if (Consts.EXTRA_EXTERNAL_ACTION_STOP_SERVICE.equals(action)) {
 			context.stopService(DindyService.getStopServiceIntent(context));
 		} 
 		

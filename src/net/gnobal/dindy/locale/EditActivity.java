@@ -146,15 +146,15 @@ public class EditActivity extends Activity {
 			Intent returnIntent = new Intent();
 			final Bundle storeAndForwardExtras = new Bundle();
 			if (which == STOP_DINDY_ITEM_POSITION) {
-				storeAndForwardExtras.putString(Consts.EXTRA_LOCALE_ACTION,
-					Consts.EXTRA_LOCALE_ACTION_STOP_SERVICE);
+				storeAndForwardExtras.putString(Consts.EXTRA_EXTERNAL_ACTION,
+					Consts.EXTRA_EXTERNAL_ACTION_STOP_SERVICE);
 			} else {
-				storeAndForwardExtras.putString(Consts.EXTRA_LOCALE_ACTION,
-					Consts.EXTRA_LOCALE_ACTION_START_SERVICE);
+				storeAndForwardExtras.putString(Consts.EXTRA_EXTERNAL_ACTION,
+					Consts.EXTRA_EXTERNAL_ACTION_START_SERVICE);
 				ProfilePreferencesHelper prefsHelper = 
 					ProfilePreferencesHelper.instance();
 				final long profileId = prefsHelper.getProfileIdFromName(text);
-				storeAndForwardExtras.putLong(Consts.EXTRA_SELECTED_PROFILE_ID,
+				storeAndForwardExtras.putLong(Consts.EXTRA_PROFILE_ID,
 					profileId);	
 			}
 

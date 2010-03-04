@@ -70,10 +70,15 @@ class DindyLogic {
 
 	void start() {
 		setRingerAndVibrateModes(mSettings.mFirstRingSettings);
+		mStarted = true;
 	}
 	
 	void stop() {
+		if (!mStarted) {
+			return;
+		}
 		setRingerAndVibrateModes(mSettings.mUserSettings);
+		mStarted = false;
 	}
 	
 	void destroy() {
@@ -97,6 +102,13 @@ class DindyLogic {
 		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, "newState: " + 
 				Utils.incomingCallStateToString(newState) + 
 				", number: " + number);
+		if (!mStarted) {
+			// can happen if the service is started with a non-existing profile
+			// and then stops itself
+			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
+					"onCallStateChange: called without being started");
+			return;
+		}
 		switch (newState) {
 		case Consts.IncomingCallState.IDLE:
 			onIdle(number);
@@ -555,6 +567,7 @@ class DindyLogic {
 	private static final String NOT_A_PHONE_NUMBER = "NOT_A_PHONE_NUMBER";
 	private static final String SMS_PENDING_INTENT_NAME = "DindySMS";
 	private String mLastRingingNumber = NOT_A_PHONE_NUMBER;
+	private boolean mStarted = false;
 	private DindySettings mSettings = null;
 	private SmsSender mSmsSender = null;
 	private Timer mTimer = new Timer();
