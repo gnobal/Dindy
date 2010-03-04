@@ -14,4 +14,5 @@
 1.0.7 Better app behavior
       Even more memory and speed improvements
 1.0.8 Introducing single profile widgets
+1.0.9 Locale plug-in added
 
