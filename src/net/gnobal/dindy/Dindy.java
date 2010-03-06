@@ -374,10 +374,10 @@ public class Dindy extends Activity {
 
 	private OnClickListener mHelpListener = new OnClickListener() {
 		public void onClick(View v) {
-			Dindy.this.showDialog(DIALOG_HELP);
-//			Intent i = new Intent(getApplicationContext(),
-//					net.gnobal.dindy.locale.EditActivity.class);
-//			Dindy.this.startActivity(i);
+//			Dindy.this.showDialog(DIALOG_HELP);
+			Intent i = new Intent(getApplicationContext(),
+					net.gnobal.dindy.locale.EditActivity.class);
+			Dindy.this.startActivity(i);
 		}
 	};
 

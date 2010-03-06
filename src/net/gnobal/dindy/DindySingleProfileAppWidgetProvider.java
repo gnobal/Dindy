@@ -73,7 +73,9 @@ public class DindySingleProfileAppWidgetProvider extends AppWidgetProvider {
     	final int N = appWidgetIds.length;
     	for (int i = N-1; i >=0; --i) {
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"updating widget ID " + appWidgetIds[i]);
+					"updating widget ID " + appWidgetIds[i] + 
+					" active profile ID " + activeProfileId + 
+					" previous profile ID " + previousProfileId);
     		DindySettings.WidgetSettings widgetSettings = 
     			prefsHelper.getWidgetSettings(widgetPrefs, appWidgetIds[i]);
     		if (widgetSettings == null) {

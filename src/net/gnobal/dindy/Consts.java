@@ -88,12 +88,14 @@ public class Consts {
 	static final long INFINITE_TIME = -1;
 	static final long MILLIS_IN_MINUTE = 60000;
 	static final String LOGTAG = "Dindy";
-	static final boolean DEBUG = false;
+	static final boolean DEBUG = true;
 	static final String EMPTY_STRING = "";
 	// NOTE these constants are used from outside (e.g. Locale) and cannot be 
 	// changed. External actions are for when you the action isn't really the
 	// intent's action, but is stored under a different intent (like in Locale)
 	// NEVER CHANGE THIS VALUES OR THEIR MEANING
+	public static final String ACTION_START_DINDY_SERVICE =
+		"net.gnobal.dindy.ACTION_START_DINDY_SERVICE";
 	public static final String ACTION_STOP_DINDY_SERVICE =
 		"net.gnobal.dindy.ACTION_STOP_DINDY_SERVICE";
 	public static final String EXTRA_PROFILE_ID = 

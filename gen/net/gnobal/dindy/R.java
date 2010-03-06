@@ -38,32 +38,33 @@ public final class R {
         public static final int power_button_pressed=0x7f02000b;
         public static final int power_button_selector_off=0x7f02000c;
         public static final int power_button_selector_on=0x7f02000d;
+        public static final int transparent_background=0x7f02000e;
     }
     public static final class id {
-        public static final int LinearLayout01=0x7f070001;
-        public static final int LinearLayout02=0x7f070007;
-        public static final int TableLayout01=0x7f07000b;
-        public static final int TableRow01=0x7f07000c;
-        public static final int TableRow02=0x7f07000e;
-        public static final int dialog_profile_name_edit_box=0x7f070011;
-        public static final int help_dialog_scroller=0x7f070000;
-        public static final int help_dialog_text_view=0x7f070002;
-        public static final int locale_usage_dialog_checkbox=0x7f070005;
-        public static final int locale_usage_dialog_scroller=0x7f070003;
-        public static final int locale_usage_dialog_text=0x7f070004;
-        public static final int main_edit_profiles_button=0x7f07000f;
-        public static final int main_help_button=0x7f070010;
-        public static final int main_power_button=0x7f070006;
-        public static final int main_profile_name=0x7f07000a;
-        public static final int main_profile_text=0x7f070009;
-        public static final int main_start_stop_text=0x7f070008;
-        public static final int profile_select_button=0x7f07000d;
-        public static final int single_profile_app_widget=0x7f070012;
-        public static final int single_profile_app_widget_image_button=0x7f070013;
-        public static final int single_profile_app_widget_text=0x7f070014;
-        public static final int startup_message_dialog_checkbox=0x7f070017;
-        public static final int startup_message_dialog_scroller=0x7f070015;
-        public static final int startup_message_dialog_text=0x7f070016;
+        public static final int LinearLayout01=0x7f080001;
+        public static final int LinearLayout02=0x7f080007;
+        public static final int TableLayout01=0x7f08000b;
+        public static final int TableRow01=0x7f08000c;
+        public static final int TableRow02=0x7f08000e;
+        public static final int dialog_profile_name_edit_box=0x7f080011;
+        public static final int help_dialog_scroller=0x7f080000;
+        public static final int help_dialog_text_view=0x7f080002;
+        public static final int locale_usage_dialog_checkbox=0x7f080005;
+        public static final int locale_usage_dialog_scroller=0x7f080003;
+        public static final int locale_usage_dialog_text=0x7f080004;
+        public static final int main_edit_profiles_button=0x7f08000f;
+        public static final int main_help_button=0x7f080010;
+        public static final int main_power_button=0x7f080006;
+        public static final int main_profile_name=0x7f08000a;
+        public static final int main_profile_text=0x7f080009;
+        public static final int main_start_stop_text=0x7f080008;
+        public static final int profile_select_button=0x7f08000d;
+        public static final int single_profile_app_widget=0x7f080012;
+        public static final int single_profile_app_widget_image_button=0x7f080013;
+        public static final int single_profile_app_widget_text=0x7f080014;
+        public static final int startup_message_dialog_checkbox=0x7f080017;
+        public static final int startup_message_dialog_scroller=0x7f080015;
+        public static final int startup_message_dialog_text=0x7f080016;
     }
     public static final class layout {
         public static final int help_dialog=0x7f030000;
@@ -153,10 +154,20 @@ public final class R {
         public static final int preferences_profiles_list_no_profiles_text=0x7f06002e;
         public static final int preferences_profiles_list_summary=0x7f06000c;
         public static final int preferences_single_profile_app_widget_name=0x7f06004a;
+        public static final int shortcuts_name=0x7f060053;
         public static final int startup_message_dialog_checkbox_text=0x7f060034;
         public static final int startup_message_dialog_ok_text=0x7f060036;
         public static final int startup_message_dialog_text=0x7f060035;
         public static final int startup_message_dialog_title=0x7f06003d;
+    }
+    public static final class style {
+        /**  Variation on our application theme that has a transparent
+         background; this example completely removes the background,
+         allowing the activity to decide how to composite.  Also here we
+         force the translucency ourself rather than making use of the built-in
+         translucent theme. 
+         */
+        public static final int Theme_Transparent=0x7f070000;
     }
     public static final class xml {
         public static final int single_profile_appwidget_provider=0x7f040000;

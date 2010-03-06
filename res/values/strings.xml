@@ -83,5 +83,6 @@
 <string name="locale_usage_dialog_checkbox_text">Do not show this message again</string>
 <string name="locale_dialog_title">Using Dindy in Locale</string>
 <string name="locale_dialog_ok_text">OK</string>
+<string name="shortcuts_name">Dindy</string>
 </resources>
 

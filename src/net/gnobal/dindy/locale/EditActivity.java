@@ -1,27 +1,25 @@
 package net.gnobal.dindy.locale;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.DialogInterface.OnClickListener;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
-import java.util.LinkedList;
 import net.gnobal.dindy.Consts;
 import net.gnobal.dindy.ProfilePreferencesHelper;
 import net.gnobal.dindy.R;
 
-public class EditActivity extends Activity {
+public class EditActivity extends net.gnobal.dindy.ExternalSourceSelectionActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setResult(RESULT_CANCELED);
+
 		final String breadcrumbString = getIntent().getStringExtra(
 				com.twofortyfouram.Intent.EXTRA_STRING_BREADCRUMB);
 		if (breadcrumbString != null) {
@@ -29,9 +27,6 @@ public class EditActivity extends Activity {
 					com.twofortyfouram.Intent.BREADCRUMB_SEPARATOR,
 					getString(R.string.locale_plugin_name)));
 		}
-		
-		mArrayAdapter = new ArrayAdapter<String>(this,
-			android.R.layout.select_dialog_item, mListItems);
 		
 		SharedPreferences preferences = getSharedPreferences(
 				Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
@@ -47,41 +42,13 @@ public class EditActivity extends Activity {
 	
 	@Override
 	protected Dialog onCreateDialog(int id) {
-		super.onCreateDialog(id);
+		Dialog dialog = super.onCreateDialog(id);
 		
-		AlertDialog dialog = null;
+		if (dialog != null) {
+			return dialog;
+		}
 		
 		switch (id) {
-		case DIALOG_SELECT:
-			ProfilePreferencesHelper prefsHelper = 
-				ProfilePreferencesHelper.instance(); 
-			mListItems.clear();
-			mListItems.addAll(prefsHelper.getAllProfileNamesSorted());
-			mListItems.addFirst(getString(R.string.locale_dialog_stop_dindy_text));
-			mArrayAdapter.notifyDataSetChanged();
-				
-			dialog = new AlertDialog.Builder(this)
-				.setTitle(R.string.app_name)
-				.setAdapter(mArrayAdapter, mOnItemClickListener)
-				.setNegativeButton(R.string.locale_dialog_cancel_text,
-					mOnCancelListener)
-				.setOnCancelListener(new DialogInterface.OnCancelListener() {
-					@Override
-					public void onCancel(DialogInterface dialog) {
-						setResult(RESULT_CANCELED);
-						removeDialog(DIALOG_SELECT);
-						finish();
-					}
-				})
-				.create();
-
-			// Only good if we were showing an actual activity and not just a
-			// dialog
-			//dialog.getWindow().setBackgroundDrawable(
-			//		SharedResources.getDrawableResource(getPackageManager(),
-			//				SharedResources.DRAWABLE_LOCALE_BORDER));
-			break;
-			
 		case DIALOG_USAGE:
 			LayoutInflater factory = LayoutInflater.from(this);
 			final View startupMessageView = factory.inflate(
@@ -128,15 +95,10 @@ public class EditActivity extends Activity {
 		return dialog;
 	}
 	
-	private DialogInterface.OnClickListener mOnCancelListener =
-		new  DialogInterface.OnClickListener() {
-		@Override
-		public void onClick(DialogInterface dialog, int which) {
-			setResult(RESULT_CANCELED);
-			removeDialog(DIALOG_SELECT);
-			finish();
-		}
-	};  
+	@Override
+	protected OnClickListener getOnClickListener() {
+		return mOnItemClickListener;
+	}
 	
 	private DialogInterface.OnClickListener mOnItemClickListener = 
 		new DialogInterface.OnClickListener() {
@@ -177,9 +139,5 @@ public class EditActivity extends Activity {
 		}		
 	};  
 	
-	private ArrayAdapter<String> mArrayAdapter = null;
-	private LinkedList<String> mListItems = new LinkedList<String>();
-	private static final int DIALOG_SELECT = 1;
 	private static final int DIALOG_USAGE = 2;
-	private static final int STOP_DINDY_ITEM_POSITION = 0; 
 }

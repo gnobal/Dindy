@@ -172,14 +172,27 @@ public class DindyService extends Service {
 	
 	public static Intent getStartServiceIntent(Context context,
 			long profileId) {
-		return new Intent(context, DindyService.class)
+		return prepareStartServiceIntent(
+				new Intent(context, DindyService.class), profileId);
+	}
+	
+	public static Intent prepareStartServiceIntent(Intent intent,
+			long profileId) {
+		return intent
 			.putExtra(Consts.EXTRA_PROFILE_ID, profileId)
-		// See:
-		// http://www.developer.com/ws/article.php/3837531/Handling-User-Interaction-with-Android-App-Widgets.htm
+			// See:
+			// http://www.developer.com/ws/article.php/3837531/Handling-User-Interaction-with-Android-App-Widgets.htm
 			.setData(Uri.withAppendedPath(Uri.parse("dindy://profile/id/"),
 				String.valueOf(profileId)));
 	}
+
+	/*  public static Intent getStartServiceBroadcastIntent(long profileId) {
+		return prepareStartServiceIntent(
+				new Intent(Consts.ACTION_START_DINDY_SERVICE),
+				profileId);
+	}
 	
+*/	
 	public static Intent getStopServiceBroadcastIntent() {
 		return new Intent(Consts.ACTION_STOP_DINDY_SERVICE);
 	}
@@ -332,11 +345,11 @@ public class DindyService extends Service {
 		}
 	}
 
-	private class DindyBroadcastReceiver extends BroadcastReceiver {
+	public class DindyBroadcastReceiver extends BroadcastReceiver {
 		public void onReceive(final Context context, final Intent intent) {
-			String action = intent.getAction();
-			Bundle extras = intent.getExtras(); 
-			if (action.equals(Intent.ACTION_NEW_OUTGOING_CALL)) {
+			final String action = intent.getAction();
+			if (Intent.ACTION_NEW_OUTGOING_CALL.equals(action)) {
+				Bundle extras = intent.getExtras(); 
 				String phoneNumber = extras.getString(
 					Intent.EXTRA_PHONE_NUMBER);
 				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,

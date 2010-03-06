@@ -6,7 +6,7 @@
 	android:gravity="center" android:id="@+id/single_profile_app_widget">
 	<ImageButton android:id="@+id/single_profile_app_widget_image_button" 
 		android:clickable="true" 
-		android:background="#00000000" 
+		android:background="@drawable/transparent_background" 
 		android:layout_height="wrap_content" 
 		android:layout_width="fill_parent" 
 		android:paddingBottom="3dp"
