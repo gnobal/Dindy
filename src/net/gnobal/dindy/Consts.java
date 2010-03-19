@@ -89,7 +89,7 @@ public class Consts {
 	static final long INFINITE_TIME = -1;
 	static final long MILLIS_IN_MINUTE = 60000;
 	static final String LOGTAG = "Dindy";
-	static final boolean DEBUG = true;
+	static final boolean DEBUG = false;
 	static final String EMPTY_STRING = "";
 	// NOTE these constants are used from outside (e.g. Locale) and cannot be 
 	// changed. External actions are for when you the action isn't really the
