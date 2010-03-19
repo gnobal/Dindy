@@ -23,6 +23,7 @@ public class Consts {
 			static final String KEY_SHOW_STARTUP_MESSAGE =
 				"show_startup_message";
 			public static final String KEY_SHOW_LOCALE_USAGE = "show_locale_usage";
+			public static final String KEY_SHOW_SHORTCUTS_USAGE = "show_shortcuts_usage";
 		}
 		
 		class Widget
@@ -98,8 +99,17 @@ public class Consts {
 		"net.gnobal.dindy.ACTION_START_DINDY_SERVICE";
 	public static final String ACTION_STOP_DINDY_SERVICE =
 		"net.gnobal.dindy.ACTION_STOP_DINDY_SERVICE";
-	public static final String EXTRA_PROFILE_ID = 
-		"profile_id";
+	public static final String EXTRA_PROFILE_ID = "profile_id";
+	public static final String EXTRA_PROFILE_NAME =  "profile_name";
+	public static final String EXTRA_INTENT_SOURCE = "intent_source";
+	
+	public static final int INTENT_SOURCE_UNKNOWN = 0;
+	public static final int INTENT_SOURCE_SHORTCUT = 1;
+	public static final int INTENT_SOURCE_WIDGET = 2;
+	public static final int INTENT_SOURCE_APP_MAIN = 3;
+	public static final int INTENT_SOURCE_APP_PROFILE_PREFS = 4;
+	public static final int INTENT_SOURCE_LOCALE = 5;
+
 	public static final String EXTRA_EXTERNAL_ACTION =
 		"net.gnobal.dindy.EXTERNAL_ACTION";
 	public static final String EXTRA_EXTERNAL_ACTION_START_SERVICE =

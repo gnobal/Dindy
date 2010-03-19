@@ -137,7 +137,8 @@ public class DindySingleProfileAppWidgetProvider extends AppWidgetProvider {
     				R.drawable.app_widget_button_selector_on);
         	pendingIntent = PendingIntent.getService(context, 0, 
             		DindyService.getStartServiceIntent(context,
-            				widgetSettings.mProfileId), 0);
+            				widgetSettings.mProfileId, null, 
+            				Consts.INTENT_SOURCE_WIDGET), 0);
     	} else {
     		return;
     	}

@@ -22,13 +22,11 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import java.util.LinkedList;
 
-// TODO fix for this version:
-// - test plan
-// - use alarm ( http://developer.android.com/reference/android/app/AlarmManager.html )
-//   instead of Java Timer because it wakes up even if the phone is sleeping
-//   (use one of the *_WAKEUP types). Maybe use Handler.
-
 //TODO fix/add in future versions:
+//- test plan
+//- use alarm ( http://developer.android.com/reference/android/app/AlarmManager.html )
+//  instead of Java Timer because it wakes up even if the phone is sleeping
+//  (use one of the *_WAKEUP types). Maybe use Handler.
 // - phone shutdown - restore to user's settings or restore Dindy by registering
 //   to start at boot time
 // - Allow parameters in SMS like {Caller} {Time}
@@ -40,6 +38,8 @@ import java.util.LinkedList;
 // - Voice response instead of SMS (Albert)
 // - Show a summary of the current profile on the main screen (Roman)
 // - know when in a car dock by using the intent ACTION_DOCK_EVENT/EXTRA_DOCK_STATE/EXTRA_DOCK_STATE_CAR/EXTRA_DOCK_STATE_DESK/EXTRA_DOCK_STATE_UNDOCKED 
+// - "smart mode" - when a number that isn't mobile calls send the SMS to the most called-to mobile number of the same person
+// - Deal with crashes and restart by saving the latest settings and restoring them
 
 public class Dindy extends Activity {
 	@Override
@@ -155,7 +155,7 @@ public class Dindy extends Activity {
 				.setIcon(android.R.drawable.ic_dialog_info)
 				.setTitle(R.string.startup_message_dialog_title)
 				.setView(startupMessageView)
-				.setPositiveButton(R.string.startup_message_dialog_ok_text,
+				.setPositiveButton(R.string.message_dialog_ok_text,
 					new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog,
 							int which) {
@@ -172,7 +172,7 @@ public class Dindy extends Activity {
 						editor.commit();
 					}})
 				.create();
-			
+			dialog.setOwnerActivity(this);
 			return dialog;
 		}
 		
@@ -194,6 +194,7 @@ public class Dindy extends Activity {
 					new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog,
 							int which) {
+						removeDialog(DIALOG_HELP);
 					}})
 				.create();
 			dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
@@ -358,7 +359,7 @@ public class Dindy extends Activity {
 
 	private void startDindyServiceWithSelectedProfileId() {
 		startService(DindyService.getStartServiceIntent(getApplicationContext(),
-				mSelectedProfileId));
+				mSelectedProfileId, null, Consts.INTENT_SOURCE_APP_MAIN));
 	}
 	
 	private OnClickListener mSelectProfileListener = new OnClickListener() {
@@ -374,10 +375,10 @@ public class Dindy extends Activity {
 
 	private OnClickListener mHelpListener = new OnClickListener() {
 		public void onClick(View v) {
-//			Dindy.this.showDialog(DIALOG_HELP);
-			Intent i = new Intent(getApplicationContext(),
-					net.gnobal.dindy.locale.EditActivity.class);
-			Dindy.this.startActivity(i);
+			Dindy.this.showDialog(DIALOG_HELP);
+//			Intent i = new Intent(getApplicationContext(),
+//					net.gnobal.dindy.locale.EditActivity.class);
+//			Dindy.this.startActivity(i);
 		}
 	};
 

@@ -2,71 +2,83 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="net.gnobal.dindy"
       android:versionName="1.0.9" android:versionCode="10">
-    <application android:icon="@drawable/icon" android:label="@string/app_name" android:name=".DindyApplication" android:debuggable="true">
-        <activity android:label="@string/app_name" android:name=".Dindy">
+    <application android:icon="@drawable/icon" 
+    	android:label="@string/app_name" 
+    	android:name=".DindyApplication" 
+    	android:debuggable="true">
+        
+        <!-- Main activities -->
+        
+        <activity android:name=".Dindy" android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ProfilesListActivity" android:label="@string/preferences_profiles_list">
+        <activity android:name=".ProfilesListActivity" 
+        	android:label="@string/preferences_profiles_list">
         </activity>
-        <activity android:name=".ProfilePreferencesActivity" android:label="@string/preferences_profile_editor">
+        <activity android:name=".ProfilePreferencesActivity" 
+        	android:label="@string/preferences_profile_editor">
         </activity>
-        
-        <!-- Locale related stuff -->
-        
-		<activity 
-			android:name=".locale.EditActivity" 
-			android:label="@string/locale_plugin_name" 
-			android:icon="@drawable/icon" 
-			android:theme="@android:style/Theme.Translucent">
-			<intent-filter>
-				<action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" />
-			</intent-filter>
-		</activity>
-		<receiver android:name=".locale.FireReceiver">
-			<!-- Intent filter allows the plug-in to be fired -->
-			<intent-filter>
-				<action android:name="com.twofortyfouram.locale.intent.action.FIRE_SETTING" />
-			</intent-filter>
-		</receiver>
-		
-		<!-- Widget related stuff -->
-		
-        <activity android:name=".DindySingleProfileAppWidgetConfigure">
+
+		<!-- App widgets -->
+
+        <activity
+        	android:name=".DindySingleProfileAppWidgetConfigure" 
+        	android:theme="@style/Theme.Transparent">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
         </activity>
-        <receiver android:name=".DindySingleProfileAppWidgetProvider" android:label="@string/preferences_single_profile_app_widget_name">
-            <meta-data android:name="android.appwidget.provider"
+        <receiver android:name=".DindySingleProfileAppWidgetProvider" 
+        	android:label="@string/preferences_single_profile_app_widget_name">
+            <meta-data android:name="android.appwidget.provider" 
                     android:resource="@xml/single_profile_appwidget_provider" />
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
         </receiver>
 
-		<!-- Shortcut related stuff -->
-		
+		<!-- Locale -->
+
+		<activity 
+			android:name=".locale.EditActivity" 
+			android:label="@string/locale_plugin_name" 
+			android:icon="@drawable/icon"
+			android:theme="@android:style/Theme.Translucent">
+			<intent-filter>
+				<action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" />
+			</intent-filter>
+		</activity>
+		<receiver android:name=".locale.FireReceiver">
+			<intent-filter>
+				<action android:name="com.twofortyfouram.locale.intent.action.FIRE_SETTING" />
+			</intent-filter>
+		</receiver>
+
+		<!-- Shortcuts -->
+ 		
 		<activity android:name=".DindyShortcuts" 
 			android:label="@string/shortcuts_name" 
-			android:theme="@style/Theme.Transparent"> 
+			android:theme="@style/Theme.Transparent">
             <intent-filter>
                 <action android:name="net.gnobal.dindy.ACTION_START_DINDY_SERVICE" />
-                <action android:name="android.intent.action.MAIN" />
+                <action android:name="net.gnobal.dindy.ACTION_STOP_DINDY_SERVICE" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
         <activity-alias android:name=".CreateShortcuts"
             android:targetActivity=".DindyShortcuts"
-            android:label="@string/shortcuts_name">
-
-            <!--  This intent-filter allows your shortcuts to be created in the launcher. -->
+            android:label="@string/shortcuts_name" 
+            android:theme="@style/Theme.Transparent">
             <intent-filter>
                 <action android:name="android.intent.action.CREATE_SHORTCUT" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity-alias>
+
+		<!-- Service -->
 
         <service android:name=".DindyService"></service>
 	</application>
@@ -80,11 +92,11 @@
     <uses-permission android:name="android.permission.WAKE_LOCK"></uses-permission>
 
     <supports-screens 
-	android:anyDensity="true" 
-	android:largeScreens="true" 
-	android:smallScreens="true" 
-	android:resizeable="true" 
-	android:normalScreens="true">
+		android:anyDensity="true" 
+		android:largeScreens="true" 
+		android:smallScreens="true" 
+		android:resizeable="true" 
+		android:normalScreens="true">
     </supports-screens>
 
 </manifest> 

@@ -1,11 +1,13 @@
 package net.gnobal.dindy;
 
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.DialogInterface.OnClickListener;
 import android.os.Bundle;
-import android.view.Window;
+import android.os.Parcelable;
 
 public class DindyShortcuts extends ExternalSourceSelectionActivity {
 
@@ -13,24 +15,44 @@ public class DindyShortcuts extends ExternalSourceSelectionActivity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		final Intent intent = getIntent();
-		if (intent != null) {
-			final String action = intent.getAction();
-			if (Consts.ACTION_START_DINDY_SERVICE.equals(action)) {
-				Bundle extras = intent.getExtras();
-				final long profileId = extras.getLong(Consts.EXTRA_PROFILE_ID,
-						Consts.NOT_A_PROFILE_ID);
-				startService(DindyService.getStartServiceIntent(
-						getApplicationContext(), profileId));
-				setResult(RESULT_CANCELED);
-				finish();
+		final String action = intent.getAction();
+		if (Consts.ACTION_START_DINDY_SERVICE.equals(action)) {
+			Bundle extras = intent.getExtras();
+			final long profileId = extras.getLong(Consts.EXTRA_PROFILE_ID,
+					Consts.NOT_A_PROFILE_ID);
+			if (DindyService.getCurrentProfileId() == profileId) {
+				// The user clicked the shortcut that starts the same profile as
+				// the one running now. We assume he/she wants to stop the 
+				// profile from running
+				stopDindyService();
 				return;
 			}
-		}		
-		// setTitle()
+			
+			final String profileName = extras.getString(
+					Consts.EXTRA_PROFILE_NAME);
+			startService(DindyService.getStartServiceIntent(
+					getApplicationContext(), profileId, profileName,
+					Consts.INTENT_SOURCE_SHORTCUT));
+			setResult(RESULT_CANCELED);
+			finish();
+			return;
+		} else if (Consts.ACTION_STOP_DINDY_SERVICE.equals(action)) {
+			stopDindyService();
+			return;
+		}
+
+		SharedPreferences preferences = getSharedPreferences(
+				Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
+		final boolean showShortcutsUsage =
+			preferences.getBoolean(Consts.Prefs.Main.KEY_SHOW_SHORTCUTS_USAGE,
+					true);
+		if (!showShortcutsUsage) {
+			showDialog(DIALOG_SELECT);
+			return;
+		}
 		
-		showDialog(DIALOG_SELECT);
+		showDialog(DIALOG_USAGE);
 	}
 
 	@Override
@@ -43,6 +65,32 @@ public class DindyShortcuts extends ExternalSourceSelectionActivity {
 		return mOnItemClickListener;
 	}
 
+	@Override
+	protected int getUsageDialogCheckboxResId() {
+		return R.id.shortcuts_usage_dialog_checkbox;
+	}
+	
+	@Override
+	protected int getUsageDialogLayoutResId() {
+		return R.layout.shortcuts_usage_dialog;
+	}
+	
+	@Override
+	protected String getUsageDialogPreferenceKey() {
+		return Consts.Prefs.Main.KEY_SHOW_SHORTCUTS_USAGE;
+	}
+
+	@Override
+	protected int getUsageDialogTitleResId() {
+		return R.string.shortcuts_usage_dialog_title;
+	}  
+	
+	private void stopDindyService() {
+		stopService(DindyService.getStopServiceIntent(
+				getApplicationContext()));
+		setResult(RESULT_CANCELED);
+		finish();
+	}
 	
 	private DialogInterface.OnClickListener mOnItemClickListener = 
 		new DialogInterface.OnClickListener() {
@@ -52,26 +100,25 @@ public class DindyShortcuts extends ExternalSourceSelectionActivity {
 			Intent shortcutIntent = null;
 	        Intent returnIntent = new Intent();
 			if (which == STOP_DINDY_ITEM_POSITION) {
-				shortcutIntent = DindyService.getStopServiceIntent(
-						getApplicationContext());
+				shortcutIntent = new Intent(Consts.ACTION_STOP_DINDY_SERVICE)
+					.setClass(getApplicationContext(), DindyShortcuts.class);			
 			} else {
 				ProfilePreferencesHelper prefsHelper = 
 					ProfilePreferencesHelper.instance();
 				final long profileId = prefsHelper.getProfileIdFromName(text);
-				//shortcutIntent = DindyService.getStartServiceBroadcastIntent(
-				//		profileId);
-				shortcutIntent = new Intent(Consts.ACTION_START_DINDY_SERVICE)
-					.putExtra(Consts.EXTRA_PROFILE_ID, profileId)
-					.setClass(getApplicationContext(), DindyShortcuts.class);
+				shortcutIntent =
+					DindyService.prepareStartServiceIntent(
+							new Intent(Consts.ACTION_START_DINDY_SERVICE),
+								profileId, text, Consts.INTENT_SOURCE_SHORTCUT)
+					.setClass(getApplicationContext(), DindyShortcuts.class);					
 			}
 
-			//shortcutIntent.setClassName(ShortcutCreationActivity.this,
-			//		ShortcutCreationActivity.this.getClass().getName());
 			returnIntent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent);
 			returnIntent.putExtra(Intent.EXTRA_SHORTCUT_NAME, text);
-	        //Parcelable iconResource = Intent.ShortcutIconResource.fromContext(
-	        //        this,  R.drawable.app_sample_code);
-	        //intent.putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE, iconResource);
+	        Parcelable iconResource = Intent.ShortcutIconResource.fromContext(
+	        		DindyShortcuts.this, R.drawable.shortcut_button);
+	        returnIntent.putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE,
+	        		iconResource);
 	        setResult(RESULT_OK, returnIntent);
 			removeDialog(DIALOG_SELECT);
 			finish();

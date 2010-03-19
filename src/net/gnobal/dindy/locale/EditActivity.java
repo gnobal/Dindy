@@ -1,16 +1,11 @@
 package net.gnobal.dindy.locale;
 
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.DialogInterface.OnClickListener;
 import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.CheckBox;
 import net.gnobal.dindy.Consts;
 import net.gnobal.dindy.ProfilePreferencesHelper;
 import net.gnobal.dindy.R;
@@ -39,66 +34,31 @@ public class EditActivity extends net.gnobal.dindy.ExternalSourceSelectionActivi
 		
 		showDialog(DIALOG_USAGE);
 	}
-	
-	@Override
-	protected Dialog onCreateDialog(int id) {
-		Dialog dialog = super.onCreateDialog(id);
-		
-		if (dialog != null) {
-			return dialog;
-		}
-		
-		switch (id) {
-		case DIALOG_USAGE:
-			LayoutInflater factory = LayoutInflater.from(this);
-			final View startupMessageView = factory.inflate(
-					R.layout.locale_usage_dialog, null);
-			dialog = new AlertDialog.Builder(this)
-				.setIcon(android.R.drawable.ic_dialog_info)
-				.setTitle(R.string.locale_dialog_title)
-				.setView(startupMessageView)
-				.setPositiveButton(R.string.locale_dialog_ok_text,
-					new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog,
-							int which) {
-						SharedPreferences preferences = getSharedPreferences(
-								Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
-						CheckBox checkBox = (CheckBox) 
-							((AlertDialog) dialog).findViewById(
-								R.id.locale_usage_dialog_checkbox);
-						SharedPreferences.Editor editor = 
-							preferences.edit();
-						editor.putBoolean(
-								Consts.Prefs.Main.KEY_SHOW_LOCALE_USAGE,
-								!checkBox.isChecked());
-						editor.commit();
-						removeDialog(DIALOG_USAGE);
-						showDialog(DIALOG_SELECT);
-					}})
-				.setOnCancelListener(new DialogInterface.OnCancelListener() {
-					@Override
-					public void onCancel(DialogInterface dialog) {
-						setResult(RESULT_CANCELED);
-						finish();
-						removeDialog(DIALOG_USAGE);
-					}
-				})
-				.create();
-			break;
 
-		default:
-			return null;	
-		}
-		
-		dialog.setOwnerActivity(this);
-
-		return dialog;
-	}
-	
 	@Override
 	protected OnClickListener getOnClickListener() {
 		return mOnItemClickListener;
 	}
+	
+	@Override
+	protected int getUsageDialogCheckboxResId() {
+		return R.id.locale_usage_dialog_checkbox;
+	}
+	
+	@Override
+	protected int getUsageDialogLayoutResId() {
+		return R.layout.locale_usage_dialog;
+	}
+	
+	@Override
+	protected String getUsageDialogPreferenceKey() {
+		return Consts.Prefs.Main.KEY_SHOW_LOCALE_USAGE;
+	}
+
+	@Override
+	protected int getUsageDialogTitleResId() {
+		return R.string.locale_usage_dialog_title;
+	}  
 	
 	private DialogInterface.OnClickListener mOnItemClickListener = 
 		new DialogInterface.OnClickListener() {
@@ -118,6 +78,8 @@ public class EditActivity extends net.gnobal.dindy.ExternalSourceSelectionActivi
 				final long profileId = prefsHelper.getProfileIdFromName(text);
 				storeAndForwardExtras.putLong(Consts.EXTRA_PROFILE_ID,
 					profileId);	
+				storeAndForwardExtras.putString(
+						Consts.EXTRA_PROFILE_NAME, text);
 			}
 
 			if (text.length() >
@@ -137,7 +99,7 @@ public class EditActivity extends net.gnobal.dindy.ExternalSourceSelectionActivi
 			removeDialog(DIALOG_SELECT);
 			finish();
 		}		
-	};  
-	
-	private static final int DIALOG_USAGE = 2;
+	};
+
+	//private static final int DIALOG_USAGE = 2;
 }

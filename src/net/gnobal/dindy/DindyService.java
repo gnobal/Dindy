@@ -23,6 +23,7 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Config;
 import android.util.Log;
+import android.widget.Toast;
 
 public class DindyService extends Service {
 	@Override
@@ -72,31 +73,55 @@ public class DindyService extends Service {
 		final boolean firstStart = 
 			(mCurrentProfileId == Consts.NOT_A_PROFILE_ID);
 		Bundle extras = intent.getExtras();
-		if (extras != null) {
-			// Whoever started the service gave us a profile ID to use so we use
-			// it blindly
-			mCurrentProfileId = extras.getLong(Consts.EXTRA_PROFILE_ID);
-			if (!mPreferencesHelper.profileExists(mCurrentProfileId)) {
-				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
-					"profile ID " + mCurrentProfileId + " doesn't exist");
-				if (firstStart) {
-					stopSelf();
-					return;
-				}
-			}
-			if (previousProfileId != mCurrentProfileId) {
-				DindySingleProfileAppWidgetProvider.updateAllSingleProfileWidgets(
-						getApplicationContext(), mCurrentProfileId,
-						previousProfileId);
-			}
-			refreshSettings(mCurrentProfileId, firstStart);
-			saveLastUsedProfileId();
-		} else {
+		if (extras == null) {
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
-					"error! no extras sent to service");
+			"error! no extras sent to service");
 			stopSelf();
 			return;
 		}
+		// Whoever started the service gave us a profile ID to use so we use
+		// it blindly
+		mCurrentProfileId = extras.getLong(Consts.EXTRA_PROFILE_ID);
+		final String profileName = extras.getString(
+				Consts.EXTRA_PROFILE_NAME);
+		if (!mPreferencesHelper.profileExists(mCurrentProfileId)) {
+			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
+				"profile ID " + mCurrentProfileId + " doesn't exist");
+/*				// Try to deduce profile ID from name
+				final String profileName = extras.getString(
+						Consts.EXTRA_PROFILE_NAME);
+				if (profileName != null) { 
+					mCurrentProfileId = mPreferencesHelper.getProfileIdFromName(
+							profileName);
+				}
+
+				if (mCurrentProfileId != Consts.NOT_A_PROFILE_ID) {
+					if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
+							"deduced profile ID " + mCurrentProfileId + " for " +
+							"profile name " + profileName);
+				} else {
+*/					// Still couldn't find the profile
+			if (firstStart) {
+				Toast.makeText(getApplicationContext(),
+						R.string.toast_text_profile_doesnt_exist_exit,
+						Toast.LENGTH_LONG).show();
+				stopSelf();
+				return;
+			} else {
+				Toast.makeText(getApplicationContext(),
+						R.string.toast_text_profile_doesnt_exist_continue,
+						Toast.LENGTH_LONG).show();
+				mCurrentProfileId = previousProfileId;
+			}
+//				}
+		}
+		if (previousProfileId != mCurrentProfileId) {
+			DindySingleProfileAppWidgetProvider.updateAllSingleProfileWidgets(
+					getApplicationContext(), mCurrentProfileId,
+					previousProfileId);
+		}
+		refreshSettings(mCurrentProfileId, firstStart);
+		saveLastUsedProfileId();
 		
 		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
 			"starting profile " + mCurrentProfileId);
@@ -107,7 +132,18 @@ public class DindyService extends Service {
 		if (firstStart) {
 			showNotification();
 		} else {
-			// TODO should we display a "Dindy refreshed" toast? 
+			String refreshText = 
+				getString(R.string.dindy_service_refreshed_text);
+			if (profileName != null) {
+				refreshText = refreshText + " (" + profileName + ")";
+			}
+			final int source = extras.getInt(Consts.EXTRA_INTENT_SOURCE,
+					Consts.INTENT_SOURCE_UNKNOWN);
+			if (source == Consts.INTENT_SOURCE_SHORTCUT ||
+				source == Consts.INTENT_SOURCE_APP_PROFILE_PREFS) {
+				Toast.makeText(getApplicationContext(), refreshText,
+						Toast.LENGTH_SHORT).show();
+			}
 		}
 	}
 
@@ -171,17 +207,26 @@ public class DindyService extends Service {
 	}
 	
 	public static Intent getStartServiceIntent(Context context,
-			long profileId) {
+			long profileId, String profileName, int source) {
 		return prepareStartServiceIntent(
-				new Intent(context, DindyService.class), profileId);
+				new Intent(context, DindyService.class), profileId, profileName,
+					source);
 	}
 	
-	public static Intent prepareStartServiceIntent(Intent intent,
-			long profileId) {
+	public static Intent prepareStartServiceIntent(
+			Intent intent, long profileId, String profileName, int source) {
+		if (profileName == null) {
+			// Try to find out the profile name from the preferences
+			profileName = 
+				ProfilePreferencesHelper.instance().getProfielNameFromId(
+						profileId);
+		}
 		return intent
 			.putExtra(Consts.EXTRA_PROFILE_ID, profileId)
+			.putExtra(Consts.EXTRA_PROFILE_NAME, profileName)
 			// See:
 			// http://www.developer.com/ws/article.php/3837531/Handling-User-Interaction-with-Android-App-Widgets.htm
+			.putExtra(Consts.EXTRA_INTENT_SOURCE, source)
 			.setData(Uri.withAppendedPath(Uri.parse("dindy://profile/id/"),
 				String.valueOf(profileId)));
 	}
@@ -221,7 +266,8 @@ public class DindyService extends Service {
 	private void showNotification() {
 		// In this sample, we'll use the same text for the ticker and the
 		// expanded notification
-		CharSequence text = getText(R.string.dindy_service_started);
+		CharSequence text = getText(R.string.dindy_service_started);// + " (" + 
+			//mPreferencesHelper.getProfielNameFromId(mCurrentProfileId) + ")";
 
 		// Set the icon, scrolling text and timestamp
 		Notification notification = new Notification(

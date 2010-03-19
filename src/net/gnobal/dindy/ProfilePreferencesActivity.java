@@ -248,7 +248,8 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 				//		mProfileId);
 				//startService(serviceIntent);
 				startService(DindyService.getStartServiceIntent(
-						getApplicationContext(), mProfileId));
+						getApplicationContext(), mProfileId, null,
+						Consts.INTENT_SOURCE_APP_PROFILE_PREFS));
 			}
 		}
 	}

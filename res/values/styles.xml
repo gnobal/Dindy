@@ -1,16 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Variation on our application theme that has a transparent
-         background; this example completely removes the background,
-         allowing the activity to decide how to composite.  Also here we
-         force the translucency ourself rather than making use of the built-in
-         translucent theme. -->
-    <style name="Theme.Transparent" parent="android:style/Theme.Translucent">
+    <style name="Theme.Transparent" parent="android:Theme">
         <item name="android:windowIsTranslucent">true</item>
-        <item name="android:windowAnimationStyle">@android:style/Animation.Translucent</item>
-        <item name="android:windowBackground">@drawable/transparent_background</item>
+        <item name="android:windowBackground">@color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowNoTitle">true</item>
-        <item name="android:colorForeground">#fff</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
     </style>
-
 </resources>
