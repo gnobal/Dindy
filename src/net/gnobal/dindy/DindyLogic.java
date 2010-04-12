@@ -215,9 +215,11 @@ class DindyLogic {
 				"onRinging: WakeLock acquired, " + mWakeLock.toString());
 		
 		if (number == null || number.trim().length() == 0) {
-			// Got an empty number. Nothing to do about that
-			return;
+			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+					"onRinging: the number is empty, treating as unknown");
 		}
+		else
+		{
 		String callerIdNumber = PhoneNumberUtils.toCallerIDMinMatch(number);
 		if (callerIdNumber == null || callerIdNumber.length() <= 0) {
 			return;
@@ -259,7 +261,7 @@ class DindyLogic {
 			setRingerAndVibrateModes(mSettings.mFirstRingSettings);
 			return;
 		}
-		
+		}
 		if (mSettings.mTreatUnknownCallers.equals(
 			Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_FIRST)) {
 			setRingerAndVibrateModes(mSettings.mFirstRingSettings);

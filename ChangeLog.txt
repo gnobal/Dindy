@@ -16,4 +16,4 @@
 1.0.8 Introducing single profile widgets
 1.0.9 Locale plug-in added
 1.1.0 Shortcuts added
-1.1.1
+1.1.1 Fixed an issue where a caller with a blank caller ID was not treated as unknown
