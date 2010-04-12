@@ -126,7 +126,6 @@ public final class R {
         public static final int preferences_name=0x7f07000b;
         public static final int preferences_new_profile=0x7f070004;
         public static final int preferences_new_profile_summary=0x7f070005;
-        public static final int preferences_profile_call_settings=0x7f07002d;
         public static final int preferences_profile_editor=0x7f070003;
         public static final int preferences_profile_enable_sms_sending_summary=0x7f070031;
         public static final int preferences_profile_enable_sms_sending_title=0x7f070026;
@@ -134,11 +133,15 @@ public final class R {
         public static final int preferences_profile_first_ring_flash=0x7f07000a;
         public static final int preferences_profile_first_ring_sound=0x7f070008;
         public static final int preferences_profile_first_ring_vibrate=0x7f070009;
+        public static final int preferences_profile_general=0x7f07002d;
         public static final int preferences_profile_list_preference_current_prefix=0x7f070033;
         public static final int preferences_profile_menu_cancel=0x7f070028;
         public static final int preferences_profile_menu_delete=0x7f070021;
         public static final int preferences_profile_menu_done=0x7f070022;
         public static final int preferences_profile_menu_rename=0x7f070020;
+        public static final int preferences_profile_non_mobile_caller_behavior_dialog_title=0x7f070057;
+        public static final int preferences_profile_non_mobile_caller_behavior_summary=0x7f070059;
+        public static final int preferences_profile_non_mobile_caller_behavior_title=0x7f070058;
         public static final int preferences_profile_second_ring=0x7f07000d;
         public static final int preferences_profile_second_ring_flash=0x7f070010;
         public static final int preferences_profile_second_ring_sound=0x7f07000e;

@@ -42,7 +42,8 @@ public class DindyApplication extends Application {
 	private void createProfile(int profileNameResource, int textMessageResource, 
 			boolean firstRingPlaySound, boolean firstRingVibrate,
 			boolean secondRingPlaySound, boolean secondRingVibrate,
-			long timeBetweenCallsMinutes, String treatUnknownCallers) {
+			long timeBetweenCallsMinutes,
+			String treatUnknownAndNonMobileCallers) {
 		String profileName = getString(profileNameResource);
 		ProfilePreferencesHelper prefsHelper =
 			ProfilePreferencesHelper.instance();
@@ -71,8 +72,10 @@ public class DindyApplication extends Application {
 				secondRingVibrate);
 		editor.putString(Consts.Prefs.Profile.KEY_TIME_BETWEEN_CALLS_MINUTES,
 				Long.toString(timeBetweenCallsMinutes));
+		editor.putString(Consts.Prefs.Profile.KEY_TREAT_NON_MOBILE_CALLERS,
+				treatUnknownAndNonMobileCallers);
 		editor.putString(Consts.Prefs.Profile.KEY_TREAT_UNKNOWN_CALLERS,
-				treatUnknownCallers);
+				treatUnknownAndNonMobileCallers);
 		editor.commit();
 	}
 }

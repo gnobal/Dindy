@@ -254,26 +254,28 @@ class DindyLogic {
 		// It's not a number that called us. Let's see if it's a number that 
 		// we're supposed to remember. If it is, we use the first ring settings.
 		// If it's not, we use whatever the user asked us to in this case
-		if (shouldRememberNumber(callerIdNumber)) {
+		NumberProperties numberProps = getNumberProperties(callerIdNumber);
+		if (numberProps.mShouldRememberNumber) {
 			// Quiet the phone down according to user's setting
 			setRingerAndVibrateModes(mSettings.mFirstRingSettings);
 			return;
 		}
 		
-		if (mSettings.mTreatUnknownCallers.equals(
-			Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_FIRST)) {
+		final String setting = numberProps.mIsKnown ?
+				mSettings.mTreatNonMobileCallers :
+				mSettings.mTreatUnknownCallers;
+		
+		if (Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_FIRST.equals(setting)) {
 			setRingerAndVibrateModes(mSettings.mFirstRingSettings);
 			return;			
 		}
 		
-		if (mSettings.mTreatUnknownCallers.equals(
-			Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_SECOND)) {
+		if (Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_SECOND.equals(setting)) {
 			setRingerAndVibrateModes(mSettings.mSecondRingSettings);
 			return;
 		}
 		
-		if (mSettings.mTreatUnknownCallers.equals(
-			Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_NORMAL)) {
+		if (Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_NORMAL.equals(setting)) {
 			setRingerAndVibrateModes(mSettings.mUserSettings);
 			return;
 		}
@@ -370,7 +372,8 @@ class DindyLogic {
 
 		// A new missed call that we haven't saved yet
 		// Is it a number we need to remember?
-		if (!shouldRememberNumber(callerIdNumber)) {
+		NumberProperties numberProps = getNumberProperties(callerIdNumber);
+		if (!numberProps.mShouldRememberNumber) {
 			releaseWakeLockIfHeld("onMissedCall 5");
 			return;
 		}
@@ -419,51 +422,72 @@ class DindyLogic {
 		releaseWakeLockIfHeld("onIncomingCallInCallsDB");
 	}
 
-	private boolean shouldRememberNumber(String callerIdNumber) {
+	private class NumberProperties
+	{
+		boolean mIsKnown = false;
+		boolean mShouldRememberNumber = false;
+	}
+	
+	private NumberProperties getNumberProperties(String callerIdNumber) {
+		NumberProperties props = new NumberProperties();
 		if (callerIdNumber == null || callerIdNumber.length() <= 0) {
-			return false;
+			return props;
 		}
 		// Sample selection to select the rightmost MIN_MATCH (5) characters 
 		// to filter the incoming call:
 		// SUBSTR(number_key,1,5) = '54321' AND type = 2
 		String query = new StringBuilder("SUBSTR(").append(Phones.NUMBER_KEY)
 		.append(",1,").append(callerIdNumber.length())
-		.append(") = '").append(callerIdNumber).append("' AND ")
-		.append(PhonesColumns.TYPE).append(" = ")
-		.append(PhonesColumns.TYPE_MOBILE).toString();
+		.append(") = '").append(callerIdNumber).append("'").toString();
+		//.append("' AND ")
+		//.append(PhonesColumns.TYPE).append(" = ")
+		//.append(PhonesColumns.TYPE_MOBILE).toString();
 		Cursor phonesCursor = mResolver.query(Phones.CONTENT_URI, 
 				PHONES_PROJECTION, 
 				query,
 				null, null);
 		int count = phonesCursor.getCount();
+		props.mIsKnown = count >= 1;
+		while (phonesCursor.moveToNext()) {
+			if (phonesCursor.getInt(PHONE_TYPE_INDEX) == PhonesColumns.TYPE_MOBILE) {
+				props.mShouldRememberNumber = true;
+				break;
+			}
+		}
 		phonesCursor.deactivate();
-		//if (Config.LOGD && Consts.DEBUG)  Log.d(Consts.LOGTAG, 
-		//"query=" + query + ", count=" + count);
 		phonesCursor.close();
 		phonesCursor = null;
-		if (count < 1) {
+
+		if (props.mIsKnown) {
+			if (props.mShouldRememberNumber) {
+				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+						callerIdNumber + " is a known mobile callerId number");
+			} else {
+				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
+						"known non-mobile callerId number " + callerIdNumber);
+			}
+		} else {
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
 					"unknown callerId number " + callerIdNumber);
-			return false;
 		}
-		
-		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, callerIdNumber +
-				" is a known callerId number");
-		return true;
+
+		return props;
 	}
 
 	private void setRingerAndVibrateModes(DindySettings.RingerVibrateSettings
 			settings) {
 		if (mAM.getRingerMode() != settings.mRingerMode) { 
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"setting ringer=" + settings.mRingerMode);
+					"setting ringer=" +
+					Utils.ringerModeToString(settings.mRingerMode));
 			mAM.setRingerMode(settings.mRingerMode);
 			//++mNumSelfRingerVibrateChanges;
 		}
 		if (mAM.getVibrateSetting(AudioManager.VIBRATE_TYPE_RINGER) != 
 			settings.mVibrateModeRinger) {
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"setting vibrateRinger=" + settings.mVibrateModeRinger);
+					"setting vibrateRinger=" +
+					Utils.vibrationSettingToString(settings.mVibrateModeRinger));
 			mAM.setVibrateSetting(AudioManager.VIBRATE_TYPE_RINGER,
 					settings.mVibrateModeRinger);
 			//++mNumSelfRingerVibrateChanges;
@@ -472,7 +496,7 @@ class DindyLogic {
 			settings.mVibrateModeNotification) {
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
 					"setting vibrateNotification=" +
-					settings.mVibrateModeNotification);
+					Utils.vibrationSettingToString(settings.mVibrateModeNotification));
 			mAM.setVibrateSetting(AudioManager.VIBRATE_TYPE_NOTIFICATION,
 					settings.mVibrateModeNotification);
 			//++mNumSelfRingerVibrateChanges;
@@ -578,10 +602,8 @@ class DindyLogic {
 	private AudioManager mAM = null;
 	private PowerManager mPM = null;
 	private PowerManager.WakeLock mWakeLock = null;
-	private String[] PHONES_PROJECTION =
-	{
-		Phones.TYPE
-	};
+	private static final String[] PHONES_PROJECTION = { Phones.TYPE };
+	private static final int PHONE_TYPE_INDEX = 0; 
 	private ContentResolver mResolver = null;
 	private BroadcastReceiver mOnSentReceiver = new BroadcastReceiver() {
 		@Override
