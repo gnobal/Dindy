@@ -19,6 +19,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.provider.CallLog;
+//import android.provider.Settings;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Config;
@@ -62,6 +63,16 @@ public class DindyService extends Service {
 		// button and this line was before setting mLogic, we would crash
 		// because of a null exception
 		mTM.listen(mStateListener, PhoneStateListener.LISTEN_CALL_STATE);
+/*		
+		int ringerModeAffectedStreams = Settings.System.getInt(getContentResolver(),
+				Settings.System.MODE_RINGER_STREAMS_AFFECTED,
+				((1 << AudioManager.STREAM_RING) |
+				(1 << AudioManager.STREAM_NOTIFICATION) |
+				(1 << AudioManager.STREAM_SYSTEM)));
+		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
+				"ringerModeAffectedStreams=" +
+				Integer.toBinaryString(ringerModeAffectedStreams));
+*/
 	}
 
 	@Override

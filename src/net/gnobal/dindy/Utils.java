@@ -1,5 +1,6 @@
 package net.gnobal.dindy;
 
+//import android.media.AudioManager;
 //import android.app.ActivityManager;
 //import android.content.Context;
 //import java.util.Iterator;
@@ -34,4 +35,16 @@ class Utils {
 		default: return Integer.toString(state);
 		}
 	}
+	
+//	static String streamTypeToString(int streamType) {
+//		switch (streamType) {
+//		case AudioManager.STREAM_ALARM: return "ALARM";
+//		case AudioManager.STREAM_MUSIC: return "MUSIC";
+//		case AudioManager.STREAM_NOTIFICATION: return "NOTIFICATION";
+//		case AudioManager.STREAM_RING: return "RING";
+//		case AudioManager.STREAM_SYSTEM: return "SYSTEM";
+//		case AudioManager.STREAM_VOICE_CALL: return "VOICE_CALL";
+//		default: return Integer.toString(streamType);
+//		}
+//	}
 }
