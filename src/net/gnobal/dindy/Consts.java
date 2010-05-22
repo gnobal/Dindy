@@ -47,6 +47,8 @@ public class Consts {
 			static final String KEY_TIME_BETWEEN_CALLS_MINUTES =
 				"time_between_calls";
 			
+			static final String KEY_TREAT_NON_MOBILE_CALLERS =
+				"treat_non_mobile_callers";
 			static final String KEY_TREAT_UNKNOWN_CALLERS =
 				"treat_unknown_callers";
 			// NOTE the following 3 values match values in the array resource
@@ -81,7 +83,8 @@ public class Consts {
 			static final String VALUE_TIME_BETWEEN_CALLS_DEFAULT = "5";
 			static final String VALUE_TREAT_UNKNOWN_CALLERS_DEFAULT =
 				VALUE_TREAT_UNKNOWN_CALLERS_AS_FIRST;
-
+			static final String VALUE_TREAT_NON_MOBILE_CALLERS_DEFAULT =
+				VALUE_TREAT_UNKNOWN_CALLERS_DEFAULT;
 		}
 	}
 
@@ -89,7 +92,7 @@ public class Consts {
 	static final long INFINITE_TIME = -1;
 	static final long MILLIS_IN_MINUTE = 60000;
 	static final String LOGTAG = "Dindy";
-	static final boolean DEBUG = false;
+	static final boolean DEBUG = true;
 	static final String EMPTY_STRING = "";
 	// NOTE these constants are used from outside (e.g. Locale) and cannot be 
 	// changed. External actions are for when you the action isn't really the
