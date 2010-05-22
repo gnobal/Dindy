@@ -19,5 +19,6 @@ class DindySettings {
 	boolean mEnableSms;
 	String mMessage;
 	long mWakeupTimeoutMillis = 0;
+	String mTreatNonMobileCallers;
 	String mTreatUnknownCallers;
 }

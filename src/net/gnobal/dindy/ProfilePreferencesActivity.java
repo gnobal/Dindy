@@ -184,7 +184,7 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 
 		// Call settings category
 		PreferenceCategory callCat = new PreferenceCategory(this);
-		callCat.setTitle(R.string.preferences_profile_call_settings);
+		callCat.setTitle(R.string.preferences_profile_general);
 		root.addPreference(callCat);
 				
 		// Time between calls
@@ -206,7 +206,27 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
         setListPrefernceSummaryWithValue(timeBetweenCallsPref,
         		R.string.preferences_profile_time_between_calls_summary,
         		timeBetweenCallsPref.getEntry());
-		
+
+        // Treat non-mobile callers as
+        ListPreference treatNonMobileCallersPref = new ListPreference(this);
+        treatNonMobileCallersPref.setEntries(
+        		R.array.unknown_caller_behavior_array_strings);
+        treatNonMobileCallersPref.setEntryValues(
+        		R.array.unknown_caller_behavior_array_values);
+        treatNonMobileCallersPref.setDialogTitle(
+        		R.string.preferences_profile_non_mobile_caller_behavior_dialog_title);
+        treatNonMobileCallersPref.setKey(
+        		Consts.Prefs.Profile.KEY_TREAT_NON_MOBILE_CALLERS);
+        treatNonMobileCallersPref.setTitle(
+        		R.string.preferences_profile_non_mobile_caller_behavior_title);
+        treatNonMobileCallersPref.setOnPreferenceChangeListener(
+        		new SummaryWithValuePreferenceChangeListener(
+        				R.string.preferences_profile_non_mobile_caller_behavior_summary));
+        callCat.addPreference(treatNonMobileCallersPref);
+        setListPrefernceSummaryWithValue(treatNonMobileCallersPref,
+        		R.string.preferences_profile_non_mobile_caller_behavior_summary,
+        		treatNonMobileCallersPref.getEntry());
+        
         // Treat unknown callers as
         ListPreference treatUnknownCallersPref = new ListPreference(this);
         treatUnknownCallersPref.setEntries(
@@ -400,6 +420,15 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 				Consts.Prefs.Profile.KEY_TREAT_UNKNOWN_CALLERS)) {
 			editor.putString(Consts.Prefs.Profile.KEY_TREAT_UNKNOWN_CALLERS,
 					Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_DEFAULT);
+		}
+		// Non-mobile callers added in 1.1.1 and gets the default from unknown
+		// callers so it must come after it
+		if (!sharedPreferences.contains(
+				Consts.Prefs.Profile.KEY_TREAT_NON_MOBILE_CALLERS)) {
+			editor.putString(Consts.Prefs.Profile.KEY_TREAT_NON_MOBILE_CALLERS,
+					sharedPreferences.getString(
+							Consts.Prefs.Profile.KEY_TREAT_UNKNOWN_CALLERS,
+							Consts.Prefs.Profile.VALUE_TREAT_NON_MOBILE_CALLERS_DEFAULT));
 		}
 		editor.commit();
 		editor = null;

@@ -357,7 +357,12 @@ public class DindyService extends Service {
 
 		mSettings.mTreatUnknownCallers = profilePreferences.getString(
 				Consts.Prefs.Profile.KEY_TREAT_UNKNOWN_CALLERS,
-				Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_FIRST);
+				Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_DEFAULT);
+		// Non-mobile callers was added in 1.1.1 and takes the default from the
+		// existing unknown callers setting
+		mSettings.mTreatNonMobileCallers = profilePreferences.getString(
+				Consts.Prefs.Profile.KEY_TREAT_NON_MOBILE_CALLERS,
+				mSettings.mTreatUnknownCallers);
 		
 		if (firstStart) {
 			// Only if it's a first start we get the user's settings. Otherwise
