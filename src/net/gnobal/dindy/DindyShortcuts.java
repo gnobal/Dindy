@@ -33,7 +33,7 @@ public class DindyShortcuts extends ExternalSourceSelectionActivity {
 					Consts.EXTRA_PROFILE_NAME);
 			startService(DindyService.getStartServiceIntent(
 					getApplicationContext(), profileId, profileName,
-					Consts.INTENT_SOURCE_SHORTCUT));
+					Consts.INTENT_SOURCE_SHORTCUT, Consts.NOT_A_TIME_LIMIT));
 			setResult(RESULT_CANCELED);
 			finish();
 			return;
@@ -109,7 +109,8 @@ public class DindyShortcuts extends ExternalSourceSelectionActivity {
 				shortcutIntent =
 					DindyService.prepareStartServiceIntent(
 							new Intent(Consts.ACTION_START_DINDY_SERVICE),
-								profileId, text, Consts.INTENT_SOURCE_SHORTCUT)
+								profileId, text, Consts.INTENT_SOURCE_SHORTCUT,
+								Consts.NOT_A_TIME_LIMIT)
 					.setClass(getApplicationContext(), DindyShortcuts.class);					
 			}
 

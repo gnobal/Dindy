@@ -7,6 +7,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.util.Config;
 import android.util.Log;
 import android.widget.RemoteViews;
@@ -135,10 +136,19 @@ public class DindySingleProfileAppWidgetProvider extends AppWidgetProvider {
     				R.layout.single_profile_appwidget);
     		views.setImageViewResource(R.id.single_profile_app_widget_image_button,
     				R.drawable.app_widget_button_selector_on);
-        	pendingIntent = PendingIntent.getService(context, 0, 
-            		DindyService.getStartServiceIntent(context,
-            				widgetSettings.mProfileId, null, 
-            				Consts.INTENT_SOURCE_WIDGET), 0);
+        	//pendingIntent = PendingIntent.getService(context, 0, 
+            //		DindyService.getStartServiceIntent(context,
+            //				widgetSettings.mProfileId, null, 
+            //				Consts.INTENT_SOURCE_WIDGET, Consts.NOT_A_TIME_LIMIT), 0);
+    		pendingIntent = PendingIntent.getActivity(context, 0,
+    				new Intent(context, ProfileStarterActivity.class)
+					.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+					| Intent.FLAG_ACTIVITY_CLEAR_TOP)
+					.setAction(Intent.ACTION_MAIN)
+					.putExtra(Consts.EXTRA_PROFILE_ID, widgetSettings.mProfileId)
+					.putExtra(Consts.EXTRA_INTENT_SOURCE, Consts.INTENT_SOURCE_WIDGET)
+					.setData(Uri.withAppendedPath(Uri.parse("dindy://profile/id/"),
+						String.valueOf(widgetSettings.mProfileId))), 0);
     	} else {
     		return;
     	}

@@ -1,5 +1,6 @@
 package net.gnobal.dindy;
 
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -36,10 +37,11 @@ public class DindyService extends Service {
 		}
 
 		mStateListener = new CallStateChangeListener();
-		mBroadcastReceiver = new DindyBroadcastReceiver();
+		mBroadcastReceiver = new DindyServiceBroadcastReceiver();
 		mNM = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 		mTM = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
-		mAM = (AudioManager) getSystemService(AUDIO_SERVICE);
+		mAuM = (AudioManager) getSystemService(AUDIO_SERVICE);
+		mAlM = (AlarmManager) getSystemService(ALARM_SERVICE);
 		mPM = (PowerManager) getSystemService(POWER_SERVICE);
 		// Start listening to call state change events
 		mCallLogObserver = new CallLogObserver();
@@ -55,8 +57,11 @@ public class DindyService extends Service {
 		//filter.addAction(AudioManager.VIBRATE_SETTING_CHANGED_ACTION);
 		registerReceiver(mBroadcastReceiver, filter);
 		mPreferencesHelper = ProfilePreferencesHelper.instance();
+		mPendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0,
+				DindyService.getStopServiceBroadcastIntent(), 0);	
+
 		mLogic = new DindyLogic(getApplicationContext(), getContentResolver(),
-				mSettings, mAM, mPM);
+				mSettings, mAuM, mPM);
 		// TODO must be after setting mLogic, since registration 
 		// immediately sends us an IDLE notification that goes straight to 
 		// mLogic. If the user is clicking fast enough on the start/stop 
@@ -98,20 +103,6 @@ public class DindyService extends Service {
 		if (!mPreferencesHelper.profileExists(mCurrentProfileId)) {
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
 				"profile ID " + mCurrentProfileId + " doesn't exist");
-/*				// Try to deduce profile ID from name
-				final String profileName = extras.getString(
-						Consts.EXTRA_PROFILE_NAME);
-				if (profileName != null) { 
-					mCurrentProfileId = mPreferencesHelper.getProfileIdFromName(
-							profileName);
-				}
-
-				if (mCurrentProfileId != Consts.NOT_A_PROFILE_ID) {
-					if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
-							"deduced profile ID " + mCurrentProfileId + " for " +
-							"profile name " + profileName);
-				} else {
-*/					// Still couldn't find the profile
 			if (firstStart) {
 				Toast.makeText(getApplicationContext(),
 						R.string.toast_text_profile_doesnt_exist_exit,
@@ -124,7 +115,6 @@ public class DindyService extends Service {
 						Toast.LENGTH_LONG).show();
 				mCurrentProfileId = previousProfileId;
 			}
-//				}
 		}
 		if (previousProfileId != mCurrentProfileId) {
 			DindySingleProfileAppWidgetProvider.updateAllSingleProfileWidgets(
@@ -134,9 +124,19 @@ public class DindyService extends Service {
 		refreshSettings(mCurrentProfileId, firstStart);
 		saveLastUsedProfileId();
 		
-		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
-			"starting profile " + mCurrentProfileId);
 		mLogic.start();
+		mAlM.cancel(mPendingIntent);
+		final long timeLimitMillis = extras.getLong(
+				Consts.EXTRA_INTENT_TIME_LIMIT_MILLIS, Consts.NOT_A_TIME_LIMIT);
+		if (timeLimitMillis != Consts.NOT_A_TIME_LIMIT) {
+			mAlM.set(AlarmManager.RTC_WAKEUP,
+					System.currentTimeMillis() + timeLimitMillis,
+					mPendingIntent);
+		}
+
+		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
+				"starting profile " + mCurrentProfileId + ", time limit " +
+				timeLimitMillis + " millis");
 
 		// Display a notification about us starting. We put an icon in the
 		// status bar.
@@ -156,6 +156,8 @@ public class DindyService extends Service {
 						Toast.LENGTH_SHORT).show();
 			}
 		}
+		
+		sendBroadcast(new Intent().setAction(Consts.SERVICE_STARTED));
 	}
 
 	@Override
@@ -170,6 +172,8 @@ public class DindyService extends Service {
 				mCurrentProfileId);
 
 		// Stop listening to call state change events
+		//mHandler.removeCallbacks(mStopServiceCallback);
+		mAlM.cancel(mPendingIntent);
 		unregisterReceiver(mBroadcastReceiver);
 		mTM.listen(mStateListener, PhoneStateListener.LISTEN_NONE);
 		mNM.cancel(R.string.dindy_service_started);
@@ -184,7 +188,8 @@ public class DindyService extends Service {
 		mPreviousCursorCount = Integer.MAX_VALUE;
 		mCallLogObserver = null;
 		mNM = null;
-		mAM = null;
+		mAuM = null;
+		mAlM = null;
 		mPM = null;
 		mBroadcastReceiver = null;
 		mPreferencesHelper = null;
@@ -192,6 +197,7 @@ public class DindyService extends Service {
 		// Must happen last because it's used here
 		mCurrentProfileId = Consts.NOT_A_PROFILE_ID;
 		mIsRunning = false;
+		sendBroadcast(new Intent().setAction(Consts.SERVICE_STOPPED));
 	}
 
 	/**
@@ -218,14 +224,16 @@ public class DindyService extends Service {
 	}
 	
 	public static Intent getStartServiceIntent(Context context,
-			long profileId, String profileName, int source) {
+			long profileId, String profileName, int source,
+			long timeLimitMillis) {
 		return prepareStartServiceIntent(
 				new Intent(context, DindyService.class), profileId, profileName,
-					source);
+					source, timeLimitMillis);
 	}
 	
 	public static Intent prepareStartServiceIntent(
-			Intent intent, long profileId, String profileName, int source) {
+			Intent intent, long profileId, String profileName, int source,
+			long timeLimitMillis) {
 		if (profileName == null) {
 			// Try to find out the profile name from the preferences
 			profileName = 
@@ -235,6 +243,7 @@ public class DindyService extends Service {
 		return intent
 			.putExtra(Consts.EXTRA_PROFILE_ID, profileId)
 			.putExtra(Consts.EXTRA_PROFILE_NAME, profileName)
+			.putExtra(Consts.EXTRA_INTENT_TIME_LIMIT_MILLIS, timeLimitMillis)
 			// See:
 			// http://www.developer.com/ws/article.php/3837531/Handling-User-Interaction-with-Android-App-Widgets.htm
 			.putExtra(Consts.EXTRA_INTENT_SOURCE, source)
@@ -368,10 +377,10 @@ public class DindyService extends Service {
 			// Only if it's a first start we get the user's settings. Otherwise
 			// we might read our own settings
 			mSettings.mUserSettings.mVibrateModeNotification = 
-				mAM.getVibrateSetting(AudioManager.VIBRATE_TYPE_NOTIFICATION);
+				mAuM.getVibrateSetting(AudioManager.VIBRATE_TYPE_NOTIFICATION);
 			mSettings.mUserSettings.mVibrateModeRinger =
-				mAM.getVibrateSetting(AudioManager.VIBRATE_TYPE_RINGER);
-			mSettings.mUserSettings.mRingerMode = mAM.getRingerMode();
+				mAuM.getVibrateSetting(AudioManager.VIBRATE_TYPE_RINGER);
+			mSettings.mUserSettings.mRingerMode = mAuM.getRingerMode();
 		}
 	}
 
@@ -407,7 +416,7 @@ public class DindyService extends Service {
 		}
 	}
 
-	public class DindyBroadcastReceiver extends BroadcastReceiver {
+	public class DindyServiceBroadcastReceiver extends BroadcastReceiver {
 		public void onReceive(final Context context, final Intent intent) {
 			final String action = intent.getAction();
 			if (Intent.ACTION_NEW_OUTGOING_CALL.equals(action)) {
@@ -433,6 +442,7 @@ public class DindyService extends Service {
 
 	private class CallLogObserver extends ContentObserver {
 		public CallLogObserver() {
+			//super(mHandler);
 			super(new Handler());
 		}
 
@@ -484,19 +494,31 @@ public class DindyService extends Service {
 			}
 		}
 	}
+	
+	//private class StopServiceRunnable implements Runnable {
+	//	public void run() {
+	//		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
+	//				"stopping service from callback");
+	//		stopSelf();
+	//	}
+	//}
 
 	private DindyLogic mLogic = null;
 	private NotificationManager mNM = null;
 	private TelephonyManager mTM = null;
-	private AudioManager mAM = null;
+	private AudioManager mAuM = null;
+	private AlarmManager mAlM = null;
 	private PowerManager mPM = null;
 	private CallStateChangeListener mStateListener = null;
-	private DindyBroadcastReceiver mBroadcastReceiver = null;
+	private DindyServiceBroadcastReceiver mBroadcastReceiver = null;
 	private CallLogObserver mCallLogObserver = null;
 	private Cursor mCallLogCursor = null;
 	private int mPreviousCursorCount = Integer.MAX_VALUE;
 	private ProfilePreferencesHelper mPreferencesHelper = null;
 	private DindySettings mSettings = new DindySettings();
+	//private Handler mHandler = new Handler();
+	//private StopServiceRunnable mStopServiceCallback = new StopServiceRunnable();
+	private PendingIntent mPendingIntent = null;
 	private static long mCurrentProfileId = Consts.NOT_A_PROFILE_ID;
 	private static boolean mIsRunning = false;
 

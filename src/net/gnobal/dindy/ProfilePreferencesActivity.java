@@ -182,10 +182,10 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 				.setTitle(R.string.preferences_profile_second_ring_vibrate);
 		secondRingCat.addPreference(secondRingVibrate);
 
-		// Call settings category
-		PreferenceCategory callCat = new PreferenceCategory(this);
-		callCat.setTitle(R.string.preferences_profile_general);
-		root.addPreference(callCat);
+		// General settings category
+		PreferenceCategory generalCat = new PreferenceCategory(this);
+		generalCat.setTitle(R.string.preferences_profile_general);
+		root.addPreference(generalCat);
 				
 		// Time between calls
         ListPreference timeBetweenCallsPref = new ListPreference(this);
@@ -202,7 +202,7 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 		timeBetweenCallsPref.setOnPreferenceChangeListener(
 				new SummaryWithValuePreferenceChangeListener(
 						R.string.preferences_profile_time_between_calls_summary));
-        callCat.addPreference(timeBetweenCallsPref);
+        generalCat.addPreference(timeBetweenCallsPref);
         setListPrefernceSummaryWithValue(timeBetweenCallsPref,
         		R.string.preferences_profile_time_between_calls_summary,
         		timeBetweenCallsPref.getEntry());
@@ -222,7 +222,7 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
         treatNonMobileCallersPref.setOnPreferenceChangeListener(
         		new SummaryWithValuePreferenceChangeListener(
         				R.string.preferences_profile_non_mobile_caller_behavior_summary));
-        callCat.addPreference(treatNonMobileCallersPref);
+        generalCat.addPreference(treatNonMobileCallersPref);
         setListPrefernceSummaryWithValue(treatNonMobileCallersPref,
         		R.string.preferences_profile_non_mobile_caller_behavior_summary,
         		treatNonMobileCallersPref.getEntry());
@@ -242,10 +242,23 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 		treatUnknownCallersPref.setOnPreferenceChangeListener(
 				new SummaryWithValuePreferenceChangeListener(
 						R.string.preferences_profile_unknown_caller_behavior_summary));
-        callCat.addPreference(treatUnknownCallersPref);
+        generalCat.addPreference(treatUnknownCallersPref);
         setListPrefernceSummaryWithValue(treatUnknownCallersPref,
         		R.string.preferences_profile_unknown_caller_behavior_summary,
         		treatUnknownCallersPref.getEntry());
+        
+		// Time limit category
+		//PreferenceCategory timeLimitCat = new PreferenceCategory(this);
+		//timeLimitCat.setTitle(R.string.preferences_profile_time_limit_cat);
+		//root.addPreference(timeLimitCat);
+
+		CheckBoxPreference useTimeLimitPref = new CheckBoxPreference(this);
+		useTimeLimitPref.setKey(Consts.Prefs.Profile.KEY_USE_TIME_LIMIT);
+		useTimeLimitPref.setTitle(
+				R.string.preferences_profile_use_time_limit_title);
+		useTimeLimitPref.setSummary(
+				R.string.preferences_profile_use_time_limit_summary);
+		generalCat.addPreference(useTimeLimitPref);
 	}
 	
 	@Override
@@ -269,7 +282,8 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 				//startService(serviceIntent);
 				startService(DindyService.getStartServiceIntent(
 						getApplicationContext(), mProfileId, null,
-						Consts.INTENT_SOURCE_APP_PROFILE_PREFS));
+						Consts.INTENT_SOURCE_APP_PROFILE_PREFS,
+						Consts.NOT_A_TIME_LIMIT));
 			}
 		}
 	}

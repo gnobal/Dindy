@@ -25,7 +25,8 @@ public class FireReceiver extends BroadcastReceiver {
 			final String profileName = intent.getStringExtra(
 					Consts.EXTRA_PROFILE_NAME);
 			serviceIntent = DindyService.getStartServiceIntent(
-				context, profileId, profileName, Consts.INTENT_SOURCE_LOCALE);
+				context, profileId, profileName, Consts.INTENT_SOURCE_LOCALE,
+				Consts.NOT_A_TIME_LIMIT);
 			context.startService(serviceIntent);
 		} else if (Consts.EXTRA_EXTERNAL_ACTION_STOP_SERVICE.equals(action)) {
 			context.stopService(DindyService.getStopServiceIntent(context));

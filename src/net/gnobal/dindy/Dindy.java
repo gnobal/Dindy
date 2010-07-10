@@ -4,9 +4,11 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Html;
@@ -45,7 +47,12 @@ public class Dindy extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		//ProfilePreferencesHelper.createInstance(getApplicationContext());
+
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(Consts.SERVICE_STARTED);
+		filter.addAction(Consts.SERVICE_STOPPED);
+		registerReceiver(mBroadcastReceiver, filter);
+		
 		mPreferencesHelper = ProfilePreferencesHelper.instance();
 		setContentView(R.layout.main);
 		ImageButton powerButton = (ImageButton)
@@ -103,6 +110,8 @@ public class Dindy extends Activity {
 			!DindyService.isRunning()) {
 			showDialog(DIALOG_STARTUP_MESSAGE);
 		}
+
+		setDynamicButtons(DindyService.isRunning());
 	}
 
 	@Override
@@ -118,10 +127,14 @@ public class Dindy extends Activity {
 				mSelectedProfileId = DindyService.getCurrentProfileId();	
 			}
 		}
-		
-		setDynamicButtons(serviceRunning);
 	}
 
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		unregisterReceiver(mBroadcastReceiver);
+	}
+	
 	static PendingIntent getPendingIntent(Context context) {
 		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0,
 				new Intent(context, Dindy.class)
@@ -205,11 +218,12 @@ public class Dindy extends Activity {
 			dialog.setOwnerActivity(this);
 			return dialog;
 		}
+
 		}
 		
 		return null;
 	}
-	
+
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode,
 			Intent data) {
@@ -246,14 +260,17 @@ public class Dindy extends Activity {
 		// The user didn't cancel and the list was in "select" mode so let's
 		// use the user's selection
 		if (requestCode == PROFILE_SELECT_REQUEST_CODE) {
-			final long previousProfile = mSelectedProfileId; 
+			final long previousProfile = mSelectedProfileId;
 			mSelectedProfileId = data.getExtras().getLong(
 					Consts.EXTRA_PROFILE_ID);
-			if (mSelectedProfileId != previousProfile &&
-				dindyServiceIsRunning) {
-				// Make the service use the new profile
-				startDindyServiceWithSelectedProfileId();
-				mPendingStartServiceRequest = true;
+			if (dindyServiceIsRunning) {
+				if (mSelectedProfileId != previousProfile) {
+					// Make the service use the new profile
+					startDindyServiceWithTimeLimit();
+					mPendingStartServiceRequest = true;
+				}
+			} else {
+				setDynamicButtons(false);
 			}
 		}
 	}
@@ -350,18 +367,22 @@ public class Dindy extends Activity {
 					!mPreferencesHelper.profileExists(mSelectedProfileId)) {
 					setFirstAvailableProfile();
 				}
+				//setDynamicButtons(false);
 			} else {
-				startDindyServiceWithSelectedProfileId();
+				startDindyServiceWithTimeLimit();
 			}
-			setDynamicButtons(!isServiceRunning);
 		}
 	};
-
-	private void startDindyServiceWithSelectedProfileId() {
-		startService(DindyService.getStartServiceIntent(getApplicationContext(),
-				mSelectedProfileId, null, Consts.INTENT_SOURCE_APP_MAIN));
-	}
 	
+	private void startDindyServiceWithTimeLimit() {
+		Intent profileStartIntent = new Intent(getApplicationContext(),
+				ProfileStarterActivity.class);
+		profileStartIntent
+			.putExtra(Consts.EXTRA_PROFILE_ID, mSelectedProfileId)
+			.putExtra(Consts.EXTRA_INTENT_SOURCE, Consts.INTENT_SOURCE_APP_MAIN);
+		Dindy.this.startActivity(profileStartIntent);
+	}
+
 	private OnClickListener mSelectProfileListener = new OnClickListener() {
 		public void onClick(View v) {
 			Intent profilesListIntent = new Intent(getApplicationContext(),
@@ -382,12 +403,28 @@ public class Dindy extends Activity {
 		}
 	};
 
+	private class DindyBroadcastReceiver extends BroadcastReceiver {
+		public void onReceive(final Context context, final Intent intent) {
+			final String action = intent.getAction();
+			if (Consts.SERVICE_STARTED.equals(action)) {
+				mSelectedProfileId = DindyService.getCurrentProfileId();
+				setDynamicButtons(true);
+			} else if (Consts.SERVICE_STOPPED.equals(action)) {
+				setDynamicButtons(false);
+			}
+		}
+	}
+
+	
+	private DindyBroadcastReceiver mBroadcastReceiver = new DindyBroadcastReceiver();
 	private ProfilePreferencesHelper mPreferencesHelper = null;
 	private long mSelectedProfileId = Consts.NOT_A_PROFILE_ID;
 	// We use this indicator to know whether to rely on what 
 	// DindyService.getCurrentProfileId() returns or on our own 
 	// mSelectedProfileId (see onResume()) 
 	private boolean mPendingStartServiceRequest = false;
+	// We use this to know the time limit to use in the time limit dialog that's
+	// about to show up
 	private static final int PROFILE_SELECT_REQUEST_CODE = 1;
 	private static final int PROFILE_MANAGE_REQUEST_CODE = 2;
 	private static final int DIALOG_STARTUP_MESSAGE = 0;

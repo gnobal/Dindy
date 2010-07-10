@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_height="fill_parent" android:layout_width="fill_parent" android:orientation="vertical">
+<RadioGroup android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/time_limit_radio_group"><RadioButton android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/duration_radio_button_text" android:id="@+id/duration_radio_button"></RadioButton><RadioButton android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/time_of_day_radio_button" android:text="@string/time_of_day_radio_button_text"></RadioButton></RadioGroup><TimePicker android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/time_limit_time_picker"></TimePicker>
+
+
+
+</LinearLayout>
