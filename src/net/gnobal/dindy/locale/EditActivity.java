@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.DialogInterface.OnClickListener;
+import android.net.Uri;
 import android.os.Bundle;
 import net.gnobal.dindy.Consts;
 import net.gnobal.dindy.ProfilePreferencesHelper;
@@ -70,6 +71,9 @@ public class EditActivity extends net.gnobal.dindy.ExternalSourceSelectionActivi
 			if (which == STOP_DINDY_ITEM_POSITION) {
 				storeAndForwardExtras.putString(Consts.EXTRA_EXTERNAL_ACTION,
 					Consts.EXTRA_EXTERNAL_ACTION_STOP_SERVICE);
+				returnIntent.setData(
+						Uri.withAppendedPath(Uri.parse("dindy://profile/id/locale/"),
+								String.valueOf(Consts.NOT_A_PROFILE_ID)));
 			} else {
 				storeAndForwardExtras.putString(Consts.EXTRA_EXTERNAL_ACTION,
 					Consts.EXTRA_EXTERNAL_ACTION_START_SERVICE);
@@ -80,6 +84,9 @@ public class EditActivity extends net.gnobal.dindy.ExternalSourceSelectionActivi
 					profileId);	
 				storeAndForwardExtras.putString(
 						Consts.EXTRA_PROFILE_NAME, text);
+				returnIntent.setData(
+						Uri.withAppendedPath(Uri.parse("dindy://profile/id/locale/"),
+								String.valueOf(profileId)));
 			}
 
 			if (text.length() >

@@ -5,6 +5,8 @@ import net.gnobal.dindy.DindyService;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Config;
+import android.util.Log;
 
 public class FireReceiver extends BroadcastReceiver {
 	@Override
@@ -13,6 +15,17 @@ public class FireReceiver extends BroadcastReceiver {
 			return;
 		}
 
+		final String action1 = intent.getStringExtra(Consts.EXTRA_EXTERNAL_ACTION);
+		final long profileId1 = intent.getLongExtra(
+				Consts.EXTRA_PROFILE_ID,
+				Consts.NOT_A_PROFILE_ID);
+		final String profileName1 = intent.getStringExtra(
+				Consts.EXTRA_PROFILE_NAME);
+		
+		if (Config.LOGD ) Log.d("Dindy",
+				"acion=" + action1 + ", profileId=" + profileId1 + "profileName=" + profileName1);
+
+		
 		final String action = intent.getStringExtra(Consts.EXTRA_EXTERNAL_ACTION);
 		Intent serviceIntent = null;
 		if (Consts.EXTRA_EXTERNAL_ACTION_START_SERVICE.equals(action)) {

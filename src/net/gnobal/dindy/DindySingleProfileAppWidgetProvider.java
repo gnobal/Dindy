@@ -142,9 +142,11 @@ public class DindySingleProfileAppWidgetProvider extends AppWidgetProvider {
             //				Consts.INTENT_SOURCE_WIDGET, Consts.NOT_A_TIME_LIMIT), 0);
     		pendingIntent = PendingIntent.getActivity(context, 0,
     				new Intent(context, ProfileStarterActivity.class)
-					.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+					.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK 
 					| Intent.FLAG_ACTIVITY_CLEAR_TOP)
 					.setAction(Intent.ACTION_MAIN)
+    				//.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+    				//| Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
 					.putExtra(Consts.EXTRA_PROFILE_ID, widgetSettings.mProfileId)
 					.putExtra(Consts.EXTRA_INTENT_SOURCE, Consts.INTENT_SOURCE_WIDGET)
 					.setData(Uri.withAppendedPath(Uri.parse("dindy://profile/id/"),
