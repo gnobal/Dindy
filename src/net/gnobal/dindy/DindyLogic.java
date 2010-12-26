@@ -123,10 +123,6 @@ class DindyLogic {
 			onOffHook(number);
 			break;
 
-		case Consts.IncomingCallState.MISSED:
-			onMissedCall(number);
-			break;
-
 		case Consts.IncomingCallState.INCOMING:
 			onIncomingCallInCallsDB(number);
 			break;
@@ -336,7 +332,7 @@ class DindyLogic {
 		// the top of this source file)
 	}
 
-	private void onMissedCall(String number) {
+	public void onMissedCall(String number) {
 		// The wakelock was acquired when the phone was ringing, so unless we 
 		// send the SMS we _must_ release it on each return from the function
 		// because this is our last chance to do so
@@ -353,11 +349,10 @@ class DindyLogic {
 				"onMissedCall: number " + number + ", callerIdNumber " +
 				callerIdNumber);
 		// if the number that's missed was the last one we remember as ringing
-		// and we came from an idle state and a new missed call with the same
-		// number appeared in the call log - it's safe to say that we found a
-		// missed call and we should probably send the SMS
-		if (mPreviousCallState != Consts.IncomingCallState.IDLE ||
-			!callerIdNumber.equals(mLastRingingNumber)) {
+		// and a new missed call with the same number appeared in the call log -
+		// it's safe to say that we found a missed call and we should probably 
+		// send the SMS
+		if (!callerIdNumber.equals(mLastRingingNumber)) {
 			releaseWakeLockIfHeld("onMissedCall 3");
 			return;
 		}

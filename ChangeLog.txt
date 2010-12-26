@@ -19,3 +19,4 @@
 1.1.1 Fixed an issue where a caller with a blank caller ID was not treated as unknown
 1.1.2 Added a profile option for known non-mobile numbers
 1.1.3 Added a time-limit option for profiles
+1.1.4 Fixed an issue where Dindy didn't function correctly alongside other programs that monitor incoming calls (like call recorders), mainly on older/slower devices

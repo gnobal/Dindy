@@ -483,7 +483,7 @@ public class DindyService extends Service {
 			int callType = mCallLogCursor.getInt(CALL_LOG_FIELD_TYPE);
 			switch (callType) {
 			case CallLog.Calls.MISSED_TYPE:
-				mLogic.onCallStateChange(Consts.IncomingCallState.MISSED,
+				mLogic.onMissedCall(
 						mCallLogCursor.getString(CALL_LOG_FIELD_NUMBER));
 				break;
 			

@@ -7,10 +7,9 @@ public class Consts {
 		static final int IDLE = 0;
 		static final int RINGING = 1;
 		static final int OFFHOOK = 2;
-		static final int MISSED = 3; // a missed call
 		// an incoming call (an indication of a call that was either accepted or
 		// declined)
-		static final int INCOMING = 4;
+		static final int INCOMING = 3;
 	}
 
 	public class Prefs
