@@ -13,6 +13,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 class ProfileNameDialogHelper {
 	interface Listener {
@@ -57,26 +58,48 @@ class ProfileNameDialogHelper {
 		EditText editBox = (EditText) dialog.findViewById(
 				R.id.dialog_profile_name_edit_box);
 		editBox.addTextChangedListener(new ProfileNameTextWatcher(
-				((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE)));
+				((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE),
+				(TextView) ((AlertDialog) dialog).findViewById(R.id.dialog_profile_name_illegal_name_reason)));
 		dialog.setTitle(mTitle);
 		editBox.setText(mOldProfileName);
 		editBox.setSelection(0, mOldProfileName.length());
 	}
 
 	private static class ProfileNameTextWatcher implements TextWatcher {
-		ProfileNameTextWatcher(Button okButton) {
+		ProfileNameTextWatcher(Button okButton, TextView illegalNameReasonTextView) {
 			mOkButton = okButton;
+			mIllegalNameReasonTextView = illegalNameReasonTextView;
+			mPreferencesHelper = ProfilePreferencesHelper.instance();
 		}
 
 		public void afterTextChanged(Editable s) {
 			// If you look in the code for View.setEnable() you'll see that it's
 			// not optimized for the case where the view is already in the right
 			// state so we need to do this
-			final boolean lengthGreaterThanZero = s.length() > 0;
+			int illegalNameReasonStringId = -1;
+			boolean isNameLegal = false;
+			String profileName = s.toString();
+			if (profileName.length() <= 0) {
+				illegalNameReasonStringId =
+					R.string.dialog_profile_name_illegal_name_reason_empty;
+			} else if (profileName.contains("'")) {
+				illegalNameReasonStringId =
+					R.string.dialog_profile_name_illegal_name_reason_apostrophe;
+			} else if (mPreferencesHelper.profileExists(profileName)) {
+				illegalNameReasonStringId =
+					R.string.dialog_profile_name_illegal_name_reason_already_exists;
+			} else {
+				isNameLegal = true;
+			}
+			if (isNameLegal) {
+				mIllegalNameReasonTextView.setText("");
+			} else {
+				mIllegalNameReasonTextView.setText(illegalNameReasonStringId);
+			}
 			final boolean needsEnable = 
-				mOkButton.isEnabled() != lengthGreaterThanZero;
+				mOkButton.isEnabled() != isNameLegal;
 			if (needsEnable) {
-				mOkButton.setEnabled(lengthGreaterThanZero);
+				mOkButton.setEnabled(isNameLegal);
 			}
 		}
 
@@ -89,6 +112,8 @@ class ProfileNameDialogHelper {
 		}
 
 		private Button mOkButton;
+		private TextView mIllegalNameReasonTextView;
+		private ProfilePreferencesHelper mPreferencesHelper;
 	}
 
 	private static class CancelClickListener implements DialogInterface.OnClickListener {

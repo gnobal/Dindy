@@ -100,5 +100,8 @@
 <string name="time_limit_dialog_cancel_text">No limit</string>
 <string name="duration_radio_button_text">Duration (HH:MM)</string>
 <string name="time_of_day_radio_button_text">End time</string>
+<string name="dialog_profile_name_illegal_name_reason_empty">Profile name cannot be empty</string>
+<string name="dialog_profile_name_illegal_name_reason_apostrophe">Profile name cannot contain an apostrophe</string>
+<string name="dialog_profile_name_illegal_name_reason_already_exists">Profile name already exists</string>
 </resources>
 

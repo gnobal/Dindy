@@ -37,13 +37,21 @@ import java.util.TimerTask;
 
 // Sequences for incoming calls and the WakeLock:
 // 1. Missed call that should get an SMS
-//    ringing (lock) -> idle -> missed (should send) -> SMS -> SMS result (unlock)
+//    ringing (lock) +-> idle
+//                   |
+//                   +-> missed (should send) -> SMS -> SMS result (unlock)
 // 2. Incoming call that was declined
-//    ringing (lock) -> idle -> incoming (unlock)
+//    ringing (lock) +-> idle
+//                   |
+//                   +-> incoming (unlock)
 // 3. Incoming call that was answered
-//    ringing (lock) -> off hook (unlock) -> idle -> incoming (do not unlock)
+//    ringing (lock) -> off hook (unlock) +-> idle
+//                                        |
+//                                        +-> incoming (do not unlock)
 // 4. Missed call that shouldn't get an SMS
-//    ringing (lock) -> idle -> missed (shouldn't send) -> unlock 
+//    ringing (lock) +-> idle
+//                   |
+//                   +-> missed (shouldn't send) -> unlock
 // Sequences for outgoing calls:
 // 5. Outgoing call
 //    idle -> off hook (do not unlock)
@@ -123,10 +131,6 @@ class DindyLogic {
 			onOffHook(number);
 			break;
 
-		case Consts.IncomingCallState.INCOMING:
-			onIncomingCallInCallsDB(number);
-			break;
-
 		default:
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
 					"unknown call state " + newState);
@@ -136,203 +140,7 @@ class DindyLogic {
 		mPreviousCallState = newState;
 	}
 
-	void onOutgoingCall(String number) {
-		if (number == null || number.trim().length() == 0) {
-			return;
-		}
-
-		String callerIdNumber = PhoneNumberUtils.toCallerIDMinMatch(number);
-		removeIncomingCallInfo(callerIdNumber);
-	}
-	
-	void onWakeupTimeChanged(long oldWakeupTimeMillis,
-			long newWakeupTimeMillis) {
-		// Currently we only handle the case where the user changes the wakeup
-		// time from infinite to non-infinite. In this case we remove all the
-		// entries in the incoming calls map because otherwise they will never
-		// expire
-		// TODO a better behavior might be to set a timer for them when this 
-		// happens. Also maybe change existing entries and shorten/prolong their
-		// wakeup time according to the new setting by remembering what the 
-		// original time we inserted them into the map
-		if (newWakeupTimeMillis != Consts.INFINITE_TIME &&
-			oldWakeupTimeMillis == Consts.INFINITE_TIME) {
-			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"wakeup timeout changed from infinite to " +
-					newWakeupTimeMillis + ". Removing all numbers");
-			synchronized (mIncomingCalls) {
-				Iterator<String> it = mIncomingCalls.keySet().iterator();
-				while (it.hasNext()) {
-					// Each key is a caller ID number
-					String callerIdNumber = it.next();
-					if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-							"removing caller ID number " + callerIdNumber);
-					removeIncomingCallInfo(callerIdNumber);
-				}
-			}			
-		}
-	}
-	
-/*
-	void onRingerModeChanged(int newRingerMode) {
-		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-			"onRingerModeChanged: new ringer mode " + newRingerMode);
-		if (mNumSelfRingerVibrateChanges > 0) {
-			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-				"onRingerModeChanged: self change. Not updating");
-			mNumSelfRingerVibrateChanges -= 1;
-			return;
-		}
-		
-		mSettings.mUserRingerMode = newRingerMode;
-	}
-	
-	void onVibrateSettingChanged(int vibrateType, int newVibrateSetting) {
-		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-			"onVibrateSettingChanged: vibrate type " + vibrateType + 
-				" vibrateSetting " + newVibrateSetting);
-		if (mNumSelfRingerVibrateChanges > 0) {
-			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-				"onVibrateSettingChanged: self change. Not updating");
-			mNumSelfRingerVibrateChanges -= 1;
-			return;
-		}
-		
-		if (vibrateType == AudioManager.VIBRATE_TYPE_NOTIFICATION) {
-			mSettings.mUserVibrateModeNotification = newVibrateSetting;
-		} else if (vibrateType == AudioManager.VIBRATE_TYPE_RINGER) {
-			mSettings.mUserVibrateModeRinger = newVibrateSetting;
-		}
-	}
-*/	
-	private void onRinging(String number) {
-		mWakeLock.acquire();
-		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-				"onRinging: WakeLock acquired, " + mWakeLock.toString());
-		
-		NumberProperties numberProps = new NumberProperties();
-		if (number == null || number.trim().length() == 0) {
-			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"onRinging: the number is empty, treating as unknown");
-		}
-		else
-		{
-		String callerIdNumber = PhoneNumberUtils.toCallerIDMinMatch(number);
-		if (callerIdNumber == null || callerIdNumber.length() <= 0) {
-			return;
-		}
-
-		// Do we care about this call:
-		// Is it a returning number? Should we treat as second call?
-		synchronized (mIncomingCalls) {
-			IncomingCallInfo currentCallInfo =
-				mIncomingCalls.get(callerIdNumber); 
-			if (currentCallInfo != null) {
-				// If the number exists in the map there is still the 
-				// possibility that it hasn't been removed by the timer thread
-				// even if its time was up because the phone was sleeping. So
-				// we do this cleanup here, but only if the call info structure
-				// wasn't put in the map with an infinite timeout value
-				long currentTimeMillis = System.currentTimeMillis();
-				if (currentCallInfo.getAbsoluteWakeupTimeMillis() != Consts.INFINITE_TIME &&
-					currentTimeMillis > currentCallInfo.getAbsoluteWakeupTimeMillis()) {
-					if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-							callerIdNumber + " will be removed in onRinging() because it wasn't removed by the timer thread" + 
-							"currentTimeMillis: " + currentTimeMillis + ", absoluteWakeupTime: " +
-							currentCallInfo.getAbsoluteWakeupTimeMillis());
-					removeIncomingCallInfo(callerIdNumber);
-				} else {
-					if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-							"setting second ring parameters for callerId number " +
-							callerIdNumber);
-					setRingerAndVibrateModes(mSettings.mSecondRingSettings);
-					return;
-				}
-			}
-		}
-		// It's not a number that called us. Let's see if it's a number that 
-		// we're supposed to remember. If it is, we use the first ring settings.
-		// If it's not, we use whatever the user asked us to in this case
-		numberProps = getNumberProperties(callerIdNumber);
-		if (numberProps.mShouldRememberNumber) {
-			// Quiet the phone down according to user's setting
-			setRingerAndVibrateModes(mSettings.mFirstRingSettings);
-			return;
-		}
-		}
-		
-		final String setting = numberProps.mIsKnown ?
-				mSettings.mTreatNonMobileCallers :
-				mSettings.mTreatUnknownCallers;
-		
-		if (Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_FIRST.equals(setting)) {
-			setRingerAndVibrateModes(mSettings.mFirstRingSettings);
-			return;			
-		}
-		
-		if (Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_SECOND.equals(setting)) {
-			setRingerAndVibrateModes(mSettings.mSecondRingSettings);
-			return;
-		}
-		
-		if (Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_NORMAL.equals(setting)) {
-			setRingerAndVibrateModes(mSettings.mUserSettings);
-			return;
-		}
-		
-		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-			"onRinging() - code should never get here");
-
-		// Should never get here, but just in case - let's behave
-		setRingerAndVibrateModes(mSettings.mFirstRingSettings);		
-	}
-
-	private void onOffHook(String number) {
-		// There is another case where we go off hook: from idle. But in that 
-		// case we don't release the lock since we never acquired it
-		if (mPreviousCallState == Consts.IncomingCallState.RINGING) {
-			releaseWakeLockIfHeld("onOffHook");
-		}
-		
-		if (number != null && number.trim().length() > 0) {
-			// User either answered the call or called this number so remove
-			// the call info
-			removeIncomingCallInfo(
-					PhoneNumberUtils.toCallerIDMinMatch(number));
-			return;
-		}
-
-		// We didn't get a number from the notification, so if the latest
-		// call state was ringing let's use the number we saved
-		if (!mLastRingingNumber.equals(NOT_A_PHONE_NUMBER) &&
-			mPreviousCallState == Consts.IncomingCallState.RINGING) {
-			removeIncomingCallInfo(mLastRingingNumber);
-			mLastRingingNumber = NOT_A_PHONE_NUMBER;
-			return;
-		}
-	}
-
-	private void onIdle(String number) {
-		// Sometimes we get onIdle notification when the application loads. We
-		// make sure here that whatever the latest ringing number we remember
-		// is reset in case we didn't come from the expected state
-		if (mPreviousCallState != Consts.IncomingCallState.RINGING) {
-			mLastRingingNumber = NOT_A_PHONE_NUMBER;
-		}
-
-		// Return the vibrate/ringer settings to the way they should be while
-		// the service is running
-		setRingerAndVibrateModes(mSettings.mFirstRingSettings);
-		
-		// NOTE: we don't do anything about the WakeLock here because we don't 
-		// know why we're idle - in most cases it will be because the user 
-		// didn't answer and we're about to get a missed call notification.
-		// But if the user declined the call we also get here without getting 
-		// the missed call notification (see "Sequences for incoming calls" at
-		// the top of this source file)
-	}
-
-	public void onMissedCall(String number) {
+	void onMissedCall(String number) {
 		// The wakelock was acquired when the phone was ringing, so unless we 
 		// send the SMS we _must_ release it on each return from the function
 		// because this is our last chance to do so
@@ -413,12 +221,178 @@ class DindyLogic {
 		}
 	}
 
-	private void onIncomingCallInCallsDB(String number) {
+	// an incoming call - an indication of a call that was either accepted or
+	// declined, but not missed (for this we have onMissedCall())
+	void onIncomingCallInCallsDB(String number) {
 		// Because of the sequences for incoming calls that were either
 		// answered or declined we can't tell the difference between the two, so
 		// we know we should unlock only according to the isHeld() status of
 		// the lock 
 		releaseWakeLockIfHeld("onIncomingCallInCallsDB");
+	}
+
+	void onOutgoingCall(String number) {
+		if (number == null || number.trim().length() == 0) {
+			return;
+		}
+
+		String callerIdNumber = PhoneNumberUtils.toCallerIDMinMatch(number);
+		removeIncomingCallInfo(callerIdNumber);
+	}
+	
+	void onWakeupTimeChanged(long oldWakeupTimeMillis,
+			long newWakeupTimeMillis) {
+		// Currently we only handle the case where the user changes the wakeup
+		// time from infinite to non-infinite. In this case we remove all the
+		// entries in the incoming calls map because otherwise they will never
+		// expire
+		// TODO a better behavior might be to set a timer for them when this 
+		// happens. Also maybe change existing entries and shorten/prolong their
+		// wakeup time according to the new setting by remembering what the 
+		// original time we inserted them into the map
+		if (newWakeupTimeMillis != Consts.INFINITE_TIME &&
+			oldWakeupTimeMillis == Consts.INFINITE_TIME) {
+			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+					"wakeup timeout changed from infinite to " +
+					newWakeupTimeMillis + ". Removing all numbers");
+			synchronized (mIncomingCalls) {
+				Iterator<String> it = mIncomingCalls.keySet().iterator();
+				while (it.hasNext()) {
+					// Each key is a caller ID number
+					String callerIdNumber = it.next();
+					if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+							"removing caller ID number " + callerIdNumber);
+					removeIncomingCallInfo(callerIdNumber);
+				}
+			}			
+		}
+	}
+	
+	private void onRinging(String number) {
+		mWakeLock.acquire();
+		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+				"onRinging: WakeLock acquired, " + mWakeLock.toString());
+		
+		NumberProperties numberProps = new NumberProperties();
+		if (number == null || number.trim().length() == 0) {
+			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+					"onRinging: the number is empty, treating as unknown");
+			numberProps.mIsKnown = false;
+		} else {
+			String callerIdNumber = PhoneNumberUtils.toCallerIDMinMatch(number);
+			if (callerIdNumber == null || callerIdNumber.length() <= 0) {
+				return;
+			}
+	
+			// Do we care about this call:
+			// Is it a returning number? Should we treat as second call?
+			synchronized (mIncomingCalls) {
+				IncomingCallInfo currentCallInfo =
+					mIncomingCalls.get(callerIdNumber); 
+				if (currentCallInfo != null) {
+					// If the number exists in the map there is still the 
+					// possibility that it hasn't been removed by the timer thread
+					// even if its time was up because the phone was sleeping. So
+					// we do this cleanup here, but only if the call info structure
+					// wasn't put in the map with an infinite timeout value
+					long currentTimeMillis = System.currentTimeMillis();
+					if (currentCallInfo.getAbsoluteWakeupTimeMillis() != Consts.INFINITE_TIME &&
+						currentTimeMillis > currentCallInfo.getAbsoluteWakeupTimeMillis()) {
+						if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+								callerIdNumber + " will be removed in onRinging() because it wasn't removed by the timer thread" + 
+								"currentTimeMillis: " + currentTimeMillis + ", absoluteWakeupTime: " +
+								currentCallInfo.getAbsoluteWakeupTimeMillis());
+						removeIncomingCallInfo(callerIdNumber);
+					} else {
+						if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+								"setting second ring parameters for callerId number " +
+								callerIdNumber);
+						setRingerAndVibrateModes(mSettings.mSecondRingSettings);
+						return;
+					}
+				}
+			}
+			// It's not a number that called us. Let's see if it's a number that 
+			// we're supposed to remember. If it is, we use the first ring settings.
+			// If it's not, we use whatever the user asked us to in this case
+			numberProps = getNumberProperties(callerIdNumber);
+			if (numberProps.mShouldRememberNumber) {
+				// Quiet the phone down according to user's setting
+				setRingerAndVibrateModes(mSettings.mFirstRingSettings);
+				return;
+			}
+		}
+		
+		final String setting = numberProps.mIsKnown ?
+				mSettings.mTreatNonMobileCallers :
+				mSettings.mTreatUnknownCallers;
+		
+		if (Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_FIRST.equals(setting)) {
+			setRingerAndVibrateModes(mSettings.mFirstRingSettings);
+			return;			
+		}
+		
+		if (Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_SECOND.equals(setting)) {
+			setRingerAndVibrateModes(mSettings.mSecondRingSettings);
+			return;
+		}
+		
+		if (Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_NORMAL.equals(setting)) {
+			setRingerAndVibrateModes(mSettings.mUserSettings);
+			return;
+		}
+		
+		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+			"onRinging() - code should never get here");
+
+		// Should never get here, but just in case - let's behave
+		setRingerAndVibrateModes(mSettings.mFirstRingSettings);		
+	}
+
+	private void onOffHook(String number) {
+		// There is another case where we go off hook: from idle. But in that 
+		// case we don't release the lock since we never acquired it
+		if (mPreviousCallState == Consts.IncomingCallState.RINGING) {
+			releaseWakeLockIfHeld("onOffHook");
+		}
+		
+		if (number != null && number.trim().length() > 0) {
+			// User either answered the call or called this number so remove
+			// the call info
+			removeIncomingCallInfo(
+					PhoneNumberUtils.toCallerIDMinMatch(number));
+			return;
+		}
+
+		// We didn't get a number from the notification, so if the latest
+		// call state was ringing let's use the number we saved
+		if (!mLastRingingNumber.equals(NOT_A_PHONE_NUMBER) &&
+			mPreviousCallState == Consts.IncomingCallState.RINGING) {
+			removeIncomingCallInfo(mLastRingingNumber);
+			mLastRingingNumber = NOT_A_PHONE_NUMBER;
+			return;
+		}
+	}
+
+	private void onIdle(String number) {
+		// Sometimes we get onIdle notification when the application loads. We
+		// make sure here that whatever the latest ringing number we remember
+		// is reset in case we didn't come from the expected state
+		if (mPreviousCallState != Consts.IncomingCallState.RINGING) {
+			mLastRingingNumber = NOT_A_PHONE_NUMBER;
+		}
+
+		// Return the vibrate/ringer settings to the way they should be while
+		// the service is running
+		setRingerAndVibrateModes(mSettings.mFirstRingSettings);
+		
+		// NOTE: we don't do anything about the WakeLock here because we don't 
+		// know why we're idle - in most cases it will be because the user 
+		// didn't answer and we're about to get (or we already got) a missed 
+		// call notification.
+		// But if the user declined the call we also get here without getting 
+		// the missed call notification (see "Sequences for incoming calls" at
+		// the top of this source file)
 	}
 
 	private class NumberProperties
@@ -438,9 +412,6 @@ class DindyLogic {
 		String query = new StringBuilder("SUBSTR(").append(Phones.NUMBER_KEY)
 		.append(",1,").append(callerIdNumber.length())
 		.append(") = '").append(callerIdNumber).append("'").toString();
-		//.append("' AND ")
-		//.append(PhonesColumns.TYPE).append(" = ")
-		//.append(PhonesColumns.TYPE_MOBILE).toString();
 		Cursor phonesCursor = mResolver.query(Phones.CONTENT_URI, 
 				PHONES_PROJECTION, 
 				query,
@@ -480,7 +451,6 @@ class DindyLogic {
 					"setting ringer=" +
 					Utils.ringerModeToString(settings.mRingerMode));
 			mAM.setRingerMode(settings.mRingerMode);
-			//++mNumSelfRingerVibrateChanges;
 		}
 		if (mAM.getVibrateSetting(AudioManager.VIBRATE_TYPE_RINGER) != 
 			settings.mVibrateModeRinger) {
@@ -489,7 +459,6 @@ class DindyLogic {
 					Utils.vibrationSettingToString(settings.mVibrateModeRinger));
 			mAM.setVibrateSetting(AudioManager.VIBRATE_TYPE_RINGER,
 					settings.mVibrateModeRinger);
-			//++mNumSelfRingerVibrateChanges;
 		}
 		if (mAM.getVibrateSetting(AudioManager.VIBRATE_TYPE_NOTIFICATION) !=
 			settings.mVibrateModeNotification) {
@@ -498,7 +467,6 @@ class DindyLogic {
 					Utils.vibrationSettingToString(settings.mVibrateModeNotification));
 			mAM.setVibrateSetting(AudioManager.VIBRATE_TYPE_NOTIFICATION,
 					settings.mVibrateModeNotification);
-			//++mNumSelfRingerVibrateChanges;
 		}
 	}
 

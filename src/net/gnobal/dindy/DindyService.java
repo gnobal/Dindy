@@ -53,8 +53,6 @@ public class DindyService extends Service {
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(Intent.ACTION_NEW_OUTGOING_CALL);
 		filter.addAction(Consts.ACTION_STOP_DINDY_SERVICE);
-		//filter.addAction(AudioManager.RINGER_MODE_CHANGED_ACTION);
-		//filter.addAction(AudioManager.VIBRATE_SETTING_CHANGED_ACTION);
 		registerReceiver(mBroadcastReceiver, filter);
 		mPreferencesHelper = ProfilePreferencesHelper.instance();
 		mPendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0,
@@ -68,16 +66,6 @@ public class DindyService extends Service {
 		// button and this line was before setting mLogic, we would crash
 		// because of a null exception
 		mTM.listen(mStateListener, PhoneStateListener.LISTEN_CALL_STATE);
-/*		
-		int ringerModeAffectedStreams = Settings.System.getInt(getContentResolver(),
-				Settings.System.MODE_RINGER_STREAMS_AFFECTED,
-				((1 << AudioManager.STREAM_RING) |
-				(1 << AudioManager.STREAM_NOTIFICATION) |
-				(1 << AudioManager.STREAM_SYSTEM)));
-		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
-				"ringerModeAffectedStreams=" +
-				Integer.toBinaryString(ringerModeAffectedStreams));
-*/
 	}
 
 	@Override
@@ -251,13 +239,6 @@ public class DindyService extends Service {
 				String.valueOf(profileId)));
 	}
 
-	/*  public static Intent getStartServiceBroadcastIntent(long profileId) {
-		return prepareStartServiceIntent(
-				new Intent(Consts.ACTION_START_DINDY_SERVICE),
-				profileId);
-	}
-	
-*/	
 	public static Intent getStopServiceBroadcastIntent() {
 		return new Intent(Consts.ACTION_STOP_DINDY_SERVICE);
 	}
@@ -266,12 +247,6 @@ public class DindyService extends Service {
 		return new Intent(context, DindyService.class);
 	}
 	
-	// DO NOT EVER CHANGE THESE VALUES!! Widgets will stop working if you do
-	// moved to Consts!
-	// public static final String EXTRA_PROFILE_ID = "profile_id";
-	//public static final String ACTION_STOP_DINDY_SERVICE =
-	//	"net.gnobal.dindy.ACTION_STOP_DINDY_SERVICE";
-
 	private void saveLastUsedProfileId() {
 		SharedPreferences preferences = getSharedPreferences(
 				Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
@@ -428,15 +403,7 @@ public class DindyService extends Service {
 				mLogic.onOutgoingCall(phoneNumber);
 			} else if (Consts.ACTION_STOP_DINDY_SERVICE.equals(action)) {
 				DindyService.this.stopSelf();
-			}/* else if (action.equals(AudioManager.RINGER_MODE_CHANGED_ACTION)) {
-				mLogic.onRingerModeChanged(extras.getInt(
-					AudioManager.EXTRA_RINGER_MODE));
-			} else if (action.equals(AudioManager.VIBRATE_SETTING_CHANGED_ACTION)) {
-				mLogic.onVibrateSettingChanged(
-						extras.getInt(AudioManager.EXTRA_VIBRATE_TYPE),
-						extras.getInt(AudioManager.EXTRA_VIBRATE_SETTING));
-			}*/
-
+			}
 		}
 	}
 
@@ -488,20 +455,12 @@ public class DindyService extends Service {
 				break;
 			
 			case CallLog.Calls.INCOMING_TYPE:
-				mLogic.onCallStateChange(Consts.IncomingCallState.INCOMING,
+				mLogic.onIncomingCallInCallsDB(
 						mCallLogCursor.getString(CALL_LOG_FIELD_NUMBER));
 				break;
 			}
 		}
 	}
-	
-	//private class StopServiceRunnable implements Runnable {
-	//	public void run() {
-	//		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
-	//				"stopping service from callback");
-	//		stopSelf();
-	//	}
-	//}
 
 	private DindyLogic mLogic = null;
 	private NotificationManager mNM = null;
@@ -516,8 +475,6 @@ public class DindyService extends Service {
 	private int mPreviousCursorCount = Integer.MAX_VALUE;
 	private ProfilePreferencesHelper mPreferencesHelper = null;
 	private DindySettings mSettings = new DindySettings();
-	//private Handler mHandler = new Handler();
-	//private StopServiceRunnable mStopServiceCallback = new StopServiceRunnable();
 	private PendingIntent mPendingIntent = null;
 	private static long mCurrentProfileId = Consts.NOT_A_PROFILE_ID;
 	private static boolean mIsRunning = false;

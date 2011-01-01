@@ -7,9 +7,6 @@ public class Consts {
 		static final int IDLE = 0;
 		static final int RINGING = 1;
 		static final int OFFHOOK = 2;
-		// an incoming call (an indication of a call that was either accepted or
-		// declined)
-		static final int INCOMING = 3;
 	}
 
 	public class Prefs
@@ -119,10 +116,10 @@ public class Consts {
 	static final String SERVICE_STOPPED = "net.gnobal.dindy.action.SERVICE_STOPPED";
 	
 	// NOTE the following  constants are used from outside (e.g. Locale, 
-	// shortcuts) and cannot be changed. External actions are for when you the 
+	// shortcuts) and cannot be changed. External actions are for when the 
 	// action isn't really the intent's action, but is stored under a 
 	// different intent (like in Locale)
-	// NEVER CHANGE THIS VALUES OR THEIR MEANING
+	// NEVER CHANGE THESE VALUES OR THEIR MEANING
 	public static final String ACTION_START_DINDY_SERVICE =
 		"net.gnobal.dindy.ACTION_START_DINDY_SERVICE";
 	public static final String ACTION_STOP_DINDY_SERVICE =
@@ -145,5 +142,4 @@ public class Consts {
 		"net.gnobal.dindy.EXTERNAL_ACTION_START_SERVICE";
 	public static final String EXTRA_EXTERNAL_ACTION_STOP_SERVICE =
 		"net.gnobal.dindy.EXTERNAL_ACTION_STOP_SERVICE";
-	
 }
