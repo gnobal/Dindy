@@ -13,7 +13,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 
 class ProfileNameDialogHelper {
 	interface Listener {
@@ -59,17 +58,17 @@ class ProfileNameDialogHelper {
 				R.id.dialog_profile_name_edit_box);
 		editBox.addTextChangedListener(new ProfileNameTextWatcher(
 				((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE),
-				(TextView) ((AlertDialog) dialog).findViewById(R.id.dialog_profile_name_illegal_name_reason)));
+				editBox));
 		dialog.setTitle(mTitle);
 		editBox.setText(mOldProfileName);
 		editBox.setSelection(0, mOldProfileName.length());
 	}
 
 	private static class ProfileNameTextWatcher implements TextWatcher {
-		ProfileNameTextWatcher(Button okButton, TextView illegalNameReasonTextView) {
+		ProfileNameTextWatcher(Button okButton, EditText profileNameEditBox) {
 			mOkButton = okButton;
-			mIllegalNameReasonTextView = illegalNameReasonTextView;
 			mPreferencesHelper = ProfilePreferencesHelper.instance();
+			mProfileNameEditBox = profileNameEditBox;
 		}
 
 		public void afterTextChanged(Editable s) {
@@ -91,16 +90,19 @@ class ProfileNameDialogHelper {
 			} else {
 				isNameLegal = true;
 			}
-			if (isNameLegal) {
-				mIllegalNameReasonTextView.setText("");
+			if (isNameLegal || mIsFirstChange) {
+				mProfileNameEditBox.setError(null);
 			} else {
-				mIllegalNameReasonTextView.setText(illegalNameReasonStringId);
+				mProfileNameEditBox.setError(mProfileNameEditBox.getContext().getString(
+						illegalNameReasonStringId));
 			}
 			final boolean needsEnable = 
 				mOkButton.isEnabled() != isNameLegal;
 			if (needsEnable) {
 				mOkButton.setEnabled(isNameLegal);
 			}
+			
+			mIsFirstChange = false;
 		}
 
 		public void beforeTextChanged(CharSequence s, int start, int count,
@@ -112,8 +114,9 @@ class ProfileNameDialogHelper {
 		}
 
 		private Button mOkButton;
-		private TextView mIllegalNameReasonTextView;
 		private ProfilePreferencesHelper mPreferencesHelper;
+		private EditText mProfileNameEditBox;
+		private boolean mIsFirstChange = true;
 	}
 
 	private static class CancelClickListener implements DialogInterface.OnClickListener {
