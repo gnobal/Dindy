@@ -317,7 +317,7 @@ public class DindyService extends Service {
 				AudioManager.VIBRATE_SETTING_ON
 				: AudioManager.VIBRATE_SETTING_OFF;
 		
-		mSettings.mEnableSms = profilePreferences.getBoolean(
+		mSettings.mEnableSmsReplyToCall = profilePreferences.getBoolean(
 				Consts.Prefs.Profile.KEY_ENABLE_SMS, true);
 		mSettings.mMessage = profilePreferences.getString(
 				Consts.Prefs.Profile.KEY_SMS_MESSAGE, Consts.EMPTY_STRING);

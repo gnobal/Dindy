@@ -56,6 +56,8 @@ public class Consts {
 				"second";
 			static final String VALUE_TREAT_UNKNOWN_CALLERS_AS_NORMAL =
 				"normal";
+			static final String VALUE_TREAT_UNKNOWN_CALLERS_AS_MOBILE_NO_SMS =
+				"mobile_no_sms";
 			static final String KEY_ENABLE_SMS = "enable_sms";			
 			static final String KEY_SMS_MESSAGE = 
 				"sms_message";
@@ -109,7 +111,7 @@ public class Consts {
 	static final long MILLIS_IN_MINUTE = 60000;
 	static final long MINUTES_IN_HOUR = 60; 
 	static final String LOGTAG = "Dindy";
-	static final boolean DEBUG = false;
+	static final boolean DEBUG = true;
 	static final String EMPTY_STRING = "";
 	
 	static final String SERVICE_STARTED = "net.gnobal.dindy.action.SERVICE_STARTED";

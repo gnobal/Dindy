@@ -16,7 +16,7 @@ class DindySettings {
 	RingerVibrateSettings mUserSettings = new RingerVibrateSettings(); 
 	RingerVibrateSettings mFirstRingSettings = new RingerVibrateSettings(); 
 	RingerVibrateSettings mSecondRingSettings = new RingerVibrateSettings(); 
-	boolean mEnableSms;
+	boolean mEnableSmsReplyToCall;
 	String mMessage;
 	long mWakeupTimeoutMillis = 0;
 	String mTreatNonMobileCallers;

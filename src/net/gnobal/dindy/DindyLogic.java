@@ -124,6 +124,8 @@ class DindyLogic {
 
 		case Consts.IncomingCallState.RINGING:
 			onRinging(number);
+			// TODO: if we're going to remember unknown numbers we should
+			// be careful here and put "unknown"
 			mLastRingingNumber = PhoneNumberUtils.toCallerIDMinMatch(number);
 			break;
 
@@ -144,14 +146,13 @@ class DindyLogic {
 		// The wakelock was acquired when the phone was ringing, so unless we 
 		// send the SMS we _must_ release it on each return from the function
 		// because this is our last chance to do so
-		if (number == null || number.trim().length() <= 0) {
-			releaseWakeLockIfHeld("onMissedCall 1");
-			return;
-		}
-		String callerIdNumber = PhoneNumberUtils.toCallerIDMinMatch(number);
-		if (callerIdNumber == null || callerIdNumber.length() <= 0) {
-			releaseWakeLockIfHeld("onMissedCall 2");
-			return;
+		String callerIdNumber = UNKNOWN_PHONE_NUMBER_CALLER_ID;
+		if (number != null && number.trim().length() > 0) {
+			callerIdNumber = PhoneNumberUtils.toCallerIDMinMatch(number);
+			if (callerIdNumber == null || callerIdNumber.length() <= 0) {
+				releaseWakeLockIfHeld("onMissedCall 2");
+				return;
+			}
 		}
 		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
 				"onMissedCall: number " + number + ", callerIdNumber " +
@@ -180,7 +181,10 @@ class DindyLogic {
 		// A new missed call that we haven't saved yet
 		// Is it a number we need to remember?
 		NumberProperties numberProps = getNumberProperties(callerIdNumber);
-		if (!numberProps.mShouldRememberNumber) {
+		final boolean shouldRemember = numberProps.mIsMobile ||
+			(numberProps.mIsKnown && Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_MOBILE_NO_SMS.equals(mSettings.mTreatNonMobileCallers)) ||
+			(!numberProps.mIsKnown && Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_MOBILE_NO_SMS.equals(mSettings.mTreatUnknownCallers));
+		if (!shouldRemember) {
 			releaseWakeLockIfHeld("onMissedCall 5");
 			return;
 		}
@@ -210,7 +214,10 @@ class DindyLogic {
 				" has been added. Timeout is " +
 				mSettings.mWakeupTimeoutMillis);
 
-		if (mSettings.mEnableSms) {
+		// Note that we may have gotten here because the user chose to treat the
+		// number as mobile, but we should only send the text message if it's
+		// indeed a mobile number
+		if (mSettings.mEnableSmsReplyToCall && numberProps.mIsMobile) {
 			// The intent will release the WakeLock
 			mSmsSender.sendMessage(number, mSettings.mMessage,
 					mSentPendingIntent);
@@ -236,6 +243,8 @@ class DindyLogic {
 			return;
 		}
 
+		// Unknown numbers don't apply here because you can't call an unknown 
+		// number
 		String callerIdNumber = PhoneNumberUtils.toCallerIDMinMatch(number);
 		removeIncomingCallInfo(callerIdNumber);
 	}
@@ -277,6 +286,8 @@ class DindyLogic {
 		if (number == null || number.trim().length() == 0) {
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
 					"onRinging: the number is empty, treating as unknown");
+			// TODO: Look for the unknown number ("unknown"?) in mIncomingCalls 
+			// as if it were a mobile number
 			numberProps.mIsKnown = false;
 		} else {
 			String callerIdNumber = PhoneNumberUtils.toCallerIDMinMatch(number);
@@ -316,7 +327,7 @@ class DindyLogic {
 			// we're supposed to remember. If it is, we use the first ring settings.
 			// If it's not, we use whatever the user asked us to in this case
 			numberProps = getNumberProperties(callerIdNumber);
-			if (numberProps.mShouldRememberNumber) {
+			if (numberProps.mIsMobile) {
 				// Quiet the phone down according to user's setting
 				setRingerAndVibrateModes(mSettings.mFirstRingSettings);
 				return;
@@ -327,7 +338,8 @@ class DindyLogic {
 				mSettings.mTreatNonMobileCallers :
 				mSettings.mTreatUnknownCallers;
 		
-		if (Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_FIRST.equals(setting)) {
+		if (Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_FIRST.equals(setting) ||
+			Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_MOBILE_NO_SMS.equals(setting)) {
 			setRingerAndVibrateModes(mSettings.mFirstRingSettings);
 			return;			
 		}
@@ -359,6 +371,7 @@ class DindyLogic {
 		if (number != null && number.trim().length() > 0) {
 			// User either answered the call or called this number so remove
 			// the call info
+			// TODO: handle unknown numbers (how?)
 			removeIncomingCallInfo(
 					PhoneNumberUtils.toCallerIDMinMatch(number));
 			return;
@@ -398,7 +411,7 @@ class DindyLogic {
 	private class NumberProperties
 	{
 		boolean mIsKnown = false;
-		boolean mShouldRememberNumber = false;
+		boolean mIsMobile = false;
 	}
 	
 	private NumberProperties getNumberProperties(String callerIdNumber) {
@@ -420,7 +433,7 @@ class DindyLogic {
 		props.mIsKnown = count >= 1;
 		while (phonesCursor.moveToNext()) {
 			if (phonesCursor.getInt(PHONE_TYPE_INDEX) == PhonesColumns.TYPE_MOBILE) {
-				props.mShouldRememberNumber = true;
+				props.mIsMobile = true;
 				break;
 			}
 		}
@@ -429,7 +442,7 @@ class DindyLogic {
 		phonesCursor = null;
 
 		if (props.mIsKnown) {
-			if (props.mShouldRememberNumber) {
+			if (props.mIsMobile) {
 				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
 						callerIdNumber + " is a known mobile callerId number");
 			} else {
@@ -506,6 +519,19 @@ class DindyLogic {
 		}		
 	}
 	
+	private static String getCallerIdNumber(String number) {
+		String callerIdNumber = UNKNOWN_PHONE_NUMBER_CALLER_ID;
+		if (number != null && number.trim().length() > 0) {
+			callerIdNumber = PhoneNumberUtils.toCallerIDMinMatch(number);
+			if (callerIdNumber == null || callerIdNumber.length() <= 0) {
+				// failed to convert the number we got to a caller ID number
+				return null;
+			}
+		}
+		
+		return callerIdNumber;
+	}
+	
 	private class IncomingCallInfo {
 		public IncomingCallInfo(String number,
 				String callerIdNumber,
@@ -556,6 +582,7 @@ class DindyLogic {
 	}
 
 	private static final String NOT_A_PHONE_NUMBER = "NOT_A_PHONE_NUMBER";
+	private static final String UNKNOWN_PHONE_NUMBER_CALLER_ID = "unknown";
 	private static final String SMS_PENDING_INTENT_NAME = "DindySMS";
 	private String mLastRingingNumber = NOT_A_PHONE_NUMBER;
 	private boolean mStarted = false;
