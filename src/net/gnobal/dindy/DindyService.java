@@ -409,7 +409,6 @@ public class DindyService extends Service {
 
 	private class CallLogObserver extends ContentObserver {
 		public CallLogObserver() {
-			//super(mHandler);
 			super(new Handler());
 		}
 

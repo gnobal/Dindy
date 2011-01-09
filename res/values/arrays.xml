@@ -59,10 +59,12 @@
 </string-array>
 <string-array name="unknown_caller_behavior_array_strings"><item>First call</item>
 <item>Second call</item>
-<item>Regular call</item>
+
+<item>Mobile contact, no SMS reply</item><item>Regular call</item>
 </string-array>
 <string-array name="unknown_caller_behavior_array_values"><item>first</item>
 <item>second</item>
-<item>normal</item>
+
+<item>mobile_no_sms</item><item>normal</item>
 </string-array>
 </resources>

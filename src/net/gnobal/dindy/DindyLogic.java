@@ -107,9 +107,10 @@ class DindyLogic {
 	}
 
 	void onCallStateChange(int newState, String number) {
-		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, "newState: " + 
-				Utils.incomingCallStateToString(newState) + 
-				", number: " + number);
+		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+				"onCallStateChange: newState=" +
+				Utils.incomingCallStateToString(newState) +	" number=" +
+				number);
 		if (!mStarted) {
 			// can happen if the service is started with a non-existing profile
 			// and then stops itself
@@ -124,9 +125,10 @@ class DindyLogic {
 
 		case Consts.IncomingCallState.RINGING:
 			onRinging(number);
-			// TODO: if we're going to remember unknown numbers we should
-			// be careful here and put "unknown"
-			mLastRingingNumber = PhoneNumberUtils.toCallerIDMinMatch(number);
+			mLastRingingNumber = getCallerIdNumber(number);
+			if (mLastRingingNumber == null) {
+				mLastRingingNumber = NOT_A_PHONE_NUMBER;
+			}
 			break;
 
 		case Consts.IncomingCallState.OFFHOOK:
@@ -135,7 +137,7 @@ class DindyLogic {
 
 		default:
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
-					"unknown call state " + newState);
+					"onCallStateChange: unknown call state " + newState);
 			return;
 		}
 
@@ -146,13 +148,13 @@ class DindyLogic {
 		// The wakelock was acquired when the phone was ringing, so unless we 
 		// send the SMS we _must_ release it on each return from the function
 		// because this is our last chance to do so
-		String callerIdNumber = UNKNOWN_PHONE_NUMBER_CALLER_ID;
-		if (number != null && number.trim().length() > 0) {
-			callerIdNumber = PhoneNumberUtils.toCallerIDMinMatch(number);
-			if (callerIdNumber == null || callerIdNumber.length() <= 0) {
-				releaseWakeLockIfHeld("onMissedCall 2");
-				return;
-			}
+		String callerIdNumber = getCallerIdNumber(number);
+		if (callerIdNumber == null) {
+			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+					"onMissedCall: number " + number + 
+					" returned null callerId");
+			releaseWakeLockIfHeld("onMissedCall");
+			return;
 		}
 		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
 				"onMissedCall: number " + number + ", callerIdNumber " +
@@ -162,7 +164,11 @@ class DindyLogic {
 		// it's safe to say that we found a missed call and we should probably 
 		// send the SMS
 		if (!callerIdNumber.equals(mLastRingingNumber)) {
-			releaseWakeLockIfHeld("onMissedCall 3");
+			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+					"onMissedCall: callerIdNumber " + callerIdNumber +
+					" does not match last ringing number " + 
+					mLastRingingNumber);
+			releaseWakeLockIfHeld("onMissedCall");
 			return;
 		}
 
@@ -170,10 +176,10 @@ class DindyLogic {
 			if (mIncomingCalls.containsKey(callerIdNumber)) {
 				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
 						"onMissedCall: callerIdNumber " + callerIdNumber +
-						" for number " + number + " already exists");
+						" already exists");
 				// TODO in this case should we extend the time during which we
 				// wait for the next call?
-				releaseWakeLockIfHeld("onMissedCall 4");
+				releaseWakeLockIfHeld("onMissedCall");
 				return;
 			}
 		}
@@ -185,7 +191,13 @@ class DindyLogic {
 			(numberProps.mIsKnown && Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_MOBILE_NO_SMS.equals(mSettings.mTreatNonMobileCallers)) ||
 			(!numberProps.mIsKnown && Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_MOBILE_NO_SMS.equals(mSettings.mTreatUnknownCallers));
 		if (!shouldRemember) {
-			releaseWakeLockIfHeld("onMissedCall 5");
+			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+					"onMissedCall: callerIdNumber " + callerIdNumber +
+					" is not a number to remember. isMobile=" +
+					numberProps.mIsMobile + " isKnown=" + numberProps.mIsKnown +
+					" nonMobileCallers=" + mSettings.mTreatNonMobileCallers +
+					" unknownCallers=" + mSettings.mTreatUnknownCallers);
+			releaseWakeLockIfHeld("onMissedCall");
 			return;
 		}
 
@@ -208,9 +220,9 @@ class DindyLogic {
 			mTimer.schedule(removalTask, mSettings.mWakeupTimeoutMillis);
 		}
 
-		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, "number " +
-				newCallInfo.getNumber() + ", callerIdNumber " +
-				newCallInfo.getCallerIdNumber() +
+		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+				"onMissedCall: number " + newCallInfo.getNumber() +
+				", callerIdNumber " + newCallInfo.getCallerIdNumber() +
 				" has been added. Timeout is " +
 				mSettings.mWakeupTimeoutMillis);
 
@@ -224,7 +236,10 @@ class DindyLogic {
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
 					"number " + number + " has been notified with SMS.");
 		} else {
-			releaseWakeLockIfHeld("onMissedCall 6");
+			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+					"onMissedCall: number " + number +
+					" need not be notified with SMS.");
+			releaseWakeLockIfHeld("onMissedCall");
 		}
 	}
 
@@ -245,7 +260,7 @@ class DindyLogic {
 
 		// Unknown numbers don't apply here because you can't call an unknown 
 		// number
-		String callerIdNumber = PhoneNumberUtils.toCallerIDMinMatch(number);
+		String callerIdNumber = getCallerIdNumber(number);
 		removeIncomingCallInfo(callerIdNumber);
 	}
 	
@@ -262,15 +277,16 @@ class DindyLogic {
 		if (newWakeupTimeMillis != Consts.INFINITE_TIME &&
 			oldWakeupTimeMillis == Consts.INFINITE_TIME) {
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"wakeup timeout changed from infinite to " +
-					newWakeupTimeMillis + ". Removing all numbers");
+					"onWakeupTimeChanged: wakeup timeout changed from infinite "
+					+ "to " + newWakeupTimeMillis + ". Removing all numbers");
 			synchronized (mIncomingCalls) {
 				Iterator<String> it = mIncomingCalls.keySet().iterator();
 				while (it.hasNext()) {
 					// Each key is a caller ID number
 					String callerIdNumber = it.next();
 					if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-							"removing caller ID number " + callerIdNumber);
+							"onWakeupTimeChanged: removing caller ID number " +
+							callerIdNumber);
 					removeIncomingCallInfo(callerIdNumber);
 				}
 			}			
@@ -282,56 +298,51 @@ class DindyLogic {
 		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
 				"onRinging: WakeLock acquired, " + mWakeLock.toString());
 		
-		NumberProperties numberProps = new NumberProperties();
-		if (number == null || number.trim().length() == 0) {
+		String callerIdNumber = getCallerIdNumber(number);
+		if (callerIdNumber == null) {
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"onRinging: the number is empty, treating as unknown");
-			// TODO: Look for the unknown number ("unknown"?) in mIncomingCalls 
-			// as if it were a mobile number
-			numberProps.mIsKnown = false;
-		} else {
-			String callerIdNumber = PhoneNumberUtils.toCallerIDMinMatch(number);
-			if (callerIdNumber == null || callerIdNumber.length() <= 0) {
-				return;
-			}
-	
-			// Do we care about this call:
-			// Is it a returning number? Should we treat as second call?
-			synchronized (mIncomingCalls) {
-				IncomingCallInfo currentCallInfo =
-					mIncomingCalls.get(callerIdNumber); 
-				if (currentCallInfo != null) {
-					// If the number exists in the map there is still the 
-					// possibility that it hasn't been removed by the timer thread
-					// even if its time was up because the phone was sleeping. So
-					// we do this cleanup here, but only if the call info structure
-					// wasn't put in the map with an infinite timeout value
-					long currentTimeMillis = System.currentTimeMillis();
-					if (currentCallInfo.getAbsoluteWakeupTimeMillis() != Consts.INFINITE_TIME &&
-						currentTimeMillis > currentCallInfo.getAbsoluteWakeupTimeMillis()) {
-						if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-								callerIdNumber + " will be removed in onRinging() because it wasn't removed by the timer thread" + 
-								"currentTimeMillis: " + currentTimeMillis + ", absoluteWakeupTime: " +
-								currentCallInfo.getAbsoluteWakeupTimeMillis());
-						removeIncomingCallInfo(callerIdNumber);
-					} else {
-						if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-								"setting second ring parameters for callerId number " +
-								callerIdNumber);
-						setRingerAndVibrateModes(mSettings.mSecondRingSettings);
-						return;
-					}
+					"onRinging: callerIdNumber is null for number " + number);
+			return;
+		}
+
+		// Do we care about this call:
+		// Is it a returning number? Should we treat as second call?
+		synchronized (mIncomingCalls) {
+			IncomingCallInfo currentCallInfo =
+				mIncomingCalls.get(callerIdNumber); 
+			if (currentCallInfo != null) {
+				// If the number exists in the map there is still the 
+				// possibility that it hasn't been removed by the timer thread
+				// even if its time was up because the phone was sleeping. So
+				// we do this cleanup here, but only if the call info structure
+				// wasn't put in the map with an infinite timeout value
+				long currentTimeMillis = System.currentTimeMillis();
+				if (currentCallInfo.getAbsoluteWakeupTimeMillis() != Consts.INFINITE_TIME &&
+					currentTimeMillis > currentCallInfo.getAbsoluteWakeupTimeMillis()) {
+					if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+							"onRinging: " + callerIdNumber + " will be removed "
+							+ "because it wasn't removed by the timer thread " + 
+							"currentTimeMillis= " + currentTimeMillis +
+							" absoluteWakeupTime=" +
+							currentCallInfo.getAbsoluteWakeupTimeMillis());
+					removeIncomingCallInfo(callerIdNumber);
+				} else {
+					if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+							"onRinging: setting second ring parameters for " +
+							"callerId number " + callerIdNumber);
+					setRingerAndVibrateModes(mSettings.mSecondRingSettings);
+					return;
 				}
 			}
-			// It's not a number that called us. Let's see if it's a number that 
-			// we're supposed to remember. If it is, we use the first ring settings.
-			// If it's not, we use whatever the user asked us to in this case
-			numberProps = getNumberProperties(callerIdNumber);
-			if (numberProps.mIsMobile) {
-				// Quiet the phone down according to user's setting
-				setRingerAndVibrateModes(mSettings.mFirstRingSettings);
-				return;
-			}
+		}
+		// It's not a number that called us. Let's see if it's a number that 
+		// we're supposed to remember. If it is, we use the first ring settings.
+		// If it's not, we use whatever the user asked us to in this case
+		NumberProperties numberProps = getNumberProperties(callerIdNumber);
+		if (numberProps.mIsMobile) {
+			// Quiet the phone down according to user's setting
+			setRingerAndVibrateModes(mSettings.mFirstRingSettings);
+			return;
 		}
 		
 		final String setting = numberProps.mIsKnown ?
@@ -363,26 +374,19 @@ class DindyLogic {
 
 	private void onOffHook(String number) {
 		// There is another case where we go off hook: from idle. But in that 
-		// case we don't release the lock since we never acquired it
+		// case we don't release the lock since we never acquired it.
+		// In the other case (when the user calls an outgoing number) we
+		// expect onOutgoingCall to be called
 		if (mPreviousCallState == Consts.IncomingCallState.RINGING) {
 			releaseWakeLockIfHeld("onOffHook");
-		}
-		
-		if (number != null && number.trim().length() > 0) {
-			// User either answered the call or called this number so remove
-			// the call info
-			// TODO: handle unknown numbers (how?)
-			removeIncomingCallInfo(
-					PhoneNumberUtils.toCallerIDMinMatch(number));
-			return;
-		}
 
-		// We didn't get a number from the notification, so if the latest
-		// call state was ringing let's use the number we saved
-		if (!mLastRingingNumber.equals(NOT_A_PHONE_NUMBER) &&
-			mPreviousCallState == Consts.IncomingCallState.RINGING) {
-			removeIncomingCallInfo(mLastRingingNumber);
-			mLastRingingNumber = NOT_A_PHONE_NUMBER;
+			// When we get here we typically don't get a number from the 
+			// notification, so let's use the number we saved when the 
+			// phone was ringing
+			if (!NOT_A_PHONE_NUMBER.equals(mLastRingingNumber)) {
+				removeIncomingCallInfo(mLastRingingNumber);
+				mLastRingingNumber = NOT_A_PHONE_NUMBER;
+			}
 			return;
 		}
 	}
@@ -444,14 +448,17 @@ class DindyLogic {
 		if (props.mIsKnown) {
 			if (props.mIsMobile) {
 				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-						callerIdNumber + " is a known mobile callerId number");
+						"getNumberProperties:" + callerIdNumber +
+						" is a known mobile callerId number");
 			} else {
 				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
-						"known non-mobile callerId number " + callerIdNumber);
+						"getNumberProperties: known non-mobile callerId number "
+						+ callerIdNumber);
 			}
 		} else {
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
-					"unknown callerId number " + callerIdNumber);
+					"getNumberProperties: unknown callerId number " +
+					callerIdNumber);
 		}
 
 		return props;
@@ -461,14 +468,14 @@ class DindyLogic {
 			settings) {
 		if (mAM.getRingerMode() != settings.mRingerMode) { 
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"setting ringer=" +
+					"setRingerAndVibrateModes: setting ringer=" +
 					Utils.ringerModeToString(settings.mRingerMode));
 			mAM.setRingerMode(settings.mRingerMode);
 		}
 		if (mAM.getVibrateSetting(AudioManager.VIBRATE_TYPE_RINGER) != 
 			settings.mVibrateModeRinger) {
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"setting vibrateRinger=" +
+					"setRingerAndVibrateModes: setting vibrateRinger=" +
 					Utils.vibrationSettingToString(settings.mVibrateModeRinger));
 			mAM.setVibrateSetting(AudioManager.VIBRATE_TYPE_RINGER,
 					settings.mVibrateModeRinger);
@@ -476,7 +483,7 @@ class DindyLogic {
 		if (mAM.getVibrateSetting(AudioManager.VIBRATE_TYPE_NOTIFICATION) !=
 			settings.mVibrateModeNotification) {
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"setting vibrateNotification=" +
+					"setRingerAndVibrateModes: setting vibrateNotification=" +
 					Utils.vibrationSettingToString(settings.mVibrateModeNotification));
 			mAM.setVibrateSetting(AudioManager.VIBRATE_TYPE_NOTIFICATION,
 					settings.mVibrateModeNotification);
@@ -521,7 +528,8 @@ class DindyLogic {
 	
 	private static String getCallerIdNumber(String number) {
 		String callerIdNumber = UNKNOWN_PHONE_NUMBER_CALLER_ID;
-		if (number != null && number.trim().length() > 0) {
+		if (number != null && number.trim().length() > 0 &&
+			!number.equals(UNKNOWN_PHONE_NUMBER_CALLER_ID)) { // avoid converting "-1" to "1"
 			callerIdNumber = PhoneNumberUtils.toCallerIDMinMatch(number);
 			if (callerIdNumber == null || callerIdNumber.length() <= 0) {
 				// failed to convert the number we got to a caller ID number
@@ -582,7 +590,9 @@ class DindyLogic {
 	}
 
 	private static final String NOT_A_PHONE_NUMBER = "NOT_A_PHONE_NUMBER";
-	private static final String UNKNOWN_PHONE_NUMBER_CALLER_ID = "unknown";
+	// The unknown number "-1" is from tests in the emulator. We consider it a 
+	// special case 
+	private static final String UNKNOWN_PHONE_NUMBER_CALLER_ID = "-1";
 	private static final String SMS_PENDING_INTENT_NAME = "DindySMS";
 	private String mLastRingingNumber = NOT_A_PHONE_NUMBER;
 	private boolean mStarted = false;

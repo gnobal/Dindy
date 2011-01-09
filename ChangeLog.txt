@@ -22,3 +22,5 @@
 1.1.4 Fixed an issue where Dindy didn't function correctly alongside other programs that monitor incoming calls (like call recorders), mainly on older/slower devices
 1.1.5 Do not allow profile names with an apostrophe to avoid database errors
       Code cleanup and reorganization in preparation for future enhancements
+1.1.6 Added the option to treat non-mobile and unknown callers as if they were mobile (first+second call) without the SMS reply
+      Minor category changes in profile preferences

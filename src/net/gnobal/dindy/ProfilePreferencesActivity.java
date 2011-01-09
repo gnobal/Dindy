@@ -182,6 +182,52 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 				.setTitle(R.string.preferences_profile_second_ring_vibrate);
 		secondRingCat.addPreference(secondRingVibrate);
 
+		// Incoming callers settings category
+		PreferenceCategory incomingCallsCat = new PreferenceCategory(this);
+		incomingCallsCat.setTitle(R.string.preferences_profile_incoming_calls);
+		root.addPreference(incomingCallsCat);
+		
+		
+        // Treat non-mobile callers as
+        ListPreference treatNonMobileCallersPref = new ListPreference(this);
+        treatNonMobileCallersPref.setEntries(
+        		R.array.unknown_caller_behavior_array_strings);
+        treatNonMobileCallersPref.setEntryValues(
+        		R.array.unknown_caller_behavior_array_values);
+        treatNonMobileCallersPref.setDialogTitle(
+        		R.string.preferences_profile_non_mobile_caller_behavior_dialog_title);
+        treatNonMobileCallersPref.setKey(
+        		Consts.Prefs.Profile.KEY_TREAT_NON_MOBILE_CALLERS);
+        treatNonMobileCallersPref.setTitle(
+        		R.string.preferences_profile_non_mobile_caller_behavior_title);
+        treatNonMobileCallersPref.setOnPreferenceChangeListener(
+        		new SummaryWithValuePreferenceChangeListener(
+        				R.string.preferences_profile_non_mobile_caller_behavior_summary));
+        incomingCallsCat.addPreference(treatNonMobileCallersPref);
+        setListPrefernceSummaryWithValue(treatNonMobileCallersPref,
+        		R.string.preferences_profile_non_mobile_caller_behavior_summary,
+        		treatNonMobileCallersPref.getEntry());
+        
+        // Treat unknown callers as
+        ListPreference treatUnknownCallersPref = new ListPreference(this);
+        treatUnknownCallersPref.setEntries(
+        		R.array.unknown_caller_behavior_array_strings);
+        treatUnknownCallersPref.setEntryValues(
+        		R.array.unknown_caller_behavior_array_values);
+        treatUnknownCallersPref.setDialogTitle(
+        		R.string.preferences_profile_unknown_caller_behavior_dialog_title);
+        treatUnknownCallersPref.setKey(
+        		Consts.Prefs.Profile.KEY_TREAT_UNKNOWN_CALLERS);
+        treatUnknownCallersPref.setTitle(
+        		R.string.preferences_profile_unknown_caller_behavior_title);
+		treatUnknownCallersPref.setOnPreferenceChangeListener(
+				new SummaryWithValuePreferenceChangeListener(
+						R.string.preferences_profile_unknown_caller_behavior_summary));
+		incomingCallsCat.addPreference(treatUnknownCallersPref);
+        setListPrefernceSummaryWithValue(treatUnknownCallersPref,
+        		R.string.preferences_profile_unknown_caller_behavior_summary,
+        		treatUnknownCallersPref.getEntry());
+        
 		// General settings category
 		PreferenceCategory generalCat = new PreferenceCategory(this);
 		generalCat.setTitle(R.string.preferences_profile_general);
@@ -207,46 +253,6 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
         		R.string.preferences_profile_time_between_calls_summary,
         		timeBetweenCallsPref.getEntry());
 
-        // Treat non-mobile callers as
-        ListPreference treatNonMobileCallersPref = new ListPreference(this);
-        treatNonMobileCallersPref.setEntries(
-        		R.array.unknown_caller_behavior_array_strings);
-        treatNonMobileCallersPref.setEntryValues(
-        		R.array.unknown_caller_behavior_array_values);
-        treatNonMobileCallersPref.setDialogTitle(
-        		R.string.preferences_profile_non_mobile_caller_behavior_dialog_title);
-        treatNonMobileCallersPref.setKey(
-        		Consts.Prefs.Profile.KEY_TREAT_NON_MOBILE_CALLERS);
-        treatNonMobileCallersPref.setTitle(
-        		R.string.preferences_profile_non_mobile_caller_behavior_title);
-        treatNonMobileCallersPref.setOnPreferenceChangeListener(
-        		new SummaryWithValuePreferenceChangeListener(
-        				R.string.preferences_profile_non_mobile_caller_behavior_summary));
-        generalCat.addPreference(treatNonMobileCallersPref);
-        setListPrefernceSummaryWithValue(treatNonMobileCallersPref,
-        		R.string.preferences_profile_non_mobile_caller_behavior_summary,
-        		treatNonMobileCallersPref.getEntry());
-        
-        // Treat unknown callers as
-        ListPreference treatUnknownCallersPref = new ListPreference(this);
-        treatUnknownCallersPref.setEntries(
-        		R.array.unknown_caller_behavior_array_strings);
-        treatUnknownCallersPref.setEntryValues(
-        		R.array.unknown_caller_behavior_array_values);
-        treatUnknownCallersPref.setDialogTitle(
-        		R.string.preferences_profile_unknown_caller_behavior_dialog_title);
-        treatUnknownCallersPref.setKey(
-        		Consts.Prefs.Profile.KEY_TREAT_UNKNOWN_CALLERS);
-        treatUnknownCallersPref.setTitle(
-        		R.string.preferences_profile_unknown_caller_behavior_title);
-		treatUnknownCallersPref.setOnPreferenceChangeListener(
-				new SummaryWithValuePreferenceChangeListener(
-						R.string.preferences_profile_unknown_caller_behavior_summary));
-        generalCat.addPreference(treatUnknownCallersPref);
-        setListPrefernceSummaryWithValue(treatUnknownCallersPref,
-        		R.string.preferences_profile_unknown_caller_behavior_summary,
-        		treatUnknownCallersPref.getEntry());
-        
 		// Time limit category
 		//PreferenceCategory timeLimitCat = new PreferenceCategory(this);
 		//timeLimitCat.setTitle(R.string.preferences_profile_time_limit_cat);
