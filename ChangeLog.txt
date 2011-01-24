@@ -24,3 +24,4 @@
       Code cleanup and reorganization in preparation for future enhancements
 1.1.6 Added the option to treat non-mobile and unknown callers as if they were mobile (first+second call) without the SMS reply
       Minor category changes in profile preferences
+1.1.7 Added SMS reply-to-SMS (in perpetual beta until officially supported by Google)
