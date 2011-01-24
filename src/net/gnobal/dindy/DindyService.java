@@ -20,7 +20,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.provider.CallLog;
-//import android.provider.Settings;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Config;
@@ -45,21 +44,18 @@ public class DindyService extends Service {
 		mPM = (PowerManager) getSystemService(POWER_SERVICE);
 		// Start listening to call state change events
 		mCallLogObserver = new CallLogObserver();
-		mCallLogCursor = getContentResolver().query(
-				CallLog.Calls.CONTENT_URI, mCallLogProjection,
-				CALL_LOG_QUERY, null, CallLog.Calls.DATE + " DESC");
-		mPreviousCursorCount = mCallLogCursor.getCount();
-		mCallLogCursor.registerContentObserver(mCallLogObserver);
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(Intent.ACTION_NEW_OUTGOING_CALL);
 		filter.addAction(Consts.ACTION_STOP_DINDY_SERVICE);
+		filter.addAction(SMS_RECEIVED_ACTION);
 		registerReceiver(mBroadcastReceiver, filter);
 		mPreferencesHelper = ProfilePreferencesHelper.instance();
 		mPendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0,
 				DindyService.getStopServiceBroadcastIntent(), 0);	
+	    mSmsHelper = new SmsHelper();
 
 		mLogic = new DindyLogic(getApplicationContext(), getContentResolver(),
-				mSettings, mAuM, mPM);
+				mSettings, mAuM, mPM, mSmsHelper);
 		// TODO must be after setting mLogic, since registration 
 		// immediately sends us an IDLE notification that goes straight to 
 		// mLogic. If the user is clicking fast enough on the start/stop 
@@ -165,15 +161,11 @@ public class DindyService extends Service {
 		unregisterReceiver(mBroadcastReceiver);
 		mTM.listen(mStateListener, PhoneStateListener.LISTEN_NONE);
 		mNM.cancel(R.string.dindy_service_started);
-		mCallLogCursor.unregisterContentObserver(mCallLogObserver);
-		mCallLogCursor.deactivate();
-		mCallLogCursor.close();
 		mLogic.stop();
 		mLogic.destroy();
+		mCallLogObserver.destroy();
 		mStateListener = null;
 		mTM = null;
-		mCallLogCursor = null;
-		mPreviousCursorCount = Integer.MAX_VALUE;
 		mCallLogObserver = null;
 		mNM = null;
 		mAuM = null;
@@ -182,6 +174,7 @@ public class DindyService extends Service {
 		mBroadcastReceiver = null;
 		mPreferencesHelper = null;
 		mLogic = null;
+		mSmsHelper = null;
 		// Must happen last because it's used here
 		mCurrentProfileId = Consts.NOT_A_PROFILE_ID;
 		mIsRunning = false;
@@ -290,13 +283,13 @@ public class DindyService extends Service {
 					Context.MODE_PRIVATE);
 
 		final boolean firstRingSound = profilePreferences.getBoolean(
-				Consts.Prefs.Profile.KEY_FIRST_RING_SOUND, false);
+				Consts.Prefs.Profile.KEY_FIRST_EVENT_SOUND, false);
 		final boolean firstRingVibrate = profilePreferences.getBoolean(
-				Consts.Prefs.Profile.KEY_FIRST_RING_VIBRATE, false);
+				Consts.Prefs.Profile.KEY_FIRST_EVENT_VIBRATE, false);
 		final boolean secondRingSound = profilePreferences.getBoolean(
-				Consts.Prefs.Profile.KEY_SECOND_RING_SOUND, true);
+				Consts.Prefs.Profile.KEY_SECOND_EVENT_SOUND, true);
 		final boolean secondRingVibrate = profilePreferences.getBoolean(
-				Consts.Prefs.Profile.KEY_SECOND_RING_VIBRATE, true);
+				Consts.Prefs.Profile.KEY_SECOND_EVENT_VIBRATE, true);
 
 		mSettings.mFirstRingSettings.mRingerMode = firstRingSound ? 
 				AudioManager.RINGER_MODE_NORMAL
@@ -318,17 +311,25 @@ public class DindyService extends Service {
 				: AudioManager.VIBRATE_SETTING_OFF;
 		
 		mSettings.mEnableSmsReplyToCall = profilePreferences.getBoolean(
-				Consts.Prefs.Profile.KEY_ENABLE_SMS, true);
-		mSettings.mMessage = profilePreferences.getString(
-				Consts.Prefs.Profile.KEY_SMS_MESSAGE, Consts.EMPTY_STRING);
+				Consts.Prefs.Profile.KEY_ENABLE_SMS_CALLERS,
+				Consts.Prefs.Profile.VALUE_ENABLE_SMS_CALLERS_DEFAULT);
+		mSettings.mMessageToCallers = profilePreferences.getString(
+				Consts.Prefs.Profile.KEY_SMS_MESSAGE_CALLERS, getString(
+						R.string.preferences_profile_sms_message_callers_default_unset_value));
+		mSettings.mEnableSmsReplyToSms = profilePreferences.getBoolean(
+				Consts.Prefs.Profile.KEY_ENABLE_SMS_TEXTERS,
+				Consts.Prefs.Profile.VALUE_ENABLE_SMS_TEXTERS_DEFAULT);
+		mSettings.mMessageToTexters = profilePreferences.getString(
+				Consts.Prefs.Profile.KEY_SMS_MESSAGE_TEXTERS, getString(
+						R.string.preferences_profile_sms_message_texters_default_unset_value));
 		
 		// First let's see what the new value is. We need to notify DindyLogic
 		// about this change so we need to keep the new setting in a different
 		// variable
 		final long newWakeupTimeoutMinutes = 
 			Long.parseLong(profilePreferences.getString(
-					Consts.Prefs.Profile.KEY_TIME_BETWEEN_CALLS_MINUTES,
-					Consts.Prefs.Profile.VALUE_TIME_BETWEEN_CALLS_DEFAULT));
+					Consts.Prefs.Profile.KEY_TIME_BETWEEN_EVENTS_MINUTES,
+					Consts.Prefs.Profile.VALUE_TIME_BETWEEN_EVENTS_DEFAULT));
 		long newWakeupTimeoutMillis = Consts.INFINITE_TIME;
 		if (newWakeupTimeoutMinutes != Consts.INFINITE_TIME) {
 			newWakeupTimeoutMillis =
@@ -347,6 +348,9 @@ public class DindyService extends Service {
 		mSettings.mTreatNonMobileCallers = profilePreferences.getString(
 				Consts.Prefs.Profile.KEY_TREAT_NON_MOBILE_CALLERS,
 				mSettings.mTreatUnknownCallers);
+		mSettings.mTreatUnknownTexters = profilePreferences.getString(
+				Consts.Prefs.Profile.KEY_TREAT_UNKNOWN_TEXTERS,
+				Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_TEXTERS_DEFAULT);
 		
 		if (firstStart) {
 			// Only if it's a first start we get the user's settings. Otherwise
@@ -403,26 +407,67 @@ public class DindyService extends Service {
 				mLogic.onOutgoingCall(phoneNumber);
 			} else if (Consts.ACTION_STOP_DINDY_SERVICE.equals(action)) {
 				DindyService.this.stopSelf();
+			} else if (SMS_RECEIVED_ACTION.equals(action)) {
+				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+						"SMS message(s) received");
+				String[] addresses = getAddressesFromSmsIntent(intent);
+				for (int i = 0; i < addresses.length; ++ i) {
+					if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+							"message: address=" + addresses[i]);
+					mLogic.onSmsMessage(addresses[i]);
+				}
 			}
 		}
 	}
 
-	private class CallLogObserver extends ContentObserver {
-		public CallLogObserver() {
+	private abstract class AbstractObserver extends ContentObserver {
+		protected AbstractObserver() {
 			super(new Handler());
+			mCursor = getContentResolver().query(getContentUri(),
+					getProjection(), getQuery(), null, getSortOrder());
+			mCursor.registerContentObserver(this);
 		}
-
+		
+		public void destroy() {
+			mCursor.unregisterContentObserver(this);
+			mCursor.deactivate();
+			mCursor.close();
+			mCursor = null;
+		}
+		
+		abstract Uri getContentUri();
+		abstract String[] getProjection();
+		abstract String getQuery();
+		abstract String getSortOrder();
+		
+		protected Cursor mCursor = null;
+	}
+	
+	private class CallLogObserver extends AbstractObserver {
+		CallLogObserver() {
+			super();
+			mPreviousCursorCount = mCursor.getCount();
+		}
+		
+		@Override
+		public void destroy() {
+			super.destroy();
+			mPreviousCursorCount = Integer.MAX_VALUE;
+		}
+		
 		@Override
 		public void onChange(boolean selfChange) {
-			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, "call log database changed");
-			if (!mCallLogCursor.requery()) {
+			super.onChange(selfChange);
+			if (Config.LOGD && Consts.DEBUG) 
+				Log.d(Consts.LOGTAG, "CallLog: database changed");
+			if (!mCursor.requery()) {
 				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
-						"requery() failed. Cursor is invalid");
+						"CallLog: requery() failed. Cursor is invalid");
 				// TODO recreate cursor
 				return;
 			}
 
-			final int currentCursorCount = mCallLogCursor.getCount();
+			final int currentCursorCount = mCursor.getCount();
 			if (currentCursorCount <= mPreviousCursorCount) {
 				// This means that there isn't really new data in the cursor for
 				// us. It can happen when the user hangs up on the caller while
@@ -433,34 +478,73 @@ public class DindyService extends Service {
 				// for the next time as well (for example if the user deleted
 				// one missed call from the calls log).
 				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-						"onChange: changing previous cursor count from "
-						+ mPreviousCursorCount + " to " + currentCursorCount);
+						"CallLog: onChange: changing previous cursor count "
+						+ "from " + mPreviousCursorCount + " to " +
+						currentCursorCount);
 				mPreviousCursorCount = currentCursorCount;
 				return;
 			}
 			mPreviousCursorCount = currentCursorCount;
 
-			if (!mCallLogCursor.moveToNext()) {
+			if (!mCursor.moveToNext()) {
 				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
-						"moveToNext() failed. No missed calls");
+						"CallLog: moveToNext() failed. No missed calls");
 				return;
 			}
 
-			int callType = mCallLogCursor.getInt(CALL_LOG_FIELD_TYPE);
+			int callType = mCursor.getInt(CALL_LOG_FIELD_TYPE);
+			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
+					"CallLog: callType=" + callType);			
 			switch (callType) {
 			case CallLog.Calls.MISSED_TYPE:
 				mLogic.onMissedCall(
-						mCallLogCursor.getString(CALL_LOG_FIELD_NUMBER));
+						mCursor.getString(CALL_LOG_FIELD_NUMBER));
 				break;
 			
 			case CallLog.Calls.INCOMING_TYPE:
 				mLogic.onIncomingCallInCallsDB(
-						mCallLogCursor.getString(CALL_LOG_FIELD_NUMBER));
+						mCursor.getString(CALL_LOG_FIELD_NUMBER));
 				break;
 			}
 		}
+
+		@Override
+		protected Uri getContentUri() { return CallLog.Calls.CONTENT_URI; }
+		
+		@Override
+		protected String[] getProjection() { return mCallLogProjection; }
+		
+		@Override
+		protected String getQuery() { return CALL_LOG_QUERY; }
+
+		@Override
+		protected String getSortOrder() { return CALL_LOG_SORT_ORDER; } 
+
+		protected int mPreviousCursorCount = Integer.MAX_VALUE;
 	}
 
+    private String[] getAddressesFromSmsIntent(Intent intent) {
+        Object[] messages = (Object[]) intent.getSerializableExtra("pdus");
+        byte[][] pduObjs = new byte[messages.length][];
+
+        for (int i = 0; i < messages.length; i++) {
+            pduObjs[i] = (byte[]) messages[i];
+        }
+        byte[][] pdus = new byte[pduObjs.length][];
+        int pduCount = pdus.length;
+        for (int i = 0; i < pduCount; i++) {
+            pdus[i] = pduObjs[i];
+        }
+        
+        String[] addresses = mSmsHelper.getAddressesFromSmsPdus(pdus);
+        for (int i = 0; i < addresses.length; ++i) {
+        	
+        }
+        
+        return addresses;
+    }
+
+	
 	private DindyLogic mLogic = null;
 	private NotificationManager mNM = null;
 	private TelephonyManager mTM = null;
@@ -469,24 +553,28 @@ public class DindyService extends Service {
 	private PowerManager mPM = null;
 	private CallStateChangeListener mStateListener = null;
 	private DindyServiceBroadcastReceiver mBroadcastReceiver = null;
-	private CallLogObserver mCallLogObserver = null;
-	private Cursor mCallLogCursor = null;
-	private int mPreviousCursorCount = Integer.MAX_VALUE;
 	private ProfilePreferencesHelper mPreferencesHelper = null;
 	private DindySettings mSettings = new DindySettings();
 	private PendingIntent mPendingIntent = null;
 	private static long mCurrentProfileId = Consts.NOT_A_PROFILE_ID;
 	private static boolean mIsRunning = false;
-
 	private final IBinder mBinder = new LocalBinder();
-	private final String[] mCallLogProjection = 
+	private CallLogObserver mCallLogObserver = null;
+	private SmsHelper mSmsHelper = null;
+	//private SmsObserver mSmsObserver = null;
+	private static final String SMS_RECEIVED_ACTION =
+		"android.provider.Telephony.SMS_RECEIVED";
+	
+	private static final String[] mCallLogProjection = 
 	{ 
 		CallLog.Calls.NUMBER, // 0
 		CallLog.Calls.TYPE    // 1
 	};
-	private final int CALL_LOG_FIELD_NUMBER = 0;
-	private final int CALL_LOG_FIELD_TYPE = 1;
-	private final String CALL_LOG_QUERY = 
+	private static final int CALL_LOG_FIELD_NUMBER = 0;
+	private static final int CALL_LOG_FIELD_TYPE = 1;
+	private static final String CALL_LOG_QUERY = 
 		CallLog.Calls.TYPE + " = " + CallLog.Calls.MISSED_TYPE + 
-		" OR " + CallLog.Calls.TYPE + " = " + CallLog.Calls.INCOMING_TYPE; 
+		" OR " + CallLog.Calls.TYPE + " = " + CallLog.Calls.INCOMING_TYPE;
+	private static final String CALL_LOG_SORT_ORDER = CallLog.Calls.DATE + " DESC";
+
 }

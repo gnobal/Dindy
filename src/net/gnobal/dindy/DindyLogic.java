@@ -62,7 +62,8 @@ import java.util.TimerTask;
 
 class DindyLogic {
 	public DindyLogic(Context context, ContentResolver resolver,
-			DindySettings settings, AudioManager am, PowerManager pm) {
+			DindySettings settings, AudioManager am, PowerManager pm,
+			SmsHelper smsHelper) {
 		mContext = context;
 		mResolver = resolver;
 		mSettings = settings;
@@ -73,7 +74,7 @@ class DindyLogic {
 	    		mContext, 0, new Intent(SMS_PENDING_INTENT_NAME), 0);
 	    mContext.registerReceiver(mOnSentReceiver, new IntentFilter(
 	    		SMS_PENDING_INTENT_NAME));
-	    mSmsSender = new SmsSender();
+	    mSmsHelper = smsHelper;
 	}
 
 	void start() {
@@ -91,7 +92,7 @@ class DindyLogic {
 	
 	void destroy() {
 		mContext.unregisterReceiver(mOnSentReceiver);
-		mSmsSender = null;
+		mSmsHelper = null;
 		mOnSentReceiver = null;
 		mContext = null;
 		mTimer.cancel();
@@ -144,6 +145,53 @@ class DindyLogic {
 		mPreviousCallState = newState;
 	}
 
+	void onSmsMessage(String number) {
+		mWakeLock.acquire();
+		String callerIdNumber = getCallerIdNumber(number);
+		if (callerIdNumber == null) {
+			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+					"onSmsMessage: number " + number + 
+					" returned null callerId");
+			releaseWakeLockIfHeld("onSmsMessage");
+			return;
+		}
+		
+		if (isCallerIdNumberExist(callerIdNumber, "onSmsMessage")) {
+			releaseWakeLockIfHeld("onSmsMessage");
+			return;
+		}
+
+		NumberProperties numberProps = getNumberProperties(callerIdNumber);
+		final boolean shouldRemember = (numberProps.mIsKnown ||
+				Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_TEXTERS_AS_MOBILE_NO_SMS.equals(mSettings.mTreatUnknownTexters));
+		if (!shouldRemember) {
+			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+					"onSmsMessage: callerIdNumber " + callerIdNumber +
+					" is not a number to remember. isMobile=" +
+					numberProps.mIsMobile + " isKnown=" + numberProps.mIsKnown);
+			releaseWakeLockIfHeld("onSmsMessage");
+			return;
+		}
+
+		addNumberAndScheduleRemoval("onSmsMessage", number, callerIdNumber);
+		
+		final boolean shouldSendSms =
+			(mSettings.mEnableSmsReplyToSms && numberProps.mIsKnown);
+		if (shouldSendSms) {
+			// The intent will release the WakeLock
+			mSmsHelper.sendMessage(number, mSettings.mMessageToTexters,
+					mSentPendingIntent);
+			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+					"onSmsMessage: number " + number +
+					" has been notified with SMS.");
+		} else {
+			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+					"onSmsMessage: number " + number +
+					" need not be notified with SMS.");
+			releaseWakeLockIfHeld("onSmsMessage");
+		}
+	}
+	
 	void onMissedCall(String number) {
 		// The wakelock was acquired when the phone was ringing, so unless we 
 		// send the SMS we _must_ release it on each return from the function
@@ -172,16 +220,9 @@ class DindyLogic {
 			return;
 		}
 
-		synchronized (mIncomingCalls) {
-			if (mIncomingCalls.containsKey(callerIdNumber)) {
-				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-						"onMissedCall: callerIdNumber " + callerIdNumber +
-						" already exists");
-				// TODO in this case should we extend the time during which we
-				// wait for the next call?
-				releaseWakeLockIfHeld("onMissedCall");
-				return;
-			}
+		if (isCallerIdNumberExist(callerIdNumber, "onMissedCall")) {
+			releaseWakeLockIfHeld("onMissedCall");
+			return;
 		}
 
 		// A new missed call that we haven't saved yet
@@ -201,40 +242,20 @@ class DindyLogic {
 			return;
 		}
 
-		RemoveCallInfoTask removalTask = null;
-		if (mSettings.mWakeupTimeoutMillis != Consts.INFINITE_TIME) {
-			removalTask = new RemoveCallInfoTask(callerIdNumber);
-		}
-		
-		IncomingCallInfo newCallInfo = new IncomingCallInfo(number,
-				callerIdNumber, removalTask,
-				mSettings.mWakeupTimeoutMillis == Consts.INFINITE_TIME ?
-					Consts.INFINITE_TIME :
-					System.currentTimeMillis() + mSettings.mWakeupTimeoutMillis);
-		// Add to list of numbers to remember
-		synchronized (mIncomingCalls) {
-			mIncomingCalls.put(callerIdNumber, newCallInfo);
-		}
-		// Schedule removal from list, but only if we're asked to use timeouts
-		if (mSettings.mWakeupTimeoutMillis != Consts.INFINITE_TIME) {
-			mTimer.schedule(removalTask, mSettings.mWakeupTimeoutMillis);
-		}
-
-		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-				"onMissedCall: number " + newCallInfo.getNumber() +
-				", callerIdNumber " + newCallInfo.getCallerIdNumber() +
-				" has been added. Timeout is " +
-				mSettings.mWakeupTimeoutMillis);
+		addNumberAndScheduleRemoval("onMissedCall", number, callerIdNumber);
 
 		// Note that we may have gotten here because the user chose to treat the
 		// number as mobile, but we should only send the text message if it's
 		// indeed a mobile number
-		if (mSettings.mEnableSmsReplyToCall && numberProps.mIsMobile) {
+		final boolean shouldSendSms =
+			(mSettings.mEnableSmsReplyToCall && numberProps.mIsMobile); 
+		if (shouldSendSms) {
 			// The intent will release the WakeLock
-			mSmsSender.sendMessage(number, mSettings.mMessage,
+			mSmsHelper.sendMessage(number, mSettings.mMessageToCallers,
 					mSentPendingIntent);
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"number " + number + " has been notified with SMS.");
+					"onMissedCall: number " + number +
+					" has been notified with SMS.");
 		} else {
 			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
 					"onMissedCall: number " + number +
@@ -292,6 +313,49 @@ class DindyLogic {
 			}			
 		}
 	}
+	
+	private boolean isCallerIdNumberExist(String callerIdNumber, String context) {
+		synchronized (mIncomingCalls) {
+			if (mIncomingCalls.containsKey(callerIdNumber)) {
+				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+						context + ": callerIdNumber " + callerIdNumber +
+						" already exists");
+				// TODO in this case should we extend the time during which we
+				// wait for the next call?
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private void addNumberAndScheduleRemoval(String context,
+			String number, String callerIdNumber) {
+		RemoveCallInfoTask removalTask = null;
+		if (mSettings.mWakeupTimeoutMillis != Consts.INFINITE_TIME) {
+			removalTask = new RemoveCallInfoTask(callerIdNumber);
+		}
+		
+		IncomingCallInfo newCallInfo = new IncomingCallInfo(number,
+				callerIdNumber, removalTask,
+				mSettings.mWakeupTimeoutMillis == Consts.INFINITE_TIME ?
+					Consts.INFINITE_TIME :
+					System.currentTimeMillis() + mSettings.mWakeupTimeoutMillis);
+		// Add to list of numbers to remember
+		synchronized (mIncomingCalls) {
+			mIncomingCalls.put(callerIdNumber, newCallInfo);
+		}
+		// Schedule removal from list, but only if we're asked to use timeouts
+		if (mSettings.mWakeupTimeoutMillis != Consts.INFINITE_TIME) {
+			mTimer.schedule(removalTask, mSettings.mWakeupTimeoutMillis);
+		}
+
+		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+				context + ": number " + newCallInfo.getNumber() +
+				", callerIdNumber " + newCallInfo.getCallerIdNumber() +
+				" has been added. Timeout is " +
+				mSettings.mWakeupTimeoutMillis);
+	}
+
 	
 	private void onRinging(String number) {
 		mWakeLock.acquire();
@@ -448,7 +512,7 @@ class DindyLogic {
 		if (props.mIsKnown) {
 			if (props.mIsMobile) {
 				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-						"getNumberProperties:" + callerIdNumber +
+						"getNumberProperties: " + callerIdNumber +
 						" is a known mobile callerId number");
 			} else {
 				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
@@ -597,7 +661,7 @@ class DindyLogic {
 	private String mLastRingingNumber = NOT_A_PHONE_NUMBER;
 	private boolean mStarted = false;
 	private DindySettings mSettings = null;
-	private SmsSender mSmsSender = null;
+	private SmsHelper mSmsHelper = null;
 	private Timer mTimer = new Timer();
 	private HashMap<String, IncomingCallInfo> mIncomingCalls =
 		new HashMap<String, IncomingCallInfo>();

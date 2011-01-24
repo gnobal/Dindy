@@ -20,6 +20,8 @@ public class Consts {
 				"show_startup_message";
 			public static final String KEY_SHOW_LOCALE_USAGE = "show_locale_usage";
 			public static final String KEY_SHOW_SHORTCUTS_USAGE = "show_shortcuts_usage";
+			static final String KEY_SHOW_SMS_WARNING_MESSAGE =
+				"show_sms_warning_message";
 		}
 		
 		class Widget
@@ -40,13 +42,15 @@ public class Consts {
 		class Profile
 		{
 			static final String PREFIX = "_profile_";
-			static final String KEY_TIME_BETWEEN_CALLS_MINUTES =
+			static final String KEY_TIME_BETWEEN_EVENTS_MINUTES =
 				"time_between_calls";
 			
 			static final String KEY_TREAT_NON_MOBILE_CALLERS =
 				"treat_non_mobile_callers";
 			static final String KEY_TREAT_UNKNOWN_CALLERS =
 				"treat_unknown_callers";
+			static final String KEY_TREAT_UNKNOWN_TEXTERS =
+				"treat_unknown_texters";
 			// NOTE the following 3 values match values in the array resource
 			// unknown_caller_behavior_array_values. DO NOT change them unless
 			// you know what you're doing
@@ -58,17 +62,20 @@ public class Consts {
 				"normal";
 			static final String VALUE_TREAT_UNKNOWN_CALLERS_AS_MOBILE_NO_SMS =
 				"mobile_no_sms";
-			static final String KEY_ENABLE_SMS = "enable_sms";			
-			static final String KEY_SMS_MESSAGE = 
-				"sms_message";
-			static final String KEY_FIRST_RING_SOUND = 
-				"first_ring_sound";
-			static final String KEY_FIRST_RING_VIBRATE = 
-				"first_ring_vibrate";
-			static final String KEY_SECOND_RING_SOUND = 
-				"second_ring_sound";
-			static final String KEY_SECOND_RING_VIBRATE = 
-				"second_ring_vibrate";
+			//static final String VALUE_TREAT_UNKNOWN_TEXTERS_AS_MOBILE_WITH_SMS =
+			//	"mobile_with_sms";
+			static final String VALUE_TREAT_UNKNOWN_TEXTERS_IGNORE =
+				"ignore";
+			static final String VALUE_TREAT_UNKNOWN_TEXTERS_AS_MOBILE_NO_SMS =
+				"mobile_no_sms";
+			static final String KEY_ENABLE_SMS_CALLERS = "enable_sms";			
+			static final String KEY_SMS_MESSAGE_CALLERS = "sms_message";
+			static final String KEY_ENABLE_SMS_TEXTERS = "enable_sms_texters";
+			static final String KEY_SMS_MESSAGE_TEXTERS = "sms_message_texters";
+			static final String KEY_FIRST_EVENT_SOUND = "first_ring_sound";
+			static final String KEY_FIRST_EVENT_VIBRATE = "first_ring_vibrate";
+			static final String KEY_SECOND_EVENT_SOUND =  "second_ring_sound";
+			static final String KEY_SECOND_EVENT_VIBRATE = "second_ring_vibrate";
 			class TimeLimitType
 			{
 				static final int DURATION = 1;
@@ -84,18 +91,21 @@ public class Consts {
 				"last_time_limit_minutes";
 			
 			// Default values for profile preferences
-			static final boolean VALUE_ENABLE_SMS_DEFAULT = true; 
-			static final boolean VALUE_FIRST_RING_SOUND_DEFAULT = false; 
-			static final boolean VALUE_FIRST_RING_VIBRATE_DEFAULT = false; 
-			static final boolean VALUE_SECOND_RING_SOUND_DEFAULT = true; 
-			static final boolean VALUE_SECOND_RING_VIBRATE_DEFAULT = true; 
+			static final boolean VALUE_ENABLE_SMS_CALLERS_DEFAULT = true; 
+			static final boolean VALUE_ENABLE_SMS_TEXTERS_DEFAULT = false; 
+			static final boolean VALUE_FIRST_EVENT_SOUND_DEFAULT = false; 
+			static final boolean VALUE_FIRST_EVENT_VIBRATE_DEFAULT = false; 
+			static final boolean VALUE_SECOND_EVENT_SOUND_DEFAULT = true; 
+			static final boolean VALUE_SECOND_EVENT_VIBRATE_DEFAULT = true; 
 			// NOTE the following value must be one of the values in the array
 			// resource time_between_calls_array_values
-			static final String VALUE_TIME_BETWEEN_CALLS_DEFAULT = "5";
+			static final String VALUE_TIME_BETWEEN_EVENTS_DEFAULT = "5";
 			static final String VALUE_TREAT_UNKNOWN_CALLERS_DEFAULT =
 				VALUE_TREAT_UNKNOWN_CALLERS_AS_FIRST;
 			static final String VALUE_TREAT_NON_MOBILE_CALLERS_DEFAULT =
 				VALUE_TREAT_UNKNOWN_CALLERS_DEFAULT;
+			static final String VALUE_TREAT_UNKNOWN_TEXTERS_DEFAULT =
+				VALUE_TREAT_UNKNOWN_TEXTERS_IGNORE;
 			static final int VALUE_LAST_TIME_LIMIT_DEFAULT_TYPE =
 				TimeLimitType.DURATION;
 			static final long VALUE_LAST_TIME_LIMIT_DEFAULT_MINUTES = 0;
@@ -111,7 +121,7 @@ public class Consts {
 	static final long MILLIS_IN_MINUTE = 60000;
 	static final long MINUTES_IN_HOUR = 60; 
 	static final String LOGTAG = "Dindy";
-	static final boolean DEBUG = false;
+	static final boolean DEBUG = true;
 	static final String EMPTY_STRING = "";
 	
 	static final String SERVICE_STARTED = "net.gnobal.dindy.action.SERVICE_STARTED";

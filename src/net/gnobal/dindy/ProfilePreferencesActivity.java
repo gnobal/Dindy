@@ -1,8 +1,10 @@
 package net.gnobal.dindy;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
@@ -14,8 +16,11 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.CheckBox;
 
 public class ProfilePreferencesActivity extends PreferenceActivity {
 	@Override
@@ -99,94 +104,120 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 		// assigning them to preferences objects
 		setPreferencesDefaultsIfNeeded(sharedPreferences);
 		
-		// SMS category
-		PreferenceCategory smsCat = new PreferenceCategory(this);
-		smsCat.setTitle(R.string.preferences_profile_sms);
-		root.addPreference(smsCat);
+		// SMS reply-to-call category
+		PreferenceCategory smsReplyToCallCat = new PreferenceCategory(this);
+		smsReplyToCallCat.setTitle(R.string.preferences_profile_sms_reply_to_call);
+		root.addPreference(smsReplyToCallCat);
 
-		CheckBoxPreference enableSmsPref = new CheckBoxPreference(this);
-		enableSmsPref.setKey(Consts.Prefs.Profile.KEY_ENABLE_SMS);
-		enableSmsPref.setTitle(
-				R.string.preferences_profile_enable_sms_sending_title);
-		enableSmsPref.setSummary(
-				R.string.preferences_profile_enable_sms_sending_summary);
-		smsCat.addPreference(enableSmsPref);
+		CheckBoxPreference enableSmsReplyToCallPref = new CheckBoxPreference(this);
+		enableSmsReplyToCallPref.setKey(Consts.Prefs.Profile.KEY_ENABLE_SMS_CALLERS);
+		enableSmsReplyToCallPref.setTitle(
+				R.string.preferences_profile_enable_sms_reply_to_call_title);
+		enableSmsReplyToCallPref.setSummary(
+				R.string.preferences_profile_enable_sms_reply_to_call_summary);
+		smsReplyToCallCat.addPreference(enableSmsReplyToCallPref);
 		
-		EditTextPreference smsMessagePref = new EditTextPreference(this);
-		smsMessagePref.setKey(Consts.Prefs.Profile.KEY_SMS_MESSAGE);
-		smsMessagePref.setTitle(R.string.preferences_profile_sms_message);
-		smsMessagePref.setOnPreferenceChangeListener(
-				new Preference.OnPreferenceChangeListener() {
-					public boolean onPreferenceChange(Preference p,
-							Object newValue) {
-						p.setSummary((String) newValue);
-						return true;
-					}
-				});
-		smsMessagePref.setOnPreferenceClickListener(
-				new Preference.OnPreferenceClickListener() {
-					public boolean onPreferenceClick(Preference preference) {
-						EditTextPreference smsPref = 
-							(EditTextPreference) preference;
-						String text = getSharedPreferences(
-								sharedPreferencesName, Context.MODE_PRIVATE)
-								.getString(
-										Consts.Prefs.Profile.KEY_SMS_MESSAGE,
-										Consts.EMPTY_STRING);
-						smsPref.getEditText().setText(text);
-						smsPref.getEditText().setSelection(text.length());
-						return true;
-					}
-				});
-
+		EditTextPreference smsReplyToCallMessagePref = new EditTextPreference(this);
+		smsReplyToCallMessagePref.setKey(Consts.Prefs.Profile.KEY_SMS_MESSAGE_CALLERS);
+		smsReplyToCallMessagePref.setTitle(R.string.preferences_profile_sms_message_callers);
+		smsReplyToCallMessagePref.setOnPreferenceChangeListener(
+				new SmsMessageChangeListener());
+		smsReplyToCallMessagePref.setOnPreferenceClickListener(
+				new SmsMessageClickListener(sharedPreferencesName,
+						Consts.Prefs.Profile.KEY_SMS_MESSAGE_CALLERS));
 		// Example on inheriting EditTextPreference:
 		// http://google.com/codesearch/p?hl=en&sa=N&cd=8&ct=rc#r4Q5vzOJY9U/src/com/android/phone/EditPinPreference.java&q=EditTextPreference
-		String currMessage = sharedPreferences.getString(
-				Consts.Prefs.Profile.KEY_SMS_MESSAGE, Consts.EMPTY_STRING);
-		smsMessagePref.setSummary(currMessage);
-		smsCat.addPreference(smsMessagePref);
+		String currCallerMessage = sharedPreferences.getString(
+				Consts.Prefs.Profile.KEY_SMS_MESSAGE_CALLERS, Consts.EMPTY_STRING);
+		smsReplyToCallMessagePref.setSummary(currCallerMessage);
+		smsReplyToCallCat.addPreference(smsReplyToCallMessagePref);
 		// Setting the dependency must happen after both involved preferences 
 		// have been added with addPreference 
-		smsMessagePref.setDependency(Consts.Prefs.Profile.KEY_ENABLE_SMS);
+		smsReplyToCallMessagePref.setDependency(Consts.Prefs.Profile.KEY_ENABLE_SMS_CALLERS);
         
-		// First call behavior
-		PreferenceCategory firstRingCat = new PreferenceCategory(this);
-		firstRingCat.setTitle(R.string.preferences_profile_first_ring);
-		root.addPreference(firstRingCat);
+		// SMS reply-to-SMS category
+		PreferenceCategory smsReplyToSmsCat = new PreferenceCategory(this);
+		smsReplyToSmsCat.setTitle(R.string.preferences_profile_sms_reply_to_sms);
+		root.addPreference(smsReplyToSmsCat);
+
+		CheckBoxPreference enableSmsReplyToSmsPref = new CheckBoxPreference(this);
+		enableSmsReplyToSmsPref.setKey(Consts.Prefs.Profile.KEY_ENABLE_SMS_TEXTERS);
+		enableSmsReplyToSmsPref.setTitle(
+				R.string.preferences_profile_enable_sms_reply_to_sms_title);
+		enableSmsReplyToSmsPref.setSummary(
+				R.string.preferences_profile_enable_sms_reply_to_sms_summary);
+		enableSmsReplyToSmsPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+			public boolean onPreferenceClick(Preference preference) {
+				SharedPreferences mainPreferences = getSharedPreferences(
+						Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
+				CheckBoxPreference smsReplyToSmsPreference =
+					(CheckBoxPreference) preference;
+				if (smsReplyToSmsPreference.isChecked() &&
+					mainPreferences.getBoolean(
+							Consts.Prefs.Main.KEY_SHOW_SMS_WARNING_MESSAGE,
+							true)) {
+					showDialog(DIALOG_SMS_WARNING);
+				}
+				return true;
+			}
+		});
+		smsReplyToSmsCat.addPreference(enableSmsReplyToSmsPref);
+
+		EditTextPreference smsReplyToSmsMessagePref = new EditTextPreference(this);
+		smsReplyToSmsMessagePref.setKey(Consts.Prefs.Profile.KEY_SMS_MESSAGE_TEXTERS);
+		smsReplyToSmsMessagePref.setTitle(R.string.preferences_profile_sms_message_texters);
+		smsReplyToSmsMessagePref.setOnPreferenceChangeListener(
+				new SmsMessageChangeListener());
+		smsReplyToSmsMessagePref.setOnPreferenceClickListener(
+				new SmsMessageClickListener(sharedPreferencesName,
+						Consts.Prefs.Profile.KEY_SMS_MESSAGE_TEXTERS));
+		// Example on inheriting EditTextPreference:
+		// http://google.com/codesearch/p?hl=en&sa=N&cd=8&ct=rc#r4Q5vzOJY9U/src/com/android/phone/EditPinPreference.java&q=EditTextPreference
+		String currTexterMessage = sharedPreferences.getString(
+				Consts.Prefs.Profile.KEY_SMS_MESSAGE_TEXTERS, Consts.EMPTY_STRING);
+		smsReplyToSmsMessagePref.setSummary(currTexterMessage);
+		smsReplyToSmsCat.addPreference(smsReplyToSmsMessagePref);
+		// Setting the dependency must happen after both involved preferences 
+		// have been added with addPreference 
+		smsReplyToSmsMessagePref.setDependency(Consts.Prefs.Profile.KEY_ENABLE_SMS_TEXTERS);
+
+		// First event behavior
+		PreferenceCategory firstEventCat = new PreferenceCategory(this);
+		firstEventCat.setTitle(R.string.preferences_profile_first_event);
+		root.addPreference(firstEventCat);
 
 		CheckBoxPreference firstRingSound = new CheckBoxPreference(this);
-		firstRingSound.setKey(Consts.Prefs.Profile.KEY_FIRST_RING_SOUND);
-		firstRingSound.setTitle(R.string.preferences_profile_first_ring_sound);
-		firstRingCat.addPreference(firstRingSound);
+		firstRingSound.setKey(Consts.Prefs.Profile.KEY_FIRST_EVENT_SOUND);
+		firstRingSound.setTitle(R.string.preferences_profile_first_event_sound);
+		firstEventCat.addPreference(firstRingSound);
 
 		CheckBoxPreference firstRingVibrate = new CheckBoxPreference(this);
-		firstRingVibrate.setKey(Consts.Prefs.Profile.KEY_FIRST_RING_VIBRATE);
+		firstRingVibrate.setKey(Consts.Prefs.Profile.KEY_FIRST_EVENT_VIBRATE);
 		firstRingVibrate
-				.setTitle(R.string.preferences_profile_first_ring_vibrate);
-		firstRingCat.addPreference(firstRingVibrate);
+				.setTitle(R.string.preferences_profile_first_event_vibrate);
+		firstEventCat.addPreference(firstRingVibrate);
 
-		// Second call behavior
-		PreferenceCategory secondRingCat = new PreferenceCategory(this);
-		secondRingCat.setTitle(R.string.preferences_profile_second_ring);
-		root.addPreference(secondRingCat);
+		// Second event behavior
+		PreferenceCategory secondEventCat = new PreferenceCategory(this);
+		secondEventCat.setTitle(R.string.preferences_profile_second_event);
+		root.addPreference(secondEventCat);
 
 		CheckBoxPreference secondRingSound = new CheckBoxPreference(this);
-		secondRingSound.setKey(Consts.Prefs.Profile.KEY_SECOND_RING_SOUND);
+		secondRingSound.setKey(Consts.Prefs.Profile.KEY_SECOND_EVENT_SOUND);
 		secondRingSound
-				.setTitle(R.string.preferences_profile_second_ring_sound);
-		secondRingCat.addPreference(secondRingSound);
+				.setTitle(R.string.preferences_profile_second_event_sound);
+		secondEventCat.addPreference(secondRingSound);
 
 		CheckBoxPreference secondRingVibrate = new CheckBoxPreference(this);
-		secondRingVibrate.setKey(Consts.Prefs.Profile.KEY_SECOND_RING_VIBRATE);
+		secondRingVibrate.setKey(Consts.Prefs.Profile.KEY_SECOND_EVENT_VIBRATE);
 		secondRingVibrate
-				.setTitle(R.string.preferences_profile_second_ring_vibrate);
-		secondRingCat.addPreference(secondRingVibrate);
+				.setTitle(R.string.preferences_profile_second_event_vibrate);
+		secondEventCat.addPreference(secondRingVibrate);
 
 		// Incoming callers settings category
-		PreferenceCategory incomingCallsCat = new PreferenceCategory(this);
-		incomingCallsCat.setTitle(R.string.preferences_profile_incoming_calls);
-		root.addPreference(incomingCallsCat);
-		
+		PreferenceCategory callersCat = new PreferenceCategory(this);
+		callersCat.setTitle(R.string.preferences_profile_callers);
+		root.addPreference(callersCat);
 		
         // Treat non-mobile callers as
         ListPreference treatNonMobileCallersPref = new ListPreference(this);
@@ -203,7 +234,7 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
         treatNonMobileCallersPref.setOnPreferenceChangeListener(
         		new SummaryWithValuePreferenceChangeListener(
         				R.string.preferences_profile_non_mobile_caller_behavior_summary));
-        incomingCallsCat.addPreference(treatNonMobileCallersPref);
+        callersCat.addPreference(treatNonMobileCallersPref);
         setListPrefernceSummaryWithValue(treatNonMobileCallersPref,
         		R.string.preferences_profile_non_mobile_caller_behavior_summary,
         		treatNonMobileCallersPref.getEntry());
@@ -223,12 +254,39 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 		treatUnknownCallersPref.setOnPreferenceChangeListener(
 				new SummaryWithValuePreferenceChangeListener(
 						R.string.preferences_profile_unknown_caller_behavior_summary));
-		incomingCallsCat.addPreference(treatUnknownCallersPref);
+		callersCat.addPreference(treatUnknownCallersPref);
         setListPrefernceSummaryWithValue(treatUnknownCallersPref,
         		R.string.preferences_profile_unknown_caller_behavior_summary,
         		treatUnknownCallersPref.getEntry());
         
-		// General settings category
+		// Incoming callers settings category
+		PreferenceCategory textersCat = new PreferenceCategory(this);
+		textersCat.setTitle(R.string.preferences_profile_texters);
+		root.addPreference(textersCat);
+
+        // Treat unknown callers as
+        ListPreference treatUnknownTextersPref = new ListPreference(this);
+        treatUnknownTextersPref.setEntries(
+        		R.array.unknown_texter_behavior_array_strings);
+        treatUnknownTextersPref.setEntryValues(
+        		R.array.unknown_texter_behavior_array_values);
+        treatUnknownTextersPref.setDialogTitle(
+        		R.string.preferences_profile_unknown_texter_behavior_dialog_title);
+        treatUnknownTextersPref.setKey(
+        		Consts.Prefs.Profile.KEY_TREAT_UNKNOWN_TEXTERS);
+        treatUnknownTextersPref.setTitle(
+        		R.string.preferences_profile_unknown_texter_behavior_title);
+        treatUnknownTextersPref.setOnPreferenceChangeListener(
+				new SummaryWithValuePreferenceChangeListener(//
+						R.string.preferences_profile_unknown_texter_behavior_summary));
+		textersCat.addPreference(treatUnknownTextersPref);
+        setListPrefernceSummaryWithValue(treatUnknownTextersPref,//
+        		R.string.preferences_profile_unknown_texter_behavior_summary,
+        		treatUnknownTextersPref.getEntry());
+
+		
+		
+        // General settings category
 		PreferenceCategory generalCat = new PreferenceCategory(this);
 		generalCat.setTitle(R.string.preferences_profile_general);
 		root.addPreference(generalCat);
@@ -240,17 +298,17 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
         timeBetweenCallsPref.setEntryValues(
         		R.array.time_between_calls_array_values);
         timeBetweenCallsPref.setDialogTitle(
-        		R.string.preferences_profile_time_between_calls_dialog_title);
+        		R.string.preferences_profile_time_between_events_dialog_title);
         timeBetweenCallsPref.setKey(
-        		Consts.Prefs.Profile.KEY_TIME_BETWEEN_CALLS_MINUTES);
+        		Consts.Prefs.Profile.KEY_TIME_BETWEEN_EVENTS_MINUTES);
         timeBetweenCallsPref.setTitle(
-        		R.string.preferences_profile_time_between_calls_title);
+        		R.string.preferences_profile_time_between_events_title);
 		timeBetweenCallsPref.setOnPreferenceChangeListener(
 				new SummaryWithValuePreferenceChangeListener(
-						R.string.preferences_profile_time_between_calls_summary));
+						R.string.preferences_profile_time_between_events_summary));
         generalCat.addPreference(timeBetweenCallsPref);
         setListPrefernceSummaryWithValue(timeBetweenCallsPref,
-        		R.string.preferences_profile_time_between_calls_summary,
+        		R.string.preferences_profile_time_between_events_summary,
         		timeBetweenCallsPref.getEntry());
 
 		// Time limit category
@@ -265,6 +323,33 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 		useTimeLimitPref.setSummary(
 				R.string.preferences_profile_use_time_limit_summary);
 		generalCat.addPreference(useTimeLimitPref);
+	}
+	
+	private class SmsMessageChangeListener implements Preference.OnPreferenceChangeListener {
+		public boolean onPreferenceChange(Preference p,	Object newValue) {
+			p.setSummary((String) newValue);
+			return true;
+		}
+	}
+	
+	private class SmsMessageClickListener implements Preference.OnPreferenceClickListener {
+		SmsMessageClickListener(String sharedPreferencesName, String messageKey) {
+			mSharedPrefsName = sharedPreferencesName;
+			mMessageKey = messageKey;
+		}
+
+		public boolean onPreferenceClick(Preference preference) {
+			EditTextPreference smsPref = (EditTextPreference) preference;
+			String text = getSharedPreferences(
+					mSharedPrefsName, Context.MODE_PRIVATE).getString(
+							mMessageKey, Consts.EMPTY_STRING);
+			smsPref.getEditText().setText(text);
+			smsPref.getEditText().setSelection(text.length());
+			return true;
+		}
+		
+		String mSharedPrefsName;
+		String mMessageKey;
 	}
 	
 	@Override
@@ -298,13 +383,47 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 	protected Dialog onCreateDialog(int id) {
 		super.onCreateDialog(id);
 		
-		if (id != ProfileNameDialogHelper.DIALOG_RENAME_PROFILE) {
-			return null;
+		switch (id) {
+		case ProfileNameDialogHelper.DIALOG_RENAME_PROFILE:
+		{
+			setNameDialogVariables(id);
+			return ProfileNameDialogHelper.buildProfileNameDialog(this,
+					android.R.drawable.ic_dialog_info, mRenameListener);
 		}
 		
-		setNameDialogVariables(id);
-		return ProfileNameDialogHelper.buildProfileNameDialog(this,
-				android.R.drawable.ic_dialog_info, mRenameListener);
+		case DIALOG_SMS_WARNING:
+		{
+			LayoutInflater factory = LayoutInflater.from(this);
+			final View startupMessageView = factory.inflate(
+					R.layout.sms_warning_message_dialog, null);
+			AlertDialog dialog = new AlertDialog.Builder(this)
+				.setIcon(android.R.drawable.ic_dialog_info)
+				.setTitle(R.string.sms_warning_message_dialog_title)
+				.setView(startupMessageView)
+				.setPositiveButton(R.string.message_dialog_ok_text,
+					new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog,
+							int which) {
+						SharedPreferences preferences = getSharedPreferences(
+								Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
+						CheckBox checkBox = (CheckBox) 
+							((AlertDialog) dialog).findViewById(
+								R.id.sms_warning_message_dialog_checkbox);
+						SharedPreferences.Editor editor = 
+							preferences.edit();
+						editor.putBoolean(
+								Consts.Prefs.Main.KEY_SHOW_SMS_WARNING_MESSAGE,
+								!checkBox.isChecked());
+						editor.commit();
+					}})
+				.create();
+			dialog.setOwnerActivity(this);
+			return dialog;
+		}
+		
+		default:
+			return null;
+		}
 	}
 
 	
@@ -403,38 +522,46 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 	
 	private void setPreferencesDefaultsIfNeeded(SharedPreferences sharedPreferences) {
 		Editor editor = sharedPreferences.edit();
-		if (!sharedPreferences.contains(Consts.Prefs.Profile.KEY_ENABLE_SMS)) {
-			editor.putBoolean(Consts.Prefs.Profile.KEY_ENABLE_SMS, 
-					Consts.Prefs.Profile.VALUE_ENABLE_SMS_DEFAULT);
+		if (!sharedPreferences.contains(Consts.Prefs.Profile.KEY_ENABLE_SMS_CALLERS)) {
+			editor.putBoolean(Consts.Prefs.Profile.KEY_ENABLE_SMS_CALLERS, 
+					Consts.Prefs.Profile.VALUE_ENABLE_SMS_CALLERS_DEFAULT);
 		}
-		if (!sharedPreferences.contains(Consts.Prefs.Profile.KEY_SMS_MESSAGE)) {
-			editor.putString(Consts.Prefs.Profile.KEY_SMS_MESSAGE,
-					getString(R.string.preferences_profile_sms_message_default_unset_value));
+		if (!sharedPreferences.contains(Consts.Prefs.Profile.KEY_SMS_MESSAGE_CALLERS)) {
+			editor.putString(Consts.Prefs.Profile.KEY_SMS_MESSAGE_CALLERS,
+					getString(R.string.preferences_profile_sms_message_callers_default_unset_value));
 		}
-		if (!sharedPreferences.contains(
-				Consts.Prefs.Profile.KEY_FIRST_RING_SOUND)) {
-			editor.putBoolean(Consts.Prefs.Profile.KEY_FIRST_RING_SOUND,
-					Consts.Prefs.Profile.VALUE_FIRST_RING_SOUND_DEFAULT);
+		if (!sharedPreferences.contains(Consts.Prefs.Profile.KEY_ENABLE_SMS_TEXTERS)) {
+			editor.putBoolean(Consts.Prefs.Profile.KEY_ENABLE_SMS_TEXTERS, 
+					Consts.Prefs.Profile.VALUE_ENABLE_SMS_TEXTERS_DEFAULT);
 		}
-		if (!sharedPreferences.contains(
-				Consts.Prefs.Profile.KEY_FIRST_RING_VIBRATE)) {
-			editor.putBoolean(Consts.Prefs.Profile.KEY_FIRST_RING_VIBRATE,
-					Consts.Prefs.Profile.VALUE_FIRST_RING_VIBRATE_DEFAULT);
+		if (!sharedPreferences.contains(Consts.Prefs.Profile.KEY_SMS_MESSAGE_TEXTERS)) {
+			editor.putString(Consts.Prefs.Profile.KEY_SMS_MESSAGE_TEXTERS,
+					getString(R.string.preferences_profile_sms_message_texters_default_unset_value));
 		}
 		if (!sharedPreferences.contains(
-				Consts.Prefs.Profile.KEY_SECOND_RING_SOUND)) {
-			editor.putBoolean(Consts.Prefs.Profile.KEY_SECOND_RING_SOUND,
-					Consts.Prefs.Profile.VALUE_SECOND_RING_SOUND_DEFAULT);
+				Consts.Prefs.Profile.KEY_FIRST_EVENT_SOUND)) {
+			editor.putBoolean(Consts.Prefs.Profile.KEY_FIRST_EVENT_SOUND,
+					Consts.Prefs.Profile.VALUE_FIRST_EVENT_SOUND_DEFAULT);
 		}
 		if (!sharedPreferences.contains(
-				Consts.Prefs.Profile.KEY_SECOND_RING_VIBRATE)) {
-			editor.putBoolean(Consts.Prefs.Profile.KEY_SECOND_RING_VIBRATE,
-					Consts.Prefs.Profile.VALUE_SECOND_RING_VIBRATE_DEFAULT);
+				Consts.Prefs.Profile.KEY_FIRST_EVENT_VIBRATE)) {
+			editor.putBoolean(Consts.Prefs.Profile.KEY_FIRST_EVENT_VIBRATE,
+					Consts.Prefs.Profile.VALUE_FIRST_EVENT_VIBRATE_DEFAULT);
 		}
 		if (!sharedPreferences.contains(
-				Consts.Prefs.Profile.KEY_TIME_BETWEEN_CALLS_MINUTES)) {
-			editor.putString(Consts.Prefs.Profile.KEY_TIME_BETWEEN_CALLS_MINUTES,
-					Consts.Prefs.Profile.VALUE_TIME_BETWEEN_CALLS_DEFAULT);
+				Consts.Prefs.Profile.KEY_SECOND_EVENT_SOUND)) {
+			editor.putBoolean(Consts.Prefs.Profile.KEY_SECOND_EVENT_SOUND,
+					Consts.Prefs.Profile.VALUE_SECOND_EVENT_SOUND_DEFAULT);
+		}
+		if (!sharedPreferences.contains(
+				Consts.Prefs.Profile.KEY_SECOND_EVENT_VIBRATE)) {
+			editor.putBoolean(Consts.Prefs.Profile.KEY_SECOND_EVENT_VIBRATE,
+					Consts.Prefs.Profile.VALUE_SECOND_EVENT_VIBRATE_DEFAULT);
+		}
+		if (!sharedPreferences.contains(
+				Consts.Prefs.Profile.KEY_TIME_BETWEEN_EVENTS_MINUTES)) {
+			editor.putString(Consts.Prefs.Profile.KEY_TIME_BETWEEN_EVENTS_MINUTES,
+					Consts.Prefs.Profile.VALUE_TIME_BETWEEN_EVENTS_DEFAULT);
 		}
 		if (!sharedPreferences.contains(
 				Consts.Prefs.Profile.KEY_TREAT_UNKNOWN_CALLERS)) {
@@ -450,6 +577,11 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 							Consts.Prefs.Profile.KEY_TREAT_UNKNOWN_CALLERS,
 							Consts.Prefs.Profile.VALUE_TREAT_NON_MOBILE_CALLERS_DEFAULT));
 		}
+		if (!sharedPreferences.contains(
+				Consts.Prefs.Profile.KEY_TREAT_UNKNOWN_TEXTERS)) {
+			editor.putString(Consts.Prefs.Profile.KEY_TREAT_UNKNOWN_TEXTERS,
+					Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_TEXTERS_DEFAULT);
+		}		
 		editor.commit();
 		editor = null;
 	}
@@ -457,6 +589,7 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 	private static final int MENU_ID_DONE = 0;
 	private static final int MENU_ID_RENAME = 1;
 	private static final int MENU_ID_DELETE = 2;
+	private static final int DIALOG_SMS_WARNING = 1;
 
 	private String mProfileName = null;
 	private long mProfileId = Consts.NOT_A_PROFILE_ID;
