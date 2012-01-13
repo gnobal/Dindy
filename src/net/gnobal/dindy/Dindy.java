@@ -13,7 +13,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
-import android.util.Config;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -76,7 +75,7 @@ public class Dindy extends Activity {
 						Consts.Prefs.Main.LAST_USED_PROFILE_ID,
 						Consts.NOT_A_PROFILE_ID);
 			} catch (Exception e) {
-				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+				if (Consts.DEBUG) Log.d(Consts.LOGTAG,
 						"getting last used profile as int for backward compatibility");
 				lastSelectedProfile = preferences.getInt(
 						Consts.Prefs.Main.LAST_USED_PROFILE_ID,
@@ -317,7 +316,7 @@ public class Dindy extends Activity {
 		// us whether there are profile to choose from or not
 		//selectProfileButton.setEnabled(mPreferencesHelper.anyProfilesExist());
 		//selectProfileButton.setEnabled(true);
-		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+		if (Consts.DEBUG) Log.d(Consts.LOGTAG,
 			"profile ID=" + mSelectedProfileId + ", name=" +
 			mPreferencesHelper.getProfielNameFromId(mSelectedProfileId));
 

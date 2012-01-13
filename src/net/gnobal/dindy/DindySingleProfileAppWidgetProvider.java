@@ -8,14 +8,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.util.Config;
 import android.util.Log;
 import android.widget.RemoteViews;
 
 public class DindySingleProfileAppWidgetProvider extends AppWidgetProvider {
     @Override
 	public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
-		if (Config.LOGD && Consts.DEBUG) {
+		if (Consts.DEBUG) {
 			String ids = "";
 			for (int i = 0; i < appWidgetIds.length; ++i) {
 				ids += appWidgetIds[i] + ", ";
@@ -35,7 +34,7 @@ public class DindySingleProfileAppWidgetProvider extends AppWidgetProvider {
     		ProfilePreferencesHelper.instance();
     	final int N = appWidgetIds.length;
     	for (int i = 0; i < N; ++i) {
-			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+			if (Consts.DEBUG) Log.d(Consts.LOGTAG,
 					"deleting widget ID " + appWidgetIds[i]);
    			prefsHelper.deleteWidgetSettings(widgetPrefs, appWidgetIds[i]);
     	}
@@ -73,7 +72,7 @@ public class DindySingleProfileAppWidgetProvider extends AppWidgetProvider {
     	String packageName = context.getPackageName();
     	final int N = appWidgetIds.length;
     	for (int i = N-1; i >=0; --i) {
-			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+			if (Consts.DEBUG) Log.d(Consts.LOGTAG,
 					"updating widget ID " + appWidgetIds[i] + 
 					" active profile ID " + activeProfileId + 
 					" previous profile ID " + previousProfileId);
@@ -171,7 +170,7 @@ public class DindySingleProfileAppWidgetProvider extends AppWidgetProvider {
     		views.setOnClickPendingIntent(
     				R.id.single_profile_app_widget_image_button,
     				pendingIntent);
-    		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+    		if (Consts.DEBUG) Log.d(Consts.LOGTAG,
     				"updating widget with profile " + profileName);
     		appWidgetManager.updateAppWidget(widgetId, views);
     	}

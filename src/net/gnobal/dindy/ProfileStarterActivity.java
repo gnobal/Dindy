@@ -8,7 +8,6 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.format.DateFormat;
-import android.util.Config;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -296,9 +295,7 @@ public class ProfileStarterActivity extends Activity {
 		selected.set(Calendar.MINUTE, toMinute);
 		if (c.get(Calendar.HOUR_OF_DAY) == toHour && 
 			c.get(Calendar.MINUTE) == toMinute) {
-				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"current time selected");
-
+				if (Consts.DEBUG) Log.d(Consts.LOGTAG, "current time selected");
 				return 0;
 			}
 

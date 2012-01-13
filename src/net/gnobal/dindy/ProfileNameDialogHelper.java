@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Config;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -121,8 +120,7 @@ class ProfileNameDialogHelper {
 
 	private static class CancelClickListener implements DialogInterface.OnClickListener {
 		public void onClick(DialogInterface dialog, int which) {
-			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"Cancel click");
+			if (Consts.DEBUG) Log.d(Consts.LOGTAG, "Cancel click");
 		}		
 	}
 	
@@ -132,7 +130,7 @@ class ProfileNameDialogHelper {
 		}
 		
 		public void onClick(DialogInterface dialog, int which) {
-			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, "OK click");
+			if (Consts.DEBUG) Log.d(Consts.LOGTAG, "OK click");
 
 			EditText edit = (EditText) ((AlertDialog) dialog).findViewById(
 					R.id.dialog_profile_name_edit_box);
@@ -174,7 +172,7 @@ class ProfileNameDialogHelper {
 		}
 
 		public void onDismiss(DialogInterface dialog) {
-			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, "Dismiss");
+			if (Consts.DEBUG) Log.d(Consts.LOGTAG, "Dismiss");
 			mListener.getOwnerActivity().removeDialog(mListener.getDialogType());
 		}
 		

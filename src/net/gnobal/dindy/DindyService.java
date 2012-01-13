@@ -23,7 +23,6 @@ import android.os.PowerManager;
 import android.provider.CallLog;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
-import android.util.Config;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -53,10 +52,9 @@ public class DindyService extends Service {
 		mPreferencesHelper = ProfilePreferencesHelper.instance();
 		mPendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0,
 				DindyService.getStopServiceBroadcastIntent(), 0);	
-	    mSmsHelper = new SmsHelper();
 
-		mLogic = new DindyLogic(getApplicationContext(), getContentResolver(),
-				mSettings, mAuM, mPM, mSmsHelper);
+		mLogic = new DindyLogic(
+			getApplicationContext(), getContentResolver(), mSettings, mAuM, mPM);
 		// TODO must be after setting mLogic, since registration 
 		// immediately sends us an IDLE notification that goes straight to 
 		// mLogic. If the user is clicking fast enough on the start/stop 
@@ -75,7 +73,7 @@ public class DindyService extends Service {
 			(mCurrentProfileId == Consts.NOT_A_PROFILE_ID);
 		Bundle extras = intent.getExtras();
 		if (extras == null) {
-			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
+			if (Consts.DEBUG) Log.d(Consts.LOGTAG, 
 			"error! no extras sent to service");
 			stopSelf();
 			return;
@@ -86,7 +84,7 @@ public class DindyService extends Service {
 		final String profileName = extras.getString(
 				Consts.EXTRA_PROFILE_NAME);
 		if (!mPreferencesHelper.profileExists(mCurrentProfileId)) {
-			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
+			if (Consts.DEBUG) Log.d(Consts.LOGTAG, 
 				"profile ID " + mCurrentProfileId + " doesn't exist");
 			if (firstStart) {
 				Toast.makeText(getApplicationContext(),
@@ -119,7 +117,7 @@ public class DindyService extends Service {
 					mPendingIntent);
 		}
 
-		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
+		if (Consts.DEBUG) Log.d(Consts.LOGTAG, 
 				"starting profile " + mCurrentProfileId + ", time limit " +
 				timeLimitMillis + " millis");
 
@@ -149,7 +147,7 @@ public class DindyService extends Service {
 	public void onDestroy() {
 		super.onDestroy();
 		
-		if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
+		if (Consts.DEBUG) Log.d(Consts.LOGTAG, 
 				"stopping profile " + mCurrentProfileId);
 
 		DindySingleProfileAppWidgetProvider.updateAllSingleProfileWidgets(
@@ -175,7 +173,6 @@ public class DindyService extends Service {
 		mBroadcastReceiver = null;
 		mPreferencesHelper = null;
 		mLogic = null;
-		mSmsHelper = null;
 		// Must happen last because it's used here
 		mCurrentProfileId = Consts.NOT_A_PROFILE_ID;
 		mIsRunning = false;
@@ -374,15 +371,15 @@ public class DindyService extends Service {
 				break;
 
 			case TelephonyManager.CALL_STATE_RINGING:
-				// HACK the following line exists so that we'll update the call
-				// log observer in case the user cleared the call log and we
-				// didn't get the notification about it because of a bug in
-				// Android.
-				// This is no longer needed starting with Android 2.0.1
-				if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.DONUT) {
-					mCallLogObserver.dispatchChange(true);
-				}
-				// HACK END
+//				// HACK the following line exists so that we'll update the call
+//				// log observer in case the user cleared the call log and we
+//				// didn't get the notification about it because of a bug in
+//				// Android.
+//				// This is no longer needed starting with Android 2.0.1
+//				if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.DONUT) {
+//					mCallLogObserver.dispatchChange(true);
+//				}
+//				// HACK END
 				incomingCallState = Consts.IncomingCallState.RINGING;
 				break;
 
@@ -405,17 +402,17 @@ public class DindyService extends Service {
 				Bundle extras = intent.getExtras(); 
 				String phoneNumber = extras.getString(
 					Intent.EXTRA_PHONE_NUMBER);
-				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+				if (Consts.DEBUG) Log.d(Consts.LOGTAG,
 						"outgoing call number: " + phoneNumber);
 				mLogic.onOutgoingCall(phoneNumber);
 			} else if (Consts.ACTION_STOP_DINDY_SERVICE.equals(action)) {
 				DindyService.this.stopSelf();
 			} else if (SMS_RECEIVED_ACTION.equals(action)) {
-				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+				if (Consts.DEBUG) Log.d(Consts.LOGTAG,
 						"SMS message(s) received");
 				String[] addresses = getAddressesFromSmsIntent(intent);
 				for (int i = 0; i < addresses.length; ++ i) {
-					if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+					if (Consts.DEBUG) Log.d(Consts.LOGTAG,
 							"message: address=" + addresses[i]);
 					mLogic.onSmsMessage(addresses[i]);
 				}
@@ -461,10 +458,10 @@ public class DindyService extends Service {
 		@Override
 		public void onChange(boolean selfChange) {
 			super.onChange(selfChange);
-			if (Config.LOGD && Consts.DEBUG) 
+			if (Consts.DEBUG) 
 				Log.d(Consts.LOGTAG, "CallLog: database changed");
 			if (!mCursor.requery()) {
-				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
+				if (Consts.DEBUG) Log.d(Consts.LOGTAG, 
 						"CallLog: requery() failed. Cursor is invalid");
 				// TODO recreate cursor
 				return;
@@ -480,7 +477,7 @@ public class DindyService extends Service {
 				// still update the previous cursor count to make this correct
 				// for the next time as well (for example if the user deleted
 				// one missed call from the calls log).
-				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG,
+				if (Consts.DEBUG) Log.d(Consts.LOGTAG,
 						"CallLog: onChange: changing previous cursor count "
 						+ "from " + mPreviousCursorCount + " to " +
 						currentCursorCount);
@@ -490,13 +487,13 @@ public class DindyService extends Service {
 			mPreviousCursorCount = currentCursorCount;
 
 			if (!mCursor.moveToNext()) {
-				if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
+				if (Consts.DEBUG) Log.d(Consts.LOGTAG, 
 						"CallLog: moveToNext() failed. No missed calls");
 				return;
 			}
 
 			int callType = mCursor.getInt(CALL_LOG_FIELD_TYPE);
-			if (Config.LOGD && Consts.DEBUG) Log.d(Consts.LOGTAG, 
+			if (Consts.DEBUG) Log.d(Consts.LOGTAG, 
 					"CallLog: callType=" + callType);			
 			switch (callType) {
 			case CallLog.Calls.MISSED_TYPE:
@@ -539,11 +536,7 @@ public class DindyService extends Service {
             pdus[i] = pduObjs[i];
         }
         
-        String[] addresses = mSmsHelper.getAddressesFromSmsPdus(pdus);
-        for (int i = 0; i < addresses.length; ++i) {
-        	
-        }
-        
+        final String[] addresses = SmsHelper.getAddressesFromSmsPdus(pdus);
         return addresses;
     }
 
@@ -563,7 +556,6 @@ public class DindyService extends Service {
 	private static boolean mIsRunning = false;
 	private final IBinder mBinder = new LocalBinder();
 	private CallLogObserver mCallLogObserver = null;
-	private SmsHelper mSmsHelper = null;
 	//private SmsObserver mSmsObserver = null;
 	private static final String SMS_RECEIVED_ACTION =
 		"android.provider.Telephony.SMS_RECEIVED";
