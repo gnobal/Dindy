@@ -3,6 +3,7 @@
 	<name>Dindy</name>
 	<comment></comment>
 	<projects>
+		<project>MarketActivity</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

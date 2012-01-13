@@ -15,6 +15,7 @@ import android.database.Cursor;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -378,7 +379,9 @@ public class DindyService extends Service {
 				// didn't get the notification about it because of a bug in
 				// Android.
 				// This is no longer needed starting with Android 2.0.1
-				mCallLogObserver.dispatchChange(true);
+				if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.DONUT) {
+					mCallLogObserver.dispatchChange(true);
+				}
 				// HACK END
 				incomingCallState = Consts.IncomingCallState.RINGING;
 				break;

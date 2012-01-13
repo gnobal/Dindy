@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="net.gnobal.dindy"
-      android:versionName="1.1.7" android:versionCode="18">
+      android:versionName="1.1.8" android:versionCode="19">
     <application android:icon="@drawable/icon" 
     	android:label="@string/app_name" 
-    	android:name=".DindyApplication" android:debuggable="false">
+    	android:name=".DindyApplication" android:debuggable="true">
         
         <!-- Main activities -->
         
@@ -88,7 +88,7 @@
         <service android:name=".DindyService"></service>
 	</application>
 
-    <uses-sdk android:minSdkVersion="3" android:targetSdkVersion="4"/>
+    <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="15"/>
 
     <uses-permission android:name="android.permission.READ_PHONE_STATE"></uses-permission>
     <uses-permission android:name="android.permission.PROCESS_OUTGOING_CALLS"></uses-permission>

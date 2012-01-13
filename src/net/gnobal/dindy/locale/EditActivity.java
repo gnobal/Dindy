@@ -1,5 +1,7 @@
 package net.gnobal.dindy.locale;
 
+import com.twofortyfouram.locale.BreadCrumber;
+
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -17,11 +19,13 @@ public class EditActivity extends net.gnobal.dindy.ExternalSourceSelectionActivi
 		super.onCreate(savedInstanceState);
 
 		final String breadcrumbString = getIntent().getStringExtra(
-				com.twofortyfouram.Intent.EXTRA_STRING_BREADCRUMB);
+				com.twofortyfouram.locale.Intent.EXTRA_STRING_BREADCRUMB);
 		if (breadcrumbString != null) {
-			setTitle(String.format("%s%s%s", breadcrumbString,
-					com.twofortyfouram.Intent.BREADCRUMB_SEPARATOR,
-					getString(R.string.locale_plugin_name)));
+			setTitle(BreadCrumber.generateBreadcrumb(getApplicationContext(),
+				getIntent(), getString(R.string.locale_plugin_name)));
+//			setTitle(String.format("%s%s%s", breadcrumbString,
+//					com.twofortyfouram.locale.Intent.BREADCRUMB_SEPARATOR,
+//					getString(R.string.locale_plugin_name)));
 		}
 		
 		SharedPreferences preferences = getSharedPreferences(
@@ -89,18 +93,17 @@ public class EditActivity extends net.gnobal.dindy.ExternalSourceSelectionActivi
 								String.valueOf(profileId)));
 			}
 
-			if (text.length() >
-				com.twofortyfouram.Intent.MAXIMUM_BLURB_LENGTH) {
-				returnIntent.putExtra(
-					com.twofortyfouram.Intent.EXTRA_STRING_BLURB,
-					text.substring(
-						0, com.twofortyfouram.Intent.MAXIMUM_BLURB_LENGTH));
+			
+			final int maxBlurbLength =
+				getResources().getInteger(R.integer.twofortyfouram_locale_maximum_blurb_length); 
+			if (text.length() > maxBlurbLength) {
+				returnIntent.putExtra(com.twofortyfouram.locale.Intent.EXTRA_STRING_BLURB,
+					text.substring(0, maxBlurbLength));
 			} else {
-				returnIntent.putExtra(
-					com.twofortyfouram.Intent.EXTRA_STRING_BLURB, text);
+				returnIntent.putExtra(com.twofortyfouram.locale.Intent.EXTRA_STRING_BLURB, text);
 			}
 
-			returnIntent.putExtra(com.twofortyfouram.Intent.EXTRA_BUNDLE,
+			returnIntent.putExtra(com.twofortyfouram.locale.Intent.EXTRA_BUNDLE,
 				storeAndForwardExtras);
 			setResult(RESULT_OK, returnIntent);
 			removeDialog(DIALOG_SELECT);

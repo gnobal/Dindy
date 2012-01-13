@@ -48,6 +48,21 @@ public class SmsHelper {
         
         return addresses;
 	}
+
+//	int[] calculateLength(String messageBody) {
+//		int[] result = null;
+//		try {
+//			result =(int[]) mCalculateLengthMethod.invoke(null, new Object[]{messageBody, false});
+//		} catch (IllegalArgumentException e) {
+//			Log.e(Consts.LOGTAG, ERROR_FAILED_TO_CALCULATE_MESSAGE_LENGTH, e);
+//		} catch (IllegalAccessException e) {
+//			Log.e(Consts.LOGTAG, ERROR_FAILED_TO_CALCULATE_MESSAGE_LENGTH, e);
+//		} catch (InvocationTargetException e) {
+//			Log.e(Consts.LOGTAG, ERROR_FAILED_TO_CALCULATE_MESSAGE_LENGTH, e);
+//		}
+//		
+//		return result;
+//	}
 	
 	SmsHelper() {
 		Class<?> smsManagerClass = null;
@@ -88,6 +103,9 @@ public class SmsHelper {
 			mGetOriginatingAddressMethod = mSmsMessageClass.getMethod(
 					SMS_MESSAGE_GET_ORIGINATING_ADDRESS_METHOD_NAME,
 					new Class[]{});
+//			mCalculateLengthMethod = mSmsMessageClass.getMethod(
+//					SMS_MESSAGE_CALCULATE_LENGTH_METHOD_NAME,
+//					new Class[]{String.class, boolean.class});
 			
 			success = true;
 		} catch (SecurityException e) {
@@ -103,6 +121,9 @@ public class SmsHelper {
 		} finally {
 			if (!success) {
 				mSendTextMessageMethod = null;
+				mCreateFromPduMethod = null;
+				mGetOriginatingAddressMethod = null;
+//				mCalculateLengthMethod = null;
 				mSmsManager = null;
 			}
 		}
@@ -113,6 +134,7 @@ public class SmsHelper {
 	private Class<?> mSmsMessageClass = null;
 	private Method mCreateFromPduMethod;
 	private Method mGetOriginatingAddressMethod;
+//	private Method mCalculateLengthMethod;
 	
 	private static final String SMS_MANAGER_CLASS_NAME_15 =
 		"android.telephony.gsm.SmsManager";
@@ -130,10 +152,14 @@ public class SmsHelper {
 		"createFromPdu";
 	private static final String SMS_MESSAGE_GET_ORIGINATING_ADDRESS_METHOD_NAME =
 		"getOriginatingAddress";
+//	private static final String SMS_MESSAGE_CALCULATE_LENGTH_METHOD_NAME =
+//		"calculateLength";
 	private static final String ERROR_FAILED_TO_INIT_SMS_SENDER =
 		"failed to initialize sms sender class";
 	private static final String ERROR_FAILED_TO_SEND_SMS_MESSAGE =
 		"failed to send sms message";
 	private static final String ERROR_FAILED_TO_GET_MESSAGE_FROM_PDU =
 		"failed to get message from pdu";
+//	private static final String ERROR_FAILED_TO_CALCULATE_MESSAGE_LENGTH =
+//		"failed to calculate message length";
 }

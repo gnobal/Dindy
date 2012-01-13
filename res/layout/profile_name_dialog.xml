@@ -15,9 +15,8 @@
         android:layout_marginLeft="20dip"
         android:layout_marginRight="20dip"
         android:scrollHorizontally="true"
-        android:autoText="false"
         android:gravity="fill_horizontal"
-        android:textAppearance="?android:attr/textAppearanceMedium" android:capitalize="sentences" android:maxLines="1" android:singleLine="true" android:id="@+id/dialog_profile_name_edit_box"/>
+        android:textAppearance="?android:attr/textAppearanceMedium" android:maxLines="1" android:id="@+id/dialog_profile_name_edit_box" android:inputType="text|textCapSentences|textAutoCorrect"/>
 
 
 
