@@ -15,7 +15,6 @@ import android.database.Cursor;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Binder;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -51,10 +50,10 @@ public class DindyService extends Service {
 		registerReceiver(mBroadcastReceiver, filter);
 		mPreferencesHelper = ProfilePreferencesHelper.instance();
 		mPendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0,
-				DindyService.getStopServiceBroadcastIntent(), 0);	
+			DindyService.getStopServiceBroadcastIntent(), 0);	
 
-		mLogic = new DindyLogic(
-			getApplicationContext(), getContentResolver(), mSettings, mAuM, mPM);
+		mLogic =
+			new DindyLogic(getApplicationContext(), getContentResolver(), mSettings, mAuM, mPM);
 		// TODO must be after setting mLogic, since registration 
 		// immediately sends us an IDLE notification that goes straight to 
 		// mLogic. If the user is clicking fast enough on the start/stop 
@@ -64,95 +63,111 @@ public class DindyService extends Service {
 	}
 
 	@Override
-	public void onStart(Intent intent, int startId) {
-		super.onStart(intent, startId);
+	public int onStartCommand(Intent intent, int flags, int startId) {
+		super.onStartCommand(intent, flags, startId);
 
 		mIsRunning = true;
 		final long previousProfileId = mCurrentProfileId;
-		final boolean firstStart = 
-			(mCurrentProfileId == Consts.NOT_A_PROFILE_ID);
-		Bundle extras = intent.getExtras();
-		if (extras == null) {
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG, 
-			"error! no extras sent to service");
-			stopSelf();
-			return;
+		final boolean firstStart = (mCurrentProfileId == Consts.NOT_A_PROFILE_ID);
+		final boolean restartAfterKill = (intent == null);
+		
+		if (!restartAfterKill) {
+			final Bundle extras = intent.getExtras();
+			if (extras == null) {
+				if (Consts.DEBUG) {
+					Log.d(Consts.LOGTAG, "error! no extras sent to service");
+				}
+				stopSelf();
+				return START_STICKY;
+			}
+			storeLastStartupSettings(firstStart, extras);
 		}
+		final Bundle startupSettings = retrieveLastStartupSettings();
+		
+		
 		// Whoever started the service gave us a profile ID to use so we use
 		// it blindly
-		mCurrentProfileId = extras.getLong(Consts.EXTRA_PROFILE_ID);
-		final String profileName = extras.getString(
-				Consts.EXTRA_PROFILE_NAME);
+		mCurrentProfileId = startupSettings.getLong(Consts.Prefs.Main.KEY_LAST_STARTUP_PROFILE_ID);
+		final String profileName = startupSettings.getString(Consts.Prefs.Main.KEY_LAST_STARTUP_PROFILE_NAME);
 		if (!mPreferencesHelper.profileExists(mCurrentProfileId)) {
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG, 
-				"profile ID " + mCurrentProfileId + " doesn't exist");
+			if (Consts.DEBUG) {
+				Log.d(Consts.LOGTAG, "profile ID " + mCurrentProfileId + " doesn't exist");
+			}
 			if (firstStart) {
 				Toast.makeText(getApplicationContext(),
-						R.string.toast_text_profile_doesnt_exist_exit,
-						Toast.LENGTH_LONG).show();
+					R.string.toast_text_profile_doesnt_exist_exit,
+					Toast.LENGTH_LONG).show();
 				stopSelf();
-				return;
+				return START_STICKY;
 			} else {
 				Toast.makeText(getApplicationContext(),
-						R.string.toast_text_profile_doesnt_exist_continue,
-						Toast.LENGTH_LONG).show();
+					R.string.toast_text_profile_doesnt_exist_continue,
+					Toast.LENGTH_LONG).show();
 				mCurrentProfileId = previousProfileId;
 			}
 		}
 		if (previousProfileId != mCurrentProfileId) {
 			DindySingleProfileAppWidgetProvider.updateAllSingleProfileWidgets(
-					getApplicationContext(), mCurrentProfileId,
-					previousProfileId);
+				getApplicationContext(), mCurrentProfileId, previousProfileId);
 		}
-		refreshSettings(mCurrentProfileId, firstStart);
+		
+		// We need to remember the user's settings in the following cases:
+		// 1. This is the first startup of the service
+		// 2. The service was killed and restarted. In this case we store whatever we stored when
+		//    when the service was first started
+		// In any other case we avoid remembering the user settings because they may have been 
+		// set by us
+		refreshSettings(mCurrentProfileId, firstStart || restartAfterKill, startupSettings);
 		saveLastUsedProfileId();
 		
-		mLogic.start();
+		mLogic.start(restartAfterKill);
 		mAlM.cancel(mPendingIntent);
-		final long timeLimitMillis = extras.getLong(
-				Consts.EXTRA_INTENT_TIME_LIMIT_MILLIS, Consts.NOT_A_TIME_LIMIT);
-		if (timeLimitMillis != Consts.NOT_A_TIME_LIMIT) {
-			mAlM.set(AlarmManager.RTC_WAKEUP,
-					System.currentTimeMillis() + timeLimitMillis,
-					mPendingIntent);
+		final long absoluteTimeLimitMillis = startupSettings.getLong(
+			Consts.Prefs.Main.KEY_LAST_STARTUP_INTENT_ABS_TIME_LIMIT_MILLIS); 
+		if (absoluteTimeLimitMillis != Consts.NOT_A_TIME_LIMIT) {
+			mAlM.set(AlarmManager.RTC_WAKEUP, absoluteTimeLimitMillis, mPendingIntent);
 		}
 
-		if (Consts.DEBUG) Log.d(Consts.LOGTAG, 
-				"starting profile " + mCurrentProfileId + ", time limit " +
-				timeLimitMillis + " millis");
+		if (Consts.DEBUG) {
+			final long currentTimeMillis = System.currentTimeMillis();
+			Log.d(Consts.LOGTAG, "starting profile " + mCurrentProfileId +
+				", absolute time limit " + absoluteTimeLimitMillis +
+				" millis, current time millis " + currentTimeMillis + ", diff " +
+				(currentTimeMillis - absoluteTimeLimitMillis));
+		}
 
 		// Display a notification about us starting. We put an icon in the
 		// status bar.
 		if (firstStart) {
 			showNotification();
 		} else {
-			String refreshText = 
-				getString(R.string.dindy_service_refreshed_text);
-			if (profileName != null) {
+			String refreshText = getString(R.string.dindy_service_refreshed_text);
+			if (profileName != null && profileName.length() > 0) {
 				refreshText = refreshText + " (" + profileName + ")";
 			}
-			final int source = extras.getInt(Consts.EXTRA_INTENT_SOURCE,
-					Consts.INTENT_SOURCE_UNKNOWN);
+			final int source = startupSettings.getInt(
+				Consts.Prefs.Main.KEY_LAST_STARTUP_INTENT_SOURCE); 				
 			if (source == Consts.INTENT_SOURCE_SHORTCUT ||
 				source == Consts.INTENT_SOURCE_APP_PROFILE_PREFS) {
-				Toast.makeText(getApplicationContext(), refreshText,
-						Toast.LENGTH_SHORT).show();
+				Toast.makeText(getApplicationContext(), refreshText, Toast.LENGTH_SHORT).show();
 			}
 		}
 		
 		sendBroadcast(new Intent().setAction(Consts.SERVICE_STARTED));
+		
+		return START_STICKY;
 	}
 
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
 		
-		if (Consts.DEBUG) Log.d(Consts.LOGTAG, 
-				"stopping profile " + mCurrentProfileId);
+		if (Consts.DEBUG) {
+			Log.d(Consts.LOGTAG, "stopping profile " + mCurrentProfileId);
+		}
 
 		DindySingleProfileAppWidgetProvider.updateAllSingleProfileWidgets(
-				getApplicationContext(), Consts.NOT_A_PROFILE_ID,
-				mCurrentProfileId);
+			getApplicationContext(), Consts.NOT_A_PROFILE_ID, mCurrentProfileId);
 
 		// Stop listening to call state change events
 		//mHandler.removeCallbacks(mStopServiceCallback);
@@ -215,9 +230,7 @@ public class DindyService extends Service {
 			long timeLimitMillis) {
 		if (profileName == null) {
 			// Try to find out the profile name from the preferences
-			profileName = 
-				ProfilePreferencesHelper.instance().getProfielNameFromId(
-						profileId);
+			profileName = ProfilePreferencesHelper.instance().getProfielNameFromId(profileId);
 		}
 		return intent
 			.putExtra(Consts.EXTRA_PROFILE_ID, profileId)
@@ -240,10 +253,9 @@ public class DindyService extends Service {
 	
 	private void saveLastUsedProfileId() {
 		SharedPreferences preferences = getSharedPreferences(
-				Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
+			Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
 		SharedPreferences.Editor editor = preferences.edit();
-		editor.putLong(Consts.Prefs.Main.LAST_USED_PROFILE_ID,
-				mCurrentProfileId);
+		editor.putLong(Consts.Prefs.Main.LAST_USED_PROFILE_ID, mCurrentProfileId);
 		editor.commit();
 		editor = null;
 		preferences = null;
@@ -257,7 +269,7 @@ public class DindyService extends Service {
 
 		// Set the icon, scrolling text and timestamp
 		Notification notification = new Notification(
-				R.drawable.notification_icon, text, System.currentTimeMillis());
+			R.drawable.notification_icon, text, System.currentTimeMillis());
 		notification.flags |= Notification.FLAG_ONGOING_EVENT;
 
 		// The PendingIntent to launch our activity if the user selects this
@@ -267,7 +279,7 @@ public class DindyService extends Service {
 		
 		// Set the info for the views that show in the notification panel.
 		notification.setLatestEventInfo(getApplicationContext(),
-				getText(R.string.dindy_service_label), text, contentIntent);
+			getText(R.string.dindy_service_label), text, contentIntent);
 
 		// Send the notification.
 		// We use a layout id because it is a unique number. We use it later
@@ -275,89 +287,87 @@ public class DindyService extends Service {
 		mNM.notify(R.string.dindy_service_started, notification);
 	}
 
-	private void refreshSettings(long selectedProfileId, boolean firstStart) {
-		SharedPreferences profilePreferences = 
-			mPreferencesHelper.getPreferencesForProfile(this, selectedProfileId,
-					Context.MODE_PRIVATE);
+	private void refreshSettings(long selectedProfileId, boolean rememberUserSettings,
+		Bundle startupSettings) {
+		SharedPreferences profilePreferences = mPreferencesHelper.getPreferencesForProfile(
+			this, selectedProfileId, Context.MODE_PRIVATE);
 
 		final boolean firstRingSound = profilePreferences.getBoolean(
-				Consts.Prefs.Profile.KEY_FIRST_EVENT_SOUND, false);
+			Consts.Prefs.Profile.KEY_FIRST_EVENT_SOUND, false);
 		final boolean firstRingVibrate = profilePreferences.getBoolean(
-				Consts.Prefs.Profile.KEY_FIRST_EVENT_VIBRATE, false);
+			Consts.Prefs.Profile.KEY_FIRST_EVENT_VIBRATE, false);
 		final boolean secondRingSound = profilePreferences.getBoolean(
-				Consts.Prefs.Profile.KEY_SECOND_EVENT_SOUND, true);
+			Consts.Prefs.Profile.KEY_SECOND_EVENT_SOUND, true);
 		final boolean secondRingVibrate = profilePreferences.getBoolean(
-				Consts.Prefs.Profile.KEY_SECOND_EVENT_VIBRATE, true);
+			Consts.Prefs.Profile.KEY_SECOND_EVENT_VIBRATE, true);
 
 		mSettings.mFirstRingSettings.mRingerMode = firstRingSound ? 
-				AudioManager.RINGER_MODE_NORMAL
-				: (firstRingVibrate ? 
-						AudioManager.RINGER_MODE_VIBRATE 
-						: AudioManager.RINGER_MODE_SILENT);
+			AudioManager.RINGER_MODE_NORMAL
+			: (firstRingVibrate ? 
+				AudioManager.RINGER_MODE_VIBRATE 
+				: AudioManager.RINGER_MODE_SILENT);
 		mSettings.mFirstRingSettings.mVibrateModeNotification =
 		mSettings.mFirstRingSettings.mVibrateModeRinger = firstRingVibrate ? 
-					AudioManager.VIBRATE_SETTING_ON
-					: AudioManager.VIBRATE_SETTING_OFF;
+			AudioManager.VIBRATE_SETTING_ON
+			: AudioManager.VIBRATE_SETTING_OFF;
 		mSettings.mSecondRingSettings.mRingerMode = secondRingSound ? 
-				AudioManager.RINGER_MODE_NORMAL
-				: (secondRingVibrate ? 
-						AudioManager.RINGER_MODE_VIBRATE 
-						: AudioManager.RINGER_MODE_SILENT);
+			AudioManager.RINGER_MODE_NORMAL
+			: (secondRingVibrate ? 
+				AudioManager.RINGER_MODE_VIBRATE 
+				: AudioManager.RINGER_MODE_SILENT);
 		mSettings.mSecondRingSettings.mVibrateModeNotification =
 		mSettings.mSecondRingSettings.mVibrateModeRinger = secondRingVibrate ? 
-				AudioManager.VIBRATE_SETTING_ON
-				: AudioManager.VIBRATE_SETTING_OFF;
+			AudioManager.VIBRATE_SETTING_ON
+			: AudioManager.VIBRATE_SETTING_OFF;
 		
 		mSettings.mEnableSmsReplyToCall = profilePreferences.getBoolean(
-				Consts.Prefs.Profile.KEY_ENABLE_SMS_CALLERS,
-				Consts.Prefs.Profile.VALUE_ENABLE_SMS_CALLERS_DEFAULT);
+			Consts.Prefs.Profile.KEY_ENABLE_SMS_CALLERS,
+			Consts.Prefs.Profile.VALUE_ENABLE_SMS_CALLERS_DEFAULT);
 		mSettings.mMessageToCallers = profilePreferences.getString(
-				Consts.Prefs.Profile.KEY_SMS_MESSAGE_CALLERS, getString(
-						R.string.preferences_profile_sms_message_callers_default_unset_value));
+			Consts.Prefs.Profile.KEY_SMS_MESSAGE_CALLERS, getString(
+				R.string.preferences_profile_sms_message_callers_default_unset_value));
 		mSettings.mEnableSmsReplyToSms = profilePreferences.getBoolean(
-				Consts.Prefs.Profile.KEY_ENABLE_SMS_TEXTERS,
-				Consts.Prefs.Profile.VALUE_ENABLE_SMS_TEXTERS_DEFAULT);
+			Consts.Prefs.Profile.KEY_ENABLE_SMS_TEXTERS,
+			Consts.Prefs.Profile.VALUE_ENABLE_SMS_TEXTERS_DEFAULT);
 		mSettings.mMessageToTexters = profilePreferences.getString(
-				Consts.Prefs.Profile.KEY_SMS_MESSAGE_TEXTERS, getString(
-						R.string.preferences_profile_sms_message_texters_default_unset_value));
+			Consts.Prefs.Profile.KEY_SMS_MESSAGE_TEXTERS, getString(
+				R.string.preferences_profile_sms_message_texters_default_unset_value));
 		
 		// First let's see what the new value is. We need to notify DindyLogic
 		// about this change so we need to keep the new setting in a different
 		// variable
 		final long newWakeupTimeoutMinutes = 
 			Long.parseLong(profilePreferences.getString(
-					Consts.Prefs.Profile.KEY_TIME_BETWEEN_EVENTS_MINUTES,
-					Consts.Prefs.Profile.VALUE_TIME_BETWEEN_EVENTS_DEFAULT));
+				Consts.Prefs.Profile.KEY_TIME_BETWEEN_EVENTS_MINUTES,
+				Consts.Prefs.Profile.VALUE_TIME_BETWEEN_EVENTS_DEFAULT));
 		long newWakeupTimeoutMillis = Consts.INFINITE_TIME;
 		if (newWakeupTimeoutMinutes != Consts.INFINITE_TIME) {
-			newWakeupTimeoutMillis =
-				newWakeupTimeoutMinutes * Consts.MILLIS_IN_MINUTE;
+			newWakeupTimeoutMillis = newWakeupTimeoutMinutes * Consts.MILLIS_IN_MINUTE;
 		}
-		mLogic.onWakeupTimeChanged(
-				mSettings.mWakeupTimeoutMillis,
-				newWakeupTimeoutMillis);
+		mLogic.onWakeupTimeChanged(mSettings.mWakeupTimeoutMillis, newWakeupTimeoutMillis);
 		mSettings.mWakeupTimeoutMillis = newWakeupTimeoutMillis;
 
 		mSettings.mTreatUnknownCallers = profilePreferences.getString(
-				Consts.Prefs.Profile.KEY_TREAT_UNKNOWN_CALLERS,
-				Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_DEFAULT);
+			Consts.Prefs.Profile.KEY_TREAT_UNKNOWN_CALLERS,
+			Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_DEFAULT);
 		// Non-mobile callers was added in 1.1.1 and takes the default from the
 		// existing unknown callers setting
 		mSettings.mTreatNonMobileCallers = profilePreferences.getString(
-				Consts.Prefs.Profile.KEY_TREAT_NON_MOBILE_CALLERS,
-				mSettings.mTreatUnknownCallers);
+			Consts.Prefs.Profile.KEY_TREAT_NON_MOBILE_CALLERS, mSettings.mTreatUnknownCallers);
 		mSettings.mTreatUnknownTexters = profilePreferences.getString(
-				Consts.Prefs.Profile.KEY_TREAT_UNKNOWN_TEXTERS,
-				Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_TEXTERS_DEFAULT);
+			Consts.Prefs.Profile.KEY_TREAT_UNKNOWN_TEXTERS,
+			Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_TEXTERS_DEFAULT);
 		
-		if (firstStart) {
-			// Only if it's a first start we get the user's settings. Otherwise
-			// we might read our own settings
+		if (rememberUserSettings) {
 			mSettings.mUserSettings.mVibrateModeNotification = 
-				mAuM.getVibrateSetting(AudioManager.VIBRATE_TYPE_NOTIFICATION);
+				//mAuM.getVibrateSetting(AudioManager.VIBRATE_TYPE_NOTIFICATION);
+				startupSettings.getInt(Consts.Prefs.Main.KEY_LAST_STARTUP_VIBRATE_TYPE_NOTIFICATION);
 			mSettings.mUserSettings.mVibrateModeRinger =
-				mAuM.getVibrateSetting(AudioManager.VIBRATE_TYPE_RINGER);
-			mSettings.mUserSettings.mRingerMode = mAuM.getRingerMode();
+				//mAuM.getVibrateSetting(AudioManager.VIBRATE_TYPE_RINGER);
+				startupSettings.getInt(Consts.Prefs.Main.KEY_LAST_STARTUP_VIBRATE_TYPE_RINGER);
+			mSettings.mUserSettings.mRingerMode =
+				//mAuM.getRingerMode();
+				startupSettings.getInt(Consts.Prefs.Main.KEY_LAST_STARTUP_RINGER_MODE);
 		}
 	}
 
@@ -402,18 +412,21 @@ public class DindyService extends Service {
 				Bundle extras = intent.getExtras(); 
 				String phoneNumber = extras.getString(
 					Intent.EXTRA_PHONE_NUMBER);
-				if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-						"outgoing call number: " + phoneNumber);
+				if (Consts.DEBUG) {
+					Log.d(Consts.LOGTAG, "outgoing call number: " + phoneNumber);
+				}
 				mLogic.onOutgoingCall(phoneNumber);
 			} else if (Consts.ACTION_STOP_DINDY_SERVICE.equals(action)) {
 				DindyService.this.stopSelf();
 			} else if (SMS_RECEIVED_ACTION.equals(action)) {
-				if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-						"SMS message(s) received");
+				if (Consts.DEBUG) {
+					Log.d(Consts.LOGTAG, "SMS message(s) received");
+				}
 				String[] addresses = getAddressesFromSmsIntent(intent);
 				for (int i = 0; i < addresses.length; ++ i) {
-					if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-							"message: address=" + addresses[i]);
+					if (Consts.DEBUG) {
+						Log.d(Consts.LOGTAG, "message: address=" + addresses[i]);
+					}
 					mLogic.onSmsMessage(addresses[i]);
 				}
 			}
@@ -424,7 +437,7 @@ public class DindyService extends Service {
 		protected AbstractObserver() {
 			super(new Handler());
 			mCursor = getContentResolver().query(getContentUri(),
-					getProjection(), getQuery(), null, getSortOrder());
+				getProjection(), getQuery(), null, getSortOrder());
 			mCursor.registerContentObserver(this);
 		}
 		
@@ -477,33 +490,33 @@ public class DindyService extends Service {
 				// still update the previous cursor count to make this correct
 				// for the next time as well (for example if the user deleted
 				// one missed call from the calls log).
-				if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-						"CallLog: onChange: changing previous cursor count "
-						+ "from " + mPreviousCursorCount + " to " +
-						currentCursorCount);
+				if (Consts.DEBUG) {
+					Log.d(Consts.LOGTAG, "CallLog: onChange: changing previous cursor count "
+						+ "from " + mPreviousCursorCount + " to " + currentCursorCount);
+				}
 				mPreviousCursorCount = currentCursorCount;
 				return;
 			}
 			mPreviousCursorCount = currentCursorCount;
 
 			if (!mCursor.moveToNext()) {
-				if (Consts.DEBUG) Log.d(Consts.LOGTAG, 
-						"CallLog: moveToNext() failed. No missed calls");
+				if (Consts.DEBUG) {
+					Log.d(Consts.LOGTAG, "CallLog: moveToNext() failed. No missed calls");
+				}
 				return;
 			}
 
 			int callType = mCursor.getInt(CALL_LOG_FIELD_TYPE);
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG, 
-					"CallLog: callType=" + callType);			
+			if (Consts.DEBUG) {
+				Log.d(Consts.LOGTAG, "CallLog: callType=" + callType);
+			}
 			switch (callType) {
 			case CallLog.Calls.MISSED_TYPE:
-				mLogic.onMissedCall(
-						mCursor.getString(CALL_LOG_FIELD_NUMBER));
+				mLogic.onMissedCall(mCursor.getString(CALL_LOG_FIELD_NUMBER));
 				break;
 			
 			case CallLog.Calls.INCOMING_TYPE:
-				mLogic.onIncomingCallInCallsDB(
-						mCursor.getString(CALL_LOG_FIELD_NUMBER));
+				mLogic.onIncomingCallInCallsDB(mCursor.getString(CALL_LOG_FIELD_NUMBER));
 				break;
 			}
 		}
@@ -540,7 +553,68 @@ public class DindyService extends Service {
         return addresses;
     }
 
-	
+
+    private void storeLastStartupSettings(boolean firstStart, Bundle startupExtras) {
+		SharedPreferences preferences = getSharedPreferences(
+			Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
+		SharedPreferences.Editor editor = preferences.edit();
+		editor.putLong(Consts.Prefs.Main.KEY_LAST_STARTUP_PROFILE_ID,
+			startupExtras.getLong(Consts.EXTRA_PROFILE_ID));
+   		final String profileName = startupExtras.getString(Consts.EXTRA_PROFILE_NAME);
+		editor.putString(Consts.Prefs.Main.KEY_LAST_STARTUP_PROFILE_NAME,
+			profileName == null ? "" : profileName);
+		final int intentSource = startupExtras.getInt(
+			Consts.EXTRA_INTENT_SOURCE, Consts.INTENT_SOURCE_UNKNOWN);
+		editor.putInt(Consts.Prefs.Main.KEY_LAST_STARTUP_INTENT_SOURCE, intentSource);
+		final long relativeTimeLimitMillis = startupExtras.getLong(
+			Consts.EXTRA_INTENT_TIME_LIMIT_MILLIS, Consts.NOT_A_TIME_LIMIT);
+		editor.putLong(Consts.Prefs.Main.KEY_LAST_STARTUP_INTENT_ABS_TIME_LIMIT_MILLIS,
+			relativeTimeLimitMillis == Consts.NOT_A_TIME_LIMIT ?
+			Consts.NOT_A_TIME_LIMIT : System.currentTimeMillis() + relativeTimeLimitMillis);
+		
+		if (firstStart) {
+			// Only store these if this is the first startup. Otherwise we'll read our own settings
+			editor.putInt(Consts.Prefs.Main.KEY_LAST_STARTUP_VIBRATE_TYPE_RINGER,
+				mAuM.getVibrateSetting(AudioManager.VIBRATE_TYPE_RINGER));
+			editor.putInt(Consts.Prefs.Main.KEY_LAST_STARTUP_VIBRATE_TYPE_NOTIFICATION,
+				mAuM.getVibrateSetting(AudioManager.VIBRATE_TYPE_NOTIFICATION));
+			editor.putInt(Consts.Prefs.Main.KEY_LAST_STARTUP_RINGER_MODE, mAuM.getRingerMode());
+		}
+		
+		editor.commit();
+		editor = null;
+		preferences = null;
+
+    }
+
+    private Bundle retrieveLastStartupSettings() {
+		SharedPreferences preferences = getSharedPreferences(
+			Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
+		final Bundle startupSettings = new Bundle();
+		startupSettings.putLong(Consts.Prefs.Main.KEY_LAST_STARTUP_PROFILE_ID, preferences.getLong(
+			Consts.Prefs.Main.KEY_LAST_STARTUP_PROFILE_ID, Consts.NOT_A_PROFILE_ID));
+		startupSettings.putString(Consts.Prefs.Main.KEY_LAST_STARTUP_PROFILE_NAME,
+			preferences.getString(Consts.Prefs.Main.KEY_LAST_STARTUP_PROFILE_NAME, null));
+		startupSettings.putInt(Consts.Prefs.Main.KEY_LAST_STARTUP_INTENT_SOURCE,
+			preferences.getInt(Consts.Prefs.Main.KEY_LAST_STARTUP_INTENT_SOURCE,
+				Consts.INTENT_SOURCE_UNKNOWN));
+		startupSettings.putLong(Consts.EXTRA_INTENT_TIME_LIMIT_MILLIS, preferences.getLong(
+			Consts.EXTRA_INTENT_TIME_LIMIT_MILLIS, Consts.NOT_A_TIME_LIMIT));
+		
+		startupSettings.putInt(Consts.Prefs.Main.KEY_LAST_STARTUP_VIBRATE_TYPE_RINGER,
+			preferences.getInt(Consts.Prefs.Main.KEY_LAST_STARTUP_VIBRATE_TYPE_RINGER,
+				AudioManager.VIBRATE_SETTING_ON));
+		startupSettings.putInt(Consts.Prefs.Main.KEY_LAST_STARTUP_VIBRATE_TYPE_NOTIFICATION,
+			preferences.getInt(Consts.Prefs.Main.KEY_LAST_STARTUP_VIBRATE_TYPE_NOTIFICATION,
+				AudioManager.VIBRATE_SETTING_ON));
+		startupSettings.putInt(Consts.Prefs.Main.KEY_LAST_STARTUP_RINGER_MODE, preferences.getInt(
+			Consts.Prefs.Main.KEY_LAST_STARTUP_RINGER_MODE,
+			AudioManager.RINGER_MODE_NORMAL));
+		preferences = null;
+		
+		return startupSettings;
+    }
+    
 	private DindyLogic mLogic = null;
 	private NotificationManager mNM = null;
 	private TelephonyManager mTM = null;

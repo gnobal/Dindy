@@ -26,4 +26,5 @@
       Minor category changes in profile preferences
 1.1.7 Added SMS reply-to-SMS (in perpetual beta until officially supported by Google)
 1.1.8 Include new Locale library and modify code accordingly
-      Now requires at least Android 2.1 (sorry, old versions)      
+      Now requires at least Android 2.1 (sorry, old versions)
+1.1.9 Cope with the service being killed (by task managers or Android) and restarted    

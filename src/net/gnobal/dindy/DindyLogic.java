@@ -16,7 +16,6 @@ import android.telephony.PhoneNumberUtils;
 import android.telephony.SmsManager;
 import android.util.Log;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -65,6 +64,7 @@ class DindyLogic {
 	public DindyLogic(Context context, ContentResolver resolver, DindySettings settings,
 		AudioManager am, PowerManager pm) {
 		mContext = context;
+		mIncomingCalls = new IncomingCalls(context);
 		mResolver = resolver;
 		mSettings = settings;
 		mAM = am;
@@ -77,7 +77,42 @@ class DindyLogic {
 	    mSM = SmsManager.getDefault();
 	}
 
-	void start() {
+	void start(boolean rebuildIncomingCalls) {
+		if (Consts.DEBUG) {
+			Log.d(Consts.LOGTAG, "start: rebuildIncomingCalls=" + rebuildIncomingCalls);
+		}
+		if (rebuildIncomingCalls) {
+			synchronized (mIncomingCalls) {
+				mIncomingCalls.rebuild();
+				final long currentTimeMillis = System.currentTimeMillis();
+				Iterator<String> it = mIncomingCalls.callerIdNumbersIterator(); 
+				while (it.hasNext()) {
+					final String callerIdNumber = it.next();
+					if (Consts.DEBUG) {
+						Log.d(Consts.LOGTAG, "start: rebuilding caller ID number " +
+							callerIdNumber);
+					}
+					final IncomingCallInfo callInfo = mIncomingCalls.get(callerIdNumber);
+					if (callInfo.getAbsoluteWakeupTimeMillis() == Consts.NOT_A_TIME_LIMIT) {
+						continue;
+					}
+					if (callInfo.getAbsoluteWakeupTimeMillis() < currentTimeMillis) {
+						// Removal was in the past, so remove it now
+						removeIncomingCallInfo(callerIdNumber);
+						continue;
+					}
+					
+					final long wakeupTimeMillis =
+						callInfo.getAbsoluteWakeupTimeMillis() - currentTimeMillis;
+					final RemoveCallInfoTask removalTask = new RemoveCallInfoTask(callerIdNumber);
+					callInfo.associateRemovalTask(removalTask);
+					mTimer.schedule(removalTask, wakeupTimeMillis);
+				}
+			}			
+		} else {
+			// Just to make sure we're starting fresh
+			mIncomingCalls.clear();
+		}
 		setRingerAndVibrateModes(mSettings.mFirstRingSettings);
 		mStarted = true;
 	}
@@ -86,6 +121,7 @@ class DindyLogic {
 		if (!mStarted) {
 			return;
 		}
+		mIncomingCalls.clear();
 		setRingerAndVibrateModes(mSettings.mUserSettings);
 		mStarted = false;
 	}
@@ -108,15 +144,16 @@ class DindyLogic {
 	}
 
 	void onCallStateChange(int newState, String number) {
-		if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-				"onCallStateChange: newState=" +
-				Utils.incomingCallStateToString(newState) +	" number=" +
-				number);
+		if (Consts.DEBUG) {
+			Log.d(Consts.LOGTAG, "onCallStateChange: newState=" +
+				Utils.incomingCallStateToString(newState) +	" number=" + number);
+		}
 		if (!mStarted) {
 			// can happen if the service is started with a non-existing profile
 			// and then stops itself
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG, 
-					"onCallStateChange: called without being started");
+			if (Consts.DEBUG) {
+				Log.d(Consts.LOGTAG,"onCallStateChange: called without being started");
+			}
 			return;
 		}
 		switch (newState) {
@@ -137,8 +174,9 @@ class DindyLogic {
 			break;
 
 		default:
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG, 
-					"onCallStateChange: unknown call state " + newState);
+			if (Consts.DEBUG) {
+				Log.d(Consts.LOGTAG, "onCallStateChange: unknown call state " + newState);
+			}
 			return;
 		}
 
@@ -149,8 +187,9 @@ class DindyLogic {
 		mWakeLock.acquire();
 		String callerIdNumber = getCallerIdNumber(number);
 		if (callerIdNumber == null) {
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG, "onSmsMessage: number " + number + 
-				" returned null callerId");
+			if (Consts.DEBUG) {
+				Log.d(Consts.LOGTAG, "onSmsMessage: number " + number + " returned null callerId");
+			}
 			releaseWakeLockIfHeld("onSmsMessage");
 			return;
 		}
@@ -162,12 +201,13 @@ class DindyLogic {
 
 		NumberProperties numberProps = getNumberProperties(number);
 		final boolean shouldRemember = (numberProps.mIsKnown ||
-				Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_TEXTERS_AS_MOBILE_NO_SMS.equals(mSettings.mTreatUnknownTexters));
+			Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_TEXTERS_AS_MOBILE_NO_SMS.equals(mSettings.mTreatUnknownTexters));
 		if (!shouldRemember) {
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-				"onSmsMessage: number " + number +
-				" is not a number to remember. isMobile=" + numberProps.mIsMobile + " isKnown=" +
-				numberProps.mIsKnown);
+			if (Consts.DEBUG) {
+				Log.d(Consts.LOGTAG, "onSmsMessage: number " + number +
+					" is not a number to remember. isMobile=" + numberProps.mIsMobile +
+					" isKnown=" + numberProps.mIsKnown);
+			}
 			releaseWakeLockIfHeld("onSmsMessage");
 			return;
 		}
@@ -296,7 +336,8 @@ class DindyLogic {
 					"onWakeupTimeChanged: wakeup timeout changed from infinite "
 					+ "to " + newWakeupTimeMillis + ". Removing all numbers");
 			synchronized (mIncomingCalls) {
-				Iterator<String> it = mIncomingCalls.keySet().iterator();
+				Iterator<String> it = mIncomingCalls.callerIdNumbersIterator(); 
+					//mIncomingCalls.keySet().iterator();
 				while (it.hasNext()) {
 					// Each key is a caller ID number
 					String callerIdNumber = it.next();
@@ -311,7 +352,8 @@ class DindyLogic {
 	
 	private boolean isCallerIdNumberExist(String callerIdNumber, String context) {
 		synchronized (mIncomingCalls) {
-			if (mIncomingCalls.containsKey(callerIdNumber)) {
+			//if (mIncomingCalls.containsKey(callerIdNumber)) {
+			if (mIncomingCalls.numberExists(callerIdNumber)) {
 				if (Consts.DEBUG) Log.d(Consts.LOGTAG,
 						context + ": callerIdNumber " + callerIdNumber +
 						" already exists");
@@ -330,11 +372,12 @@ class DindyLogic {
 			removalTask = new RemoveCallInfoTask(callerIdNumber);
 		}
 		
-		IncomingCallInfo newCallInfo = new IncomingCallInfo(number,
-				callerIdNumber, removalTask,
-				mSettings.mWakeupTimeoutMillis == Consts.INFINITE_TIME ?
-					Consts.INFINITE_TIME :
-					System.currentTimeMillis() + mSettings.mWakeupTimeoutMillis);
+		final IncomingCallInfo newCallInfo = new IncomingCallInfo(number,
+			callerIdNumber,
+			mSettings.mWakeupTimeoutMillis == Consts.INFINITE_TIME ?
+				Consts.INFINITE_TIME :
+				System.currentTimeMillis() + mSettings.mWakeupTimeoutMillis);
+		newCallInfo.associateRemovalTask(removalTask);
 		// Add to list of numbers to remember
 		synchronized (mIncomingCalls) {
 			mIncomingCalls.put(callerIdNumber, newCallInfo);
@@ -367,8 +410,7 @@ class DindyLogic {
 		// Do we care about this call:
 		// Is it a returning number? Should we treat as second call?
 		synchronized (mIncomingCalls) {
-			IncomingCallInfo currentCallInfo =
-				mIncomingCalls.get(callerIdNumber); 
+			IncomingCallInfo currentCallInfo = mIncomingCalls.get(callerIdNumber); 
 			if (currentCallInfo != null) {
 				// If the number exists in the map there is still the 
 				// possibility that it hasn't been removed by the timer thread
@@ -589,41 +631,7 @@ class DindyLogic {
 		return callerIdNumber;
 	}
 	
-	private class IncomingCallInfo {
-		public IncomingCallInfo(String number,
-				String callerIdNumber,
-				RemoveCallInfoTask associatedRemovalTask,
-				long absoluteWakeupTimeMillis) {
-			mNumber = number;
-			mCallerIdNumber = callerIdNumber;
-			mAssociatedRemovalTask = associatedRemovalTask;
-			mAbsoluteWakeupTimeMillis = absoluteWakeupTimeMillis;
-		}
-
-		public String getNumber() {
-			return mNumber;
-		}
-
-		public String getCallerIdNumber() {
-			return mCallerIdNumber;
-		}
-		
-		public RemoveCallInfoTask getAssociatedRemovalTask() {
-			return mAssociatedRemovalTask;
-		}
-
-		public long getAbsoluteWakeupTimeMillis() {
-			return mAbsoluteWakeupTimeMillis;
-		}
-		
-		private String mNumber;
-		private String mCallerIdNumber;
-		// private boolean mHasBeenNotifiedWithSMS = false;
-		private RemoveCallInfoTask mAssociatedRemovalTask;
-		private long mAbsoluteWakeupTimeMillis;
-	}
-
-	private class RemoveCallInfoTask extends TimerTask {
+	class RemoveCallInfoTask extends TimerTask {
 		RemoveCallInfoTask(String numberToRemove) {
 			mNumberToRemove = numberToRemove;
 		}
@@ -648,8 +656,9 @@ class DindyLogic {
 	private DindySettings mSettings = null;
 	private SmsManager mSM = null;
 	private Timer mTimer = new Timer();
-	private HashMap<String, IncomingCallInfo> mIncomingCalls =
-		new HashMap<String, IncomingCallInfo>();
+	//private HashMap<String, IncomingCallInfo> mIncomingCalls =
+	//	new HashMap<String, IncomingCallInfo>();
+	private IncomingCalls mIncomingCalls;
 	private int mPreviousCallState = Consts.IncomingCallState.IDLE;
 	private Context mContext;
 	private AudioManager mAM = null;

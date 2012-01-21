@@ -5,8 +5,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
-import android.provider.BaseColumns;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -34,7 +32,7 @@ public class ProfilePreferencesHelper {
 		boolean exist = false;
 
 		try {
-			db = mDatabaseHelper.getReadableDatabase();
+			db = mDatabaseHelper.getWritableDatabase();
 			cursor = db.rawQuery(ANY_PROFILES_EXIST_QUERY, null);
 			if (cursor.getCount() > 0 && cursor.moveToNext()) {
 				exist = cursor.getLong(0) > 0;
@@ -68,9 +66,9 @@ public class ProfilePreferencesHelper {
 		String name = null;
 		
 		try {
-			db = mDatabaseHelper.getReadableDatabase();
-			cursor = db.query(PROFILES_TABLE_NAME, PROFILE_NAME_COLUMNS,
-					Profiles._ID + " = '" + profileId + "'", null, null, null,
+			db = mDatabaseHelper.getWritableDatabase();
+			cursor = db.query(Database.PROFILES_TABLE_NAME, PROFILE_NAME_COLUMNS,
+					Database.Profiles._ID + " = '" + profileId + "'", null, null, null,
 					null, "1");
 			if (cursor.getCount() > 0 && cursor.moveToNext()) {
 				name = cursor.getString(PROFILE_NAME_INDEX);
@@ -96,9 +94,9 @@ public class ProfilePreferencesHelper {
 		long profileId = Consts.NOT_A_PROFILE_ID;
 		
 		try {
-			db = mDatabaseHelper.getReadableDatabase();
-			cursor = db.query(PROFILES_TABLE_NAME, PROFILE_ID_COLUMNS,
-					Profiles.NAME + " = '" + name + "'", null, null, null,
+			db = mDatabaseHelper.getWritableDatabase();
+			cursor = db.query(Database.PROFILES_TABLE_NAME, PROFILE_ID_COLUMNS,
+					Database.Profiles.NAME + " = '" + name + "'", null, null, null,
 					null, "1");
 			if (cursor.getCount() > 0 && cursor.moveToNext()) {
 				profileId = cursor.getLong(PROFILE_ID_INDEX);				
@@ -137,8 +135,8 @@ public class ProfilePreferencesHelper {
 		try {
 			db = mDatabaseHelper.getWritableDatabase();
 			ContentValues contentValues = new ContentValues();
-			contentValues.put(Profiles.NAME, name);
-			profileId = db.insert(PROFILES_TABLE_NAME, null, contentValues);
+			contentValues.put(Database.Profiles.NAME, name);
+			profileId = db.insert(Database.PROFILES_TABLE_NAME, null, contentValues);
 			if (profileId == -1) {
 				profileId = Consts.NOT_A_PROFILE_ID;
 			}
@@ -177,7 +175,7 @@ public class ProfilePreferencesHelper {
 			profilePreferences = getPreferencesForProfile(context, name,
 					Context.MODE_PRIVATE);
 			db = mDatabaseHelper.getWritableDatabase();
-			/* int numDeleted = */db.delete(PROFILES_TABLE_NAME, Profiles.NAME
+			/* int numDeleted = */db.delete(Database.PROFILES_TABLE_NAME, Database.Profiles.NAME
 					+ " = '" + name + "'", null);
 			// TODO check that numDelete == 1
 			editor = profilePreferences.edit();
@@ -209,9 +207,9 @@ public class ProfilePreferencesHelper {
 		try {
 			db = mDatabaseHelper.getWritableDatabase();
 			ContentValues contentValues = new ContentValues();
-			contentValues.put(Profiles.NAME, newName);
+			contentValues.put(Database.Profiles.NAME, newName);
 			// TODO make sure only one row was affected
-			db.update(PROFILES_TABLE_NAME, contentValues, Profiles.NAME + " = '"
+			db.update(Database.PROFILES_TABLE_NAME, contentValues, Database.Profiles.NAME + " = '"
 					+ oldName + "'", null);
 		} catch (Throwable t) {
 			success = false;
@@ -312,19 +310,15 @@ public class ProfilePreferencesHelper {
 				getPreferencesFileNameForProfileId(profileId), mode);
 	}
 
-	static final class Profiles implements BaseColumns {
-		public static final String NAME = "name";
-	}
-
 	private boolean loadCache() {
 		SQLiteDatabase db = null;
 		Cursor cursor = null;
 		boolean success = true;
 		
 		try {
-			db = mDatabaseHelper.getReadableDatabase();
-			cursor = db.query(PROFILES_TABLE_NAME, PROFILE_NAME_COLUMNS,
-					null, null, null, null, Profiles.NAME + " ASC");
+			db = mDatabaseHelper.getWritableDatabase();
+			cursor = db.query(Database.PROFILES_TABLE_NAME, PROFILE_NAME_COLUMNS,
+					null, null, null, null, Database.Profiles.NAME + " ASC");
 			mCachedNames.clear();
 			while (cursor.moveToNext()) {
 				mCachedNames.add(cursor.getString(PROFILE_NAME_INDEX));
@@ -356,43 +350,21 @@ public class ProfilePreferencesHelper {
 				getPreferencesFileNameForProfile(profileName), mode);
 	}
 
-	private class DatabaseHelper extends SQLiteOpenHelper {
-		DatabaseHelper(Context context) {
-			super(context, DATABASE_NAME, null, DATABASE_VERSION);
-		}
-
-		@Override
-		public void onCreate(SQLiteDatabase db) {
-			db.execSQL("CREATE TABLE " + PROFILES_TABLE_NAME + " ("
-					+ Profiles._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
-					Profiles.NAME + " TEXT" + ");");
-		}
-
-		@Override
-		public void onUpgrade(SQLiteDatabase db, int oldVersion,
-				int newVersion) {
-		}
-	}
-
 	private ProfilePreferencesHelper(Context context) {
-		mDatabaseHelper = new DatabaseHelper(context);
+		mDatabaseHelper = new Database(context);
 		// mContext = context;
 	}
 	
-	private static final String DATABASE_NAME = "dindy.db";
-	private static final int DATABASE_VERSION = 1;
-	private static final String PROFILES_TABLE_NAME = "profiles";
-
-	private static final String[] PROFILE_NAME_COLUMNS = { Profiles.NAME };
+	private static final String[] PROFILE_NAME_COLUMNS = { Database.Profiles.NAME };
 	private static final int PROFILE_NAME_INDEX = 0;
 
-	private static final String[] PROFILE_ID_COLUMNS = { Profiles._ID };
+	private static final String[] PROFILE_ID_COLUMNS = { Database.Profiles._ID };
 	private static final int PROFILE_ID_INDEX = 0;
 
 	private static final String ANY_PROFILES_EXIST_QUERY =  
-		"SELECT COUNT(*) FROM " + PROFILES_TABLE_NAME;
+		"SELECT COUNT(*) FROM " + Database.PROFILES_TABLE_NAME;
 	
-	private DatabaseHelper mDatabaseHelper;
+	private Database mDatabaseHelper;
 	// private Context mContext;
 	private boolean mCacheIsOutdated = true;
 	private LinkedList<String> mCachedNames = new LinkedList<String>(); 

@@ -22,6 +22,25 @@ public class Consts {
 			public static final String KEY_SHOW_SHORTCUTS_USAGE = "show_shortcuts_usage";
 			static final String KEY_SHOW_SMS_WARNING_MESSAGE =
 				"show_sms_warning_message";
+			
+			// The following keys should match the keys associated with EXTRA_* below
+			public static final String KEY_LAST_STARTUP_PROFILE_ID =
+				"last_startup_profile_id";
+			public static final String KEY_LAST_STARTUP_PROFILE_NAME =
+				"last_startup_profile_name";
+			public static final String KEY_LAST_STARTUP_INTENT_SOURCE =
+				"last_startup_intent_source";
+			// The time limit as expressed in absolute time in the future (same as
+			// System.currentTimeMillis())
+			public static final String KEY_LAST_STARTUP_INTENT_ABS_TIME_LIMIT_MILLIS =
+				"last_startup_time_limit";
+			
+			public static final String KEY_LAST_STARTUP_VIBRATE_TYPE_NOTIFICATION =
+				"last_startup_vibrate_type_notification";
+			public static final String KEY_LAST_STARTUP_VIBRATE_TYPE_RINGER =
+				"last_startup_vibrate_type_ringer";
+			public static final String KEY_LAST_STARTUP_RINGER_MODE =
+				"last_startup_ringer_mode";
 		}
 		
 		class Widget
@@ -121,7 +140,7 @@ public class Consts {
 	static final long MILLIS_IN_MINUTE = 60000;
 	static final long MINUTES_IN_HOUR = 60; 
 	static final String LOGTAG = "Dindy";
-	static final boolean DEBUG = false;
+	static final boolean DEBUG = true;
 	static final String EMPTY_STRING = "";
 	
 	static final String SERVICE_STARTED = "net.gnobal.dindy.action.SERVICE_STARTED";
@@ -136,6 +155,8 @@ public class Consts {
 		"net.gnobal.dindy.ACTION_START_DINDY_SERVICE";
 	public static final String ACTION_STOP_DINDY_SERVICE =
 		"net.gnobal.dindy.ACTION_STOP_DINDY_SERVICE";
+	// NOTE: If you add extras here, they should also be added to the KEY_LAST_STARTUP_* constants
+	// above and handled properly
 	public static final String EXTRA_PROFILE_ID = "profile_id";
 	public static final String EXTRA_PROFILE_NAME =  "profile_name";
 	public static final String EXTRA_INTENT_SOURCE = "intent_source";
