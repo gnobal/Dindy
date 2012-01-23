@@ -133,7 +133,7 @@ public class DindyService extends Service {
 			Log.d(Consts.LOGTAG, "starting profile " + mCurrentProfileId +
 				", absolute time limit " + absoluteTimeLimitMillis +
 				" millis, current time millis " + currentTimeMillis + ", diff " +
-				(currentTimeMillis - absoluteTimeLimitMillis));
+				(absoluteTimeLimitMillis - currentTimeMillis));
 		}
 
 		// Display a notification about us starting. We put an icon in the
@@ -598,8 +598,9 @@ public class DindyService extends Service {
 		startupSettings.putInt(Consts.Prefs.Main.KEY_LAST_STARTUP_INTENT_SOURCE,
 			preferences.getInt(Consts.Prefs.Main.KEY_LAST_STARTUP_INTENT_SOURCE,
 				Consts.INTENT_SOURCE_UNKNOWN));
-		startupSettings.putLong(Consts.EXTRA_INTENT_TIME_LIMIT_MILLIS, preferences.getLong(
-			Consts.EXTRA_INTENT_TIME_LIMIT_MILLIS, Consts.NOT_A_TIME_LIMIT));
+		startupSettings.putLong(Consts.Prefs.Main.KEY_LAST_STARTUP_INTENT_ABS_TIME_LIMIT_MILLIS,
+			preferences.getLong(Consts.Prefs.Main.KEY_LAST_STARTUP_INTENT_ABS_TIME_LIMIT_MILLIS,
+				Consts.NOT_A_TIME_LIMIT));
 		
 		startupSettings.putInt(Consts.Prefs.Main.KEY_LAST_STARTUP_VIBRATE_TYPE_RINGER,
 			preferences.getInt(Consts.Prefs.Main.KEY_LAST_STARTUP_VIBRATE_TYPE_RINGER,
