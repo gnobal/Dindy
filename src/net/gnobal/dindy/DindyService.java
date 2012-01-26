@@ -2,7 +2,6 @@ package net.gnobal.dindy;
 
 import android.app.AlarmManager;
 import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -36,7 +35,6 @@ public class DindyService extends Service {
 
 		mStateListener = new CallStateChangeListener();
 		mBroadcastReceiver = new DindyServiceBroadcastReceiver();
-		mNM = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 		mTM = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
 		mAuM = (AudioManager) getSystemService(AUDIO_SERVICE);
 		mAlM = (AlarmManager) getSystemService(ALARM_SERVICE);
@@ -174,14 +172,13 @@ public class DindyService extends Service {
 		mAlM.cancel(mPendingIntent);
 		unregisterReceiver(mBroadcastReceiver);
 		mTM.listen(mStateListener, PhoneStateListener.LISTEN_NONE);
-		mNM.cancel(R.string.dindy_service_started);
+		stopForeground(true);
 		mLogic.stop();
 		mLogic.destroy();
 		mCallLogObserver.destroy();
 		mStateListener = null;
 		mTM = null;
 		mCallLogObserver = null;
-		mNM = null;
 		mAuM = null;
 		mAlM = null;
 		mPM = null;
@@ -282,9 +279,8 @@ public class DindyService extends Service {
 			getText(R.string.dindy_service_label), text, contentIntent);
 
 		// Send the notification.
-		// We use a layout id because it is a unique number. We use it later
-		// to cancel.
-		mNM.notify(R.string.dindy_service_started, notification);
+		// We use a layout id because it is a unique number
+		startForeground(R.string.dindy_service_started, notification);
 	}
 
 	private void refreshSettings(long selectedProfileId, boolean rememberUserSettings,
@@ -617,7 +613,6 @@ public class DindyService extends Service {
     }
     
 	private DindyLogic mLogic = null;
-	private NotificationManager mNM = null;
 	private TelephonyManager mTM = null;
 	private AudioManager mAuM = null;
 	private AlarmManager mAlM = null;
