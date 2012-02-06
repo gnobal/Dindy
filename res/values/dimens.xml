@@ -1,0 +1,5 @@
+
+    <resources>
+        <dimen name="single_profile_widget_padding_top_port">5dp</dimen>
+        <dimen name="single_profile_widget_padding_top_land">3dp</dimen>
+    </resources>

@@ -633,10 +633,13 @@ public class DindyService extends Service {
 	private static final String[] mCallLogProjection = 
 	{ 
 		CallLog.Calls.NUMBER, // 0
-		CallLog.Calls.TYPE    // 1
+		CallLog.Calls.TYPE   // 1
+		//CallLog.Calls.DATE    // 2
+
 	};
 	private static final int CALL_LOG_FIELD_NUMBER = 0;
 	private static final int CALL_LOG_FIELD_TYPE = 1;
+	//private static final int CALL_LOG_FIELD_DATE = 2;
 	private static final String CALL_LOG_QUERY = 
 		CallLog.Calls.TYPE + " = " + CallLog.Calls.MISSED_TYPE + 
 		" OR " + CallLog.Calls.TYPE + " = " + CallLog.Calls.INCOMING_TYPE;

@@ -31,4 +31,6 @@
 1.2.0 Some users have been having trouble updating, so this is just a version bump to solve update issues
 1.2.1 Fix time limit, which stopped working after recent changes
 1.2.2 Run the service in the foreground to avoid being killed while operating
+1.2.3 Changes to widget due to ICS changes
+
     

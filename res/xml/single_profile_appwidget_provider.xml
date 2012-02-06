@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:updatePeriodMillis="0" android:configure="net.gnobal.dindy.DindySingleProfileAppWidgetConfigure" android:minWidth="72dp" android:minHeight="72dp">
+    android:updatePeriodMillis="0"
+    android:configure="net.gnobal.dindy.DindySingleProfileAppWidgetConfigure"
+    android:minWidth="40dp"
+    android:minHeight="40dp">
 </appwidget-provider>

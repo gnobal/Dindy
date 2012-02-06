@@ -74,7 +74,7 @@
 <string name="default_profile_busy_name">Busy</string>
 <string name="default_profile_busy_sms_message_callers">Hi. This is an automated reply. I\'m busy and will get back to you.</string>
 <string name="locale_plugin_name">Dindy</string>
-<string name="preferences_single_profile_app_widget_name">Dindy profile</string>
+<string name="preferences_single_profile_app_widget_name">Profile widget</string>
 <string name="preferences_all_profiles_app_widget_name">Dindy</string>
 <string name="app_widget_profile_deleted">DELETED</string>
 <string name="locale_dialog_cancel_text">Cancel</string>
@@ -83,7 +83,7 @@
 
 <string name="locale_usage_dialog_title">Using Dindy in Locale</string>
 
-<string name="shortcuts_name">Dindy</string>
+<string name="shortcuts_name">Profile shortcut</string>
 <string name="toast_text_profile_doesnt_exist_exit">The requested Dindy profile has been deleted. Dindy will not start.</string>
 <string name="toast_text_profile_doesnt_exist_continue">The requested Dindy profile has been deleted. Dindy will continue with the current profile.</string>
 <string name="dindy_service_refreshed_text">Dindy settings refreshed</string>

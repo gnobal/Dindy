@@ -1,19 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" 
 	android:orientation="vertical" 
-	android:layout_height="98dp" 
-	android:layout_width="78dp" 
-	android:gravity="center" android:id="@+id/single_profile_app_widget">
+	android:layout_height="wrap_content" 
+	android:layout_width="wrap_content"
+	android:gravity="center"
+	android:id="@+id/single_profile_app_widget">
 	<ImageButton android:id="@+id/single_profile_app_widget_image_button" 
 		android:clickable="true" 
-		android:background="#00000000" 
+		android:background="@drawable/transparent_background" 
 		android:layout_height="wrap_content" 
-		android:layout_width="fill_parent" 
+		android:layout_width="wrap_content" 
 		android:paddingBottom="5dp"
-		android:paddingTop="5dp">
+		android:paddingTop="@dimen/single_profile_widget_padding_top_port">
 	</ImageButton>
 	<TextView xmlns:android="http://schemas.android.com/apk/res/android" 
 		android:layout_width="wrap_content" 
+		android:layout_height="wrap_content" 
 		android:id="@+id/single_profile_app_widget_text" 
 		android:text="Test" 
 		android:lines="1" 
@@ -24,7 +26,6 @@
 		android:textSize="13dip" 
 		android:paddingLeft="5dip" 
 		android:paddingRight="5dip" 
-		android:layout_height="wrap_content" 
 		android:shadowRadius="2.0" 
 		android:shadowColor="#FF000000" 
 		android:ellipsize="marquee"/>
