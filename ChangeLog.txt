@@ -32,5 +32,7 @@
 1.2.1 Fix time limit, which stopped working after recent changes
 1.2.2 Run the service in the foreground to avoid being killed while operating
 1.2.3 Changes to widget due to ICS changes
+1.2.4 Now requires at least Android 4
+      Visual refresh - change icons for now
 
     
