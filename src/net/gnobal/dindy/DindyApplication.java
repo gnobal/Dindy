@@ -82,7 +82,7 @@ public class DindyApplication extends Application {
 		editor.putBoolean(Consts.Prefs.Profile.KEY_ENABLE_SMS_CALLERS, true);
 		editor.putString(Consts.Prefs.Profile.KEY_SMS_MESSAGE_CALLERS,
 				getString(textMessageCallersResource));
-		editor.putBoolean(Consts.Prefs.Profile.KEY_ENABLE_SMS_TEXTERS, false);
+		editor.putBoolean(Consts.Prefs.Profile.KEY_ENABLE_SMS_TEXTERS, true);
 		editor.putString(Consts.Prefs.Profile.KEY_SMS_MESSAGE_TEXTERS,
 				getString(textMessageTextersResource));
 		editor.putBoolean(Consts.Prefs.Profile.KEY_FIRST_EVENT_SOUND,

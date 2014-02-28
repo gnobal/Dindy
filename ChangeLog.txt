@@ -34,5 +34,6 @@
 1.2.3 Changes to widget due to ICS changes
 1.2.4 Now requires at least Android 4
       Visual refresh - change icons for now
-
-    
+1.2.5 Now the SMS is officially supported in the SDK (it only took Google around 5 years):
+      - Remove reply-to-SMS "perpetual beta" warning
+      - New profiles enable reply-to-SMS by default

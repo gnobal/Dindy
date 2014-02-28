@@ -20,8 +20,6 @@ public class Consts {
 				"show_startup_message";
 			public static final String KEY_SHOW_LOCALE_USAGE = "show_locale_usage";
 			public static final String KEY_SHOW_SHORTCUTS_USAGE = "show_shortcuts_usage";
-			static final String KEY_SHOW_SMS_WARNING_MESSAGE =
-				"show_sms_warning_message";
 			
 			// The following keys should match the keys associated with EXTRA_* below
 			public static final String KEY_LAST_STARTUP_PROFILE_ID =
@@ -111,7 +109,7 @@ public class Consts {
 			
 			// Default values for profile preferences
 			static final boolean VALUE_ENABLE_SMS_CALLERS_DEFAULT = true; 
-			static final boolean VALUE_ENABLE_SMS_TEXTERS_DEFAULT = false; 
+			static final boolean VALUE_ENABLE_SMS_TEXTERS_DEFAULT = true; 
 			static final boolean VALUE_FIRST_EVENT_SOUND_DEFAULT = false; 
 			static final boolean VALUE_FIRST_EVENT_VIBRATE_DEFAULT = false; 
 			static final boolean VALUE_SECOND_EVENT_SOUND_DEFAULT = true; 

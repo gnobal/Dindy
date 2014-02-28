@@ -1,10 +1,8 @@
 package net.gnobal.dindy;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
@@ -16,11 +14,8 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.CheckBox;
 
 public class ProfilePreferencesActivity extends PreferenceActivity {
 	@Override
@@ -146,21 +141,6 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 				R.string.preferences_profile_enable_sms_reply_to_sms_title);
 		enableSmsReplyToSmsPref.setSummary(
 				R.string.preferences_profile_enable_sms_reply_to_sms_summary);
-		enableSmsReplyToSmsPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-			public boolean onPreferenceClick(Preference preference) {
-				SharedPreferences mainPreferences = getSharedPreferences(
-						Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
-				CheckBoxPreference smsReplyToSmsPreference =
-					(CheckBoxPreference) preference;
-				if (smsReplyToSmsPreference.isChecked() &&
-					mainPreferences.getBoolean(
-							Consts.Prefs.Main.KEY_SHOW_SMS_WARNING_MESSAGE,
-							true)) {
-					showDialog(DIALOG_SMS_WARNING);
-				}
-				return true;
-			}
-		});
 		smsReplyToSmsCat.addPreference(enableSmsReplyToSmsPref);
 
 		EditTextPreference smsReplyToSmsMessagePref = new EditTextPreference(this);
@@ -391,36 +371,6 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 					android.R.drawable.ic_dialog_info, mRenameListener);
 		}
 		
-		case DIALOG_SMS_WARNING:
-		{
-			LayoutInflater factory = LayoutInflater.from(this);
-			final View startupMessageView = factory.inflate(
-					R.layout.sms_warning_message_dialog, null);
-			AlertDialog dialog = new AlertDialog.Builder(this)
-				.setIcon(android.R.drawable.ic_dialog_info)
-				.setTitle(R.string.sms_warning_message_dialog_title)
-				.setView(startupMessageView)
-				.setPositiveButton(R.string.message_dialog_ok_text,
-					new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog,
-							int which) {
-						SharedPreferences preferences = getSharedPreferences(
-								Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
-						CheckBox checkBox = (CheckBox) 
-							((AlertDialog) dialog).findViewById(
-								R.id.sms_warning_message_dialog_checkbox);
-						SharedPreferences.Editor editor = 
-							preferences.edit();
-						editor.putBoolean(
-								Consts.Prefs.Main.KEY_SHOW_SMS_WARNING_MESSAGE,
-								!checkBox.isChecked());
-						editor.commit();
-					}})
-				.create();
-			dialog.setOwnerActivity(this);
-			return dialog;
-		}
-		
 		default:
 			return null;
 		}
@@ -589,7 +539,6 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 	private static final int MENU_ID_DONE = 0;
 	private static final int MENU_ID_RENAME = 1;
 	private static final int MENU_ID_DELETE = 2;
-	private static final int DIALOG_SMS_WARNING = 1;
 
 	private String mProfileName = null;
 	private long mProfileId = Consts.NOT_A_PROFILE_ID;

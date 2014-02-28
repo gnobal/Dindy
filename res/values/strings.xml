@@ -111,8 +111,6 @@
 <string name="default_profile_car_sms_message_texters">Hi. This is an automated reply. I\'m driving. Call in the next 5 minutes if you want me to stop and take the call.</string>
 <string name="default_profile_meeting_sms_message_texters">Hi. This is an automated reply. I\'m in a meeting. Call in the next 10 minutes if it\'s urgent and you want me to take the call.</string>
 <string name="default_profile_night_sms_message_texters">Hi. This is an automated reply. I\'m sleeping. Call if you want me to get up and take the call.</string>
-<string name="sms_warning_message_dialog_text">Capturing incoming SMS messages in Dindy is beta and may break at any time, as there is still no official support for it in the Android platform. Therefore, SMS reply-to-SMS is disabled by default for all profiles.\n\nIn addition, response to MMS is still not available in Dindy.</string>
-<string name="sms_warning_message_dialog_title">Notice</string>
 <string name="preferences_profile_texters">Texters</string>
 <string name="preferences_profile_unknown_texter_behavior_dialog_title">Use setting</string>
 <string name="preferences_profile_unknown_texter_behavior_summary">Settings to use for an unknown texter</string>
