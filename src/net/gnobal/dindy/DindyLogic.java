@@ -17,6 +17,8 @@ import android.telephony.PhoneNumberUtils;
 import android.telephony.SmsManager;
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -218,18 +220,23 @@ class DindyLogic {
 		final boolean shouldSendSms =
 			(mSettings.mEnableSmsReplyToSms && numberProps.mIsKnown);
 		if (shouldSendSms) {
-			// The intent will release the WakeLock
-			mSM.sendTextMessage(
-				number, null, mSettings.mMessageToTexters, mSentPendingIntent, null);
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"onSmsMessage: number " + number +
-					" has been notified with SMS.");
+			sendTextMessage("onSmsMessage", number, mSettings.mMessageToTexters);
 		} else {
 			if (Consts.DEBUG) Log.d(Consts.LOGTAG,
 					"onSmsMessage: number " + number +
 					" need not be notified with SMS.");
 			releaseWakeLockIfHeld("onSmsMessage");
 		}
+	}
+
+	private void sendTextMessage(final String context, final String number, final String message) {
+		if (Consts.DEBUG) Log.d(Consts.LOGTAG,
+				context + ": number " + number + " has been notified with SMS.");
+		final ArrayList<String> dividedMessage = mSM.divideMessage(message);
+		final ArrayList<PendingIntent> sentPendingIntents = new ArrayList<PendingIntent>(
+			Collections.nCopies(dividedMessage.size(), mSentPendingIntent));
+		// The intents will release the WakeLock
+		mSM.sendMultipartTextMessage(number, null, dividedMessage, sentPendingIntents, null);
 	}
 	
 	void onMissedCall(String number) {
@@ -286,13 +293,7 @@ class DindyLogic {
 		final boolean shouldSendSms =
 			(mSettings.mEnableSmsReplyToCall && numberProps.mIsMobile); 
 		if (shouldSendSms) {
-			// The intent will release the WakeLock
-//			mSmsHelper.sendMessage(number, mSettings.mMessageToCallers,
-//					mSentPendingIntent);
-			mSM.sendTextMessage(
-				number, null, mSettings.mMessageToCallers, mSentPendingIntent, null);
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-				"onMissedCall: number " + number + " has been notified with SMS.");
+			sendTextMessage("onMissedCall", number, mSettings.mMessageToCallers);
 		} else {
 			if (Consts.DEBUG) Log.d(Consts.LOGTAG,
 				"onMissedCall: number " + number + " need not be notified with SMS.");
@@ -679,6 +680,9 @@ class DindyLogic {
 				if (Consts.DEBUG)
 					Log.d(Consts.LOGTAG, "onReceive: SMS sent successfully");
 			}
+			// NOTE: Since we started dividing the SMS message, this intent might
+			// be called several times for each message, so we can't do anything
+			// here that isn't OK to do a few times
 			if (intent.getAction().equals(SMS_PENDING_INTENT_NAME)) {
 				releaseWakeLockIfHeld("onReceive (SMS sent)");
 			}
