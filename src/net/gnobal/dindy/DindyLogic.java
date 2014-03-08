@@ -1,5 +1,6 @@
 package net.gnobal.dindy;
 
+import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
@@ -670,9 +671,14 @@ class DindyLogic {
 	private BroadcastReceiver mOnSentReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			// TODO use the result code to learn whether the SMS sending
-			// succeeded
-			// switch (getResultCode())
+			final int resultCode = getResultCode();
+			if (resultCode != Activity.RESULT_OK) {
+				if (Consts.DEBUG)
+					Log.e(Consts.LOGTAG, "onReceive: got error code on SMS send: " + resultCode);
+			} else {
+				if (Consts.DEBUG)
+					Log.d(Consts.LOGTAG, "onReceive: SMS sent successfully");
+			}
 			if (intent.getAction().equals(SMS_PENDING_INTENT_NAME)) {
 				releaseWakeLockIfHeld("onReceive (SMS sent)");
 			}
