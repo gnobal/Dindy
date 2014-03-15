@@ -36,7 +36,7 @@ public abstract class ExternalSourceSelectionActivity extends Activity {
 				ProfilePreferencesHelper.instance(); 
 			mListItems.clear();
 			mListItems.addAll(prefsHelper.getAllProfileNamesSorted());
-			mListItems.addFirst(getString(R.string.locale_dialog_stop_dindy_text));
+			mListItems.addFirst(getString(R.string.stop_dindy));
 			mArrayAdapter.notifyDataSetChanged();
 				
 			dialog = new AlertDialog.Builder(this)

@@ -78,7 +78,7 @@
 <string name="preferences_all_profiles_app_widget_name">Dindy</string>
 <string name="app_widget_profile_deleted">DELETED</string>
 <string name="locale_dialog_cancel_text">Cancel</string>
-<string name="locale_dialog_stop_dindy_text">Stop Dindy</string>
+<string name="stop_dindy">Stop Dindy</string>
 <string name="locale_usage_dialog_text">To correctly use Dindy in Locale add the \&quot;Stop Dindy\&quot; setting to each situation where you do NOT want to use Dindy, specifically the default situation.\n\nFor each situation where you want to use Dindy, add the desired Dindy profile setting.\n\nAfter deleting a Dindy profile that is used in Locale you must change the Dindy setting in the relevant situations. If you uninstall and reinstall Dindy, you must re-apply all of Dindy\'s settings in Locale (Dindy upgrades are safe).</string>
 
 <string name="locale_usage_dialog_title">Using Dindy in Locale</string>

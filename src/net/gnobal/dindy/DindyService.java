@@ -19,6 +19,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.provider.CallLog;
+import android.support.v4.app.NotificationCompat;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -257,30 +258,28 @@ public class DindyService extends Service {
 		editor = null;
 		preferences = null;
 	}
-	
+
 	private void showNotification() {
-		// In this sample, we'll use the same text for the ticker and the
-		// expanded notification
-		CharSequence text = getText(R.string.dindy_service_started);// + " (" + 
-			//mPreferencesHelper.getProfielNameFromId(mCurrentProfileId) + ")";
+		final CharSequence title = getText(R.string.dindy_service_label);
+		final CharSequence text = getText(R.string.dindy_service_started);
+		final NotificationCompat.Builder builder =
+				new NotificationCompat.Builder(getApplicationContext());
+		final PendingIntent contentIntent =
+				Dindy.getPendingIntent(getApplicationContext());
+		final PendingIntent pendingIntent = PendingIntent.getBroadcast(
+				getApplicationContext(), 0, getStopServiceBroadcastIntent(), 0);
 
-		// Set the icon, scrolling text and timestamp
-		Notification notification = new Notification(
-			R.drawable.notification_icon, text, System.currentTimeMillis());
-		notification.flags |= Notification.FLAG_ONGOING_EVENT;
+		builder
+			.setOngoing(true)
+			.setWhen(System.currentTimeMillis())
+			.setSmallIcon(R.drawable.notification_icon)
+			.setContentTitle(title)
+			.setContentText(text)
+			.setContentIntent(contentIntent)
+			.setTicker(text)
+			.addAction(R.drawable.ic_action_cancel, getText(R.string.stop_dindy), pendingIntent);
 
-		// The PendingIntent to launch our activity if the user selects this
-		// notification
-		PendingIntent contentIntent =
-			Dindy.getPendingIntent(getApplicationContext());
-		
-		// Set the info for the views that show in the notification panel.
-		notification.setLatestEventInfo(getApplicationContext(),
-			getText(R.string.dindy_service_label), text, contentIntent);
-
-		// Send the notification.
-		// We use a layout id because it is a unique number
-		startForeground(R.string.dindy_service_started, notification);
+		startForeground(R.string.dindy_service_started, builder.build());
 	}
 
 	private void refreshSettings(long selectedProfileId, boolean rememberUserSettings,
