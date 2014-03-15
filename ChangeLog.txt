@@ -39,3 +39,4 @@
       - New profiles enable reply-to-SMS by default
 1.2.6 Support SMS messages in any language
       Support long SMS messages
+1.2.7 Android 4.1+: Stop Dindy directly from the notification
