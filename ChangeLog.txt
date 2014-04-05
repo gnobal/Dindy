@@ -40,3 +40,4 @@
 1.2.6 Support SMS messages in any language
       Support long SMS messages
 1.2.7 Android 4.1+: Stop Dindy directly from the notification
+1.2.8 More visual redesign: do all profile actions (add, edit, rename and delete) from the main screen.
