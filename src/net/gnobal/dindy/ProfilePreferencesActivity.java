@@ -1,7 +1,5 @@
 package net.gnobal.dindy;
 
-import android.app.Activity;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -15,58 +13,10 @@ import android.preference.PreferenceCategory;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 
 public class ProfilePreferencesActivity extends PreferenceActivity {
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		super.onCreateOptionsMenu(menu);
-		
-		menu.add(0, MENU_ID_DONE, 0, 
-				R.string.preferences_profile_menu_done).setIcon(
-						android.R.drawable.ic_menu_save);// .setShortcut('3','d');
-		menu.add(0, MENU_ID_RENAME, 0, 
-				R.string.preferences_profile_menu_rename).setIcon(
-						android.R.drawable.ic_menu_edit);// .setShortcut('7','r');
-		menu.add(0, MENU_ID_DELETE, 0, 
-				R.string.preferences_profile_menu_delete).setIcon(
-						android.R.drawable.ic_menu_delete);//.setShortcut('3', 'd');
-		
-		return true;
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		super.onOptionsItemSelected(item);
-		
-		 switch (item.getItemId()) {
-		 case MENU_ID_DONE:
-		 {
-			 finish();
-			 return true; 
-		 }
-
-		 case MENU_ID_RENAME:
-		 {
-			 showDialog(ProfileNameDialogHelper.DIALOG_RENAME_PROFILE);
-			 return true; 
-		 }
-		
-		 case MENU_ID_DELETE:
-		 {
-			 mHelper.deleteProfile(this, mProfileName);
-			DindySingleProfileAppWidgetProvider.updateAllSingleProfileWidgets(
-					getApplicationContext(), DindyService.getCurrentProfileId(),
-					Consts.NOT_A_PROFILE_ID);
-			 finish();
-			 return true;
-		 }
-		 
-		 } // switch
-		
-		 return false;
-	}
-	
 	static final String EXTRA_PROFILE_NAME = "profile_name";
 	static final String EXTRA_PROFILE_ID = "profile_id";
 	
@@ -80,7 +30,7 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 		
 		Bundle bundle = getIntent().getExtras();
 		mProfileName = bundle.getString(EXTRA_PROFILE_NAME);
-		setTitleWithCurrentProfile();
+		setTitle(mProfileName);
 		mProfileId = bundle.getLong(EXTRA_PROFILE_ID);
 		// Root
 		PreferenceManager pm = getPreferenceManager();
@@ -304,6 +254,24 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 				R.string.preferences_profile_use_time_limit_summary);
 		generalCat.addPreference(useTimeLimitPref);
 	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		final MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.profile_editor_actions, menu);
+		return super.onCreateOptionsMenu(menu);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.action_done_editing_profile:
+			finish();
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+	}
 	
 	private class SmsMessageChangeListener implements Preference.OnPreferenceChangeListener {
 		public boolean onPreferenceChange(Preference p,	Object newValue) {
@@ -358,52 +326,7 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 			}
 		}
 	}
-	
-	@Override
-	protected Dialog onCreateDialog(int id) {
-		super.onCreateDialog(id);
-		
-		switch (id) {
-		case ProfileNameDialogHelper.DIALOG_RENAME_PROFILE:
-		{
-			setNameDialogVariables(id);
-			return ProfileNameDialogHelper.buildProfileNameDialog(this,
-					android.R.drawable.ic_dialog_info, mRenameListener);
-		}
-		
-		default:
-			return null;
-		}
-	}
 
-	
-	@Override
-	protected void onPrepareDialog(int id, Dialog dialog) {
-		super.onPrepareDialog(id, dialog);
-		
-		if (id != ProfileNameDialogHelper.DIALOG_RENAME_PROFILE) {
-			return;
-		}
-		
-		setNameDialogVariables(id);
-		ProfileNameDialogHelper.prepareDialog(id, dialog);
-	}
-
-	private void setNameDialogVariables(int dialogId) {
-		if (dialogId != ProfileNameDialogHelper.DIALOG_RENAME_PROFILE) {
-			return;
-		}
-		
-		if (mProfileName != null) {
-			String title = getString(
-					R.string.dialog_profile_name_rename_title_prefix)
-					+ " " + mProfileName;
-			String oldProfileName = mProfileName;
-			ProfileNameDialogHelper.setDialogVariables(title,
-					oldProfileName);
-		}
-	}
-	
 	// Prepare a change listener that sets a preference's summary according 
 	// to the user's selected value
 	private class SummaryWithValuePreferenceChangeListener implements
@@ -438,38 +361,6 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 				.append(" ").append(value).append(")").toString());		
 	}
 
-	private void setTitleWithCurrentProfile() {
-		setTitle(getString(R.string.preferences_profile_editor) + " - " + 
-				mProfileName);
-	}
-	
-	private class RenameDialogListener implements 
-		ProfileNameDialogHelper.Listener { 
-		RenameDialogListener(ProfilePreferencesActivity parent) {
-			mParent = parent;
-		}
-		
-		public int getDialogType() {
-			return ProfileNameDialogHelper.DIALOG_RENAME_PROFILE;
-		}
-	
-		public void onSuccess(String newProfileName,
-				long newProfileId) {
-			DindySingleProfileAppWidgetProvider.updateAllSingleProfileWidgets(
-					getApplicationContext(), DindyService.getCurrentProfileId(),
-					Consts.NOT_A_PROFILE_ID);
-			mParent.mProfileName = newProfileName;
-			mParent.setTitleWithCurrentProfile();
-		}
-		
-		public Activity getOwnerActivity() {
-			return mParent;
-		}
-		
-		private ProfilePreferencesActivity mParent;
-	}
-
-	
 	private void setPreferencesDefaultsIfNeeded(SharedPreferences sharedPreferences) {
 		Editor editor = sharedPreferences.edit();
 		if (!sharedPreferences.contains(Consts.Prefs.Profile.KEY_ENABLE_SMS_CALLERS)) {
@@ -536,12 +427,7 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
 		editor = null;
 	}
 	
-	private static final int MENU_ID_DONE = 0;
-	private static final int MENU_ID_RENAME = 1;
-	private static final int MENU_ID_DELETE = 2;
-
 	private String mProfileName = null;
 	private long mProfileId = Consts.NOT_A_PROFILE_ID;
 	private ProfilePreferencesHelper mHelper = null;
-	private RenameDialogListener mRenameListener = new RenameDialogListener(this);
 }

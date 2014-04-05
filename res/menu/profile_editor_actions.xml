@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item android:id="@+id/action_done_editing_profile"
+          android:title="@string/menu_profile_editor_done"
+          android:showAsAction="always" />
+</menu>

@@ -1,5 +1,9 @@
 package net.gnobal.dindy;
 
+import java.util.LinkedList;
+
+import android.app.ActionBar;
+import android.app.ActionBar.OnNavigationListener;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -15,13 +19,15 @@ import android.text.Html;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.Button;
+import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.TextView;
-import java.util.LinkedList;
 
 //TODO fix/add in future versions:
 //- test plan
@@ -41,31 +47,32 @@ import java.util.LinkedList;
 // - know when in a car dock by using the intent ACTION_DOCK_EVENT/EXTRA_DOCK_STATE/EXTRA_DOCK_STATE_CAR/EXTRA_DOCK_STATE_DESK/EXTRA_DOCK_STATE_UNDOCKED 
 // - "smart mode" - when a number that isn't mobile calls send the SMS to the most called-to mobile number of the same person
 // - Deal with crashes and restart by saving the latest settings and restoring them
-
 public class Dindy extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		IntentFilter filter = new IntentFilter();
+		final IntentFilter filter = new IntentFilter();
 		filter.addAction(Consts.SERVICE_STARTED);
 		filter.addAction(Consts.SERVICE_STOPPED);
 		registerReceiver(mBroadcastReceiver, filter);
 		
 		mPreferencesHelper = ProfilePreferencesHelper.instance();
+		// See:
+		// http://wptrafficanalyzer.in/blog/adding-drop-down-navigation-to-action-bar-in-android/
+		mProfileNames = new LinkedList<String>(mPreferencesHelper.getAllProfileNamesSorted());
+		mProfilesAdapter = new ArrayAdapter<String>(getBaseContext(),
+				android.R.layout.simple_spinner_dropdown_item, mProfileNames);
+		ActionBar actionBar = getActionBar();
+		actionBar.setDisplayShowTitleEnabled(false);
+		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+		actionBar.setListNavigationCallbacks(mProfilesAdapter, mNavigationListener);
+
 		setContentView(R.layout.main);
 		ImageButton powerButton = (ImageButton)
 			findViewById(R.id.main_power_button);
 		powerButton.setOnClickListener(mStartStopListener);
-		Button button = (Button) findViewById(R.id.profile_select_button);
-		button.setOnClickListener(mSelectProfileListener);
-		button = (Button) findViewById(R.id.main_edit_profiles_button);
-		button.setOnClickListener(new OnClickListener() {
-			public void onClick(View v) { startProfileEditor(); }
-		});
-		button = (Button) findViewById(R.id.main_help_button);
-		button.setOnClickListener(mHelpListener);
-		
+
 		SharedPreferences preferences = getSharedPreferences(
 				Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
 		if (preferences.contains(Consts.Prefs.Main.LAST_USED_PROFILE_ID)) {
@@ -81,9 +88,9 @@ public class Dindy extends Activity {
 						Consts.Prefs.Main.LAST_USED_PROFILE_ID,
 						(int) Consts.NOT_A_PROFILE_ID);
 			}
-					
+
 			if (mPreferencesHelper.profileExists(lastSelectedProfile)) {
-				mSelectedProfileId = lastSelectedProfile;
+				setSelectedProfileId(lastSelectedProfile);
 			} else if (!DindyService.isRunning()) {
 				// Why only if the service isn't running? Because the service is
 				// currently running with a profile that was deleted, so we
@@ -109,22 +116,18 @@ public class Dindy extends Activity {
 			!DindyService.isRunning()) {
 			showDialog(DIALOG_STARTUP_MESSAGE);
 		}
-
-		setDynamicButtons(DindyService.isRunning());
 	}
 
 	@Override
 	public void onResume() {
 		super.onResume();
-		final boolean serviceRunning = DindyService.isRunning();
-		if (mPendingStartServiceRequest) {
-			// Just turn it off for next time. We'll use mSelectedProfileId
-			// that the user selected
-			mPendingStartServiceRequest = false;				
-		} else {
-			if (serviceRunning) {
-				mSelectedProfileId = DindyService.getCurrentProfileId();	
-			}
+		// We do this here because if the ProfileStarterActivity was called and the user
+		// selected not to start the profile (e.g. if a time limit dialog was presented
+		// and the user cancelled) we need to re-update the UI to reflect the old
+		// profile that was still running before
+		if (DindyService.isRunning()) {
+			mSelectedProfileId = DindyService.getCurrentProfileId();
+			setSelectedProfileId(mSelectedProfileId);
 		}
 	}
 
@@ -152,7 +155,80 @@ public class Dindy extends Activity {
 		
 		outState.putBoolean(Consts.Prefs.Main.KEY_SHOW_STARTUP_MESSAGE, false);
 	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu items for use in the action bar
+		final MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.main_activity_actions, menu);
+		return super.onCreateOptionsMenu(menu);
+	}
+
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		super.onPrepareOptionsMenu(menu);
+		// Don't allow delete if there's only one profile left
+		menu.findItem(R.id.action_delete_profile).setEnabled(mProfilesAdapter.getCount() != 1);
+		return true;
+	}
 	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.action_help:
+			showDialog(DIALOG_HELP);
+			return true;
+		case R.id.action_add_profile:
+			showDialog(ProfileNameDialogHelper.DIALOG_NEW_PROFILE);
+			return true;
+		case R.id.action_delete_profile:
+			if (DindyService.isRunning()) {
+				stopService(DindyService.getStopServiceIntent(getApplicationContext()));
+				mSelectedProfileId = Consts.NOT_A_PROFILE_ID;
+			}
+			final int selectedNavigationIndex = getActionBar().getSelectedNavigationIndex(); 
+			final String profileToRemove = mProfilesAdapter.getItem(selectedNavigationIndex);
+			boolean lastProfileInListDeleted = false;
+			if (selectedNavigationIndex == mProfilesAdapter.getCount() - 1) {
+				lastProfileInListDeleted = true;
+			}
+			mPreferencesHelper.deleteProfile(this, profileToRemove);
+			mProfilesAdapter.remove(profileToRemove);
+			DindySingleProfileAppWidgetProvider.updateAllSingleProfileWidgets(
+					getApplicationContext(), DindyService.getCurrentProfileId(),
+					Consts.NOT_A_PROFILE_ID);
+			if (!lastProfileInListDeleted) {
+				// If a profile on the list gets deleted and there's another profile after it,
+				// we won't get an onNavigationItemSelected notification because the index
+				// doesn't change so we manufacture an artificial event
+				mNavigationListener.onNavigationItemSelected(selectedNavigationIndex, -999);
+			}
+			return true;
+		case R.id.action_rename_profile:
+			showDialog(ProfileNameDialogHelper.DIALOG_RENAME_PROFILE);
+			return true;
+		case R.id.action_edit_profile:
+			startProfileEditor(mPreferencesHelper.getProfielNameFromId(
+				mSelectedProfileId), mSelectedProfileId);
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+	}
+
+	@Override
+	protected void onPrepareDialog(int id, Dialog dialog) {
+		super.onPrepareDialog(id, dialog);
+
+		if (id != ProfileNameDialogHelper.DIALOG_NEW_PROFILE &&
+			id != ProfileNameDialogHelper.DIALOG_RENAME_PROFILE) {
+			return;
+		}
+
+		setNameDialogVariables(id);
+		ProfileNameDialogHelper.prepareDialog(id, dialog);
+	}
+
 	@Override
 	protected Dialog onCreateDialog(int id) {
 		super.onCreateDialog(id);
@@ -218,84 +294,49 @@ public class Dindy extends Activity {
 			return dialog;
 		}
 
+		case ProfileNameDialogHelper.DIALOG_NEW_PROFILE:
+		{
+			setNameDialogVariables(ProfileNameDialogHelper.DIALOG_NEW_PROFILE);
+			return ProfileNameDialogHelper.buildProfileNameDialog(this,
+					android.R.drawable.ic_dialog_info, mNewListener);
 		}
-		
+
+		case ProfileNameDialogHelper.DIALOG_RENAME_PROFILE:
+		{
+			setNameDialogVariables(ProfileNameDialogHelper.DIALOG_RENAME_PROFILE);
+			return ProfileNameDialogHelper.buildProfileNameDialog(this,
+					android.R.drawable.ic_dialog_info, mRenameListener);
+		}
+
+		}
+
 		return null;
 	}
 
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode,
-			Intent data) {
-		super.onActivityResult(requestCode, resultCode, data);
-		
-		if (requestCode != PROFILE_SELECT_REQUEST_CODE &&
-			requestCode != PROFILE_MANAGE_REQUEST_CODE) {
-			return;
-		}
-		
-		boolean dindyServiceIsRunning = DindyService.isRunning();
-
-		// The currently selected profile may have been deleted so in this case
-		// first we update mSelectedProfileId to NOT_A_PROFILE_ID  
-		if (mSelectedProfileId != Consts.NOT_A_PROFILE_ID && 
-			!mPreferencesHelper.profileExists(mSelectedProfileId)) {
-			mSelectedProfileId = Consts.NOT_A_PROFILE_ID;
-		}
-
-		// If the activity was canceled, set a valid profile because the user 
-		// may have deleted the one he used before or even all of them, but
-		// only if we're not running (because this will make us show the wrong
-		// text)
-		if (resultCode == RESULT_CANCELED) {
-			if (!dindyServiceIsRunning &&
-				(mSelectedProfileId == Consts.NOT_A_PROFILE_ID ||
-				!mPreferencesHelper.profileExists(mSelectedProfileId))) {
-				setFirstAvailableProfile();
-			}
-
-			return;
-		}
-
-		// The user didn't cancel and the list was in "select" mode so let's
-		// use the user's selection
-		if (requestCode == PROFILE_SELECT_REQUEST_CODE) {
-			final long previousProfile = mSelectedProfileId;
-			mSelectedProfileId = data.getExtras().getLong(
-					Consts.EXTRA_PROFILE_ID);
-			if (dindyServiceIsRunning) {
-				if (mSelectedProfileId != previousProfile) {
-					// Make the service use the new profile
-					startDindyServiceWithTimeLimit();
-					mPendingStartServiceRequest = true;
-				}
-			} else {
-				setDynamicButtons(false);
-			}
-		}
+	private void startProfileEditor(final String profileName, final long profileId) {
+		final Intent profilePreferencesIntent = new Intent(this,
+				ProfilePreferencesActivity.class);
+		profilePreferencesIntent.putExtra(
+				ProfilePreferencesActivity.EXTRA_PROFILE_NAME, profileName);
+		profilePreferencesIntent.putExtra(
+				ProfilePreferencesActivity.EXTRA_PROFILE_ID, profileId);
+		startActivityForResult(profilePreferencesIntent, PROFILE_EDIT_REQUEST_CODE);
 	}
 
-	private void startProfileEditor() {
-		Intent profileManagerIntent = new Intent(
-				getApplicationContext(), 
-				ProfilesListActivity.class);
-		profileManagerIntent.putExtra(
-				ProfilesListActivity.EXTRA_MODE_NAME,
-				ProfilesListActivity.EXTRA_MODE_EDIT);
-		startActivityForResult(profileManagerIntent,
-				PROFILE_MANAGE_REQUEST_CODE);
+	private void setSelectedProfileId(long profileId) {
+		// This will trigger a navigation change in the navigation listener
+		getActionBar().setSelectedNavigationItem(mProfilesAdapter.getPosition(
+				mPreferencesHelper.getProfielNameFromId(profileId)));
 	}
 	
 	private void setFirstAvailableProfile() {
-		LinkedList<String> allProfiles = 
-			mPreferencesHelper.getAllProfileNamesSorted();
-		if (allProfiles.isEmpty()) {
-			mSelectedProfileId = Consts.NOT_A_PROFILE_ID;
+		if (mProfilesAdapter.getCount() > 0) {
+			getActionBar().setSelectedNavigationItem(0);
 		} else {
-			mSelectedProfileId = mPreferencesHelper.getProfileIdFromName(
-					allProfiles.get(0));
+			mSelectedProfileId = Consts.NOT_A_PROFILE_ID;
 		}
 	}
-	
+
 	private void setDynamicButtons(boolean isDindyServiceRunning) {
 		ImageButton powerButton = (ImageButton) 
 			findViewById(R.id.main_power_button);
@@ -305,8 +346,6 @@ public class Dindy extends Activity {
 				R.id.main_profile_text);
 		TextView profileNameView = (TextView) findViewById(
 				R.id.main_profile_name);
-		//Button selectProfileButton = (Button) findViewById(
-		//		R.id.profile_select_button);
 		// TODO rework this. Now that both buttons are almost always enabled,
 		// it matters less whether the service is running or not.
 
@@ -314,8 +353,6 @@ public class Dindy extends Activity {
 		// NOT_A_PROFILE_ID if the service is running but the profile used to
 		// run it was deleted, so we can't trust mSelectedProfileId to tell
 		// us whether there are profile to choose from or not
-		//selectProfileButton.setEnabled(mPreferencesHelper.anyProfilesExist());
-		//selectProfileButton.setEnabled(true);
 		if (Consts.DEBUG) Log.d(Consts.LOGTAG,
 			"profile ID=" + mSelectedProfileId + ", name=" +
 			mPreferencesHelper.getProfielNameFromId(mSelectedProfileId));
@@ -360,72 +397,134 @@ public class Dindy extends Activity {
 			if (isServiceRunning) {
 				stopService(DindyService.getStopServiceIntent(
 						getApplicationContext()));
-				// If the selected profile was deleted while the service was 
-				// running, set a new profile for the user to select
-				if (mSelectedProfileId == Consts.NOT_A_PROFILE_ID ||
-					!mPreferencesHelper.profileExists(mSelectedProfileId)) {
-					setFirstAvailableProfile();
-				}
-				//setDynamicButtons(false);
 			} else {
 				startDindyServiceWithTimeLimit();
 			}
 		}
 	};
-	
+
 	private void startDindyServiceWithTimeLimit() {
 		Intent profileStartIntent = new Intent(getApplicationContext(),
 				ProfileStarterActivity.class);
 		profileStartIntent
 			.putExtra(Consts.EXTRA_PROFILE_ID, mSelectedProfileId)
 			.putExtra(Consts.EXTRA_INTENT_SOURCE, Consts.INTENT_SOURCE_APP_MAIN);
-		Dindy.this.startActivity(profileStartIntent);
+		startActivity(profileStartIntent);
 	}
 
-	private OnClickListener mSelectProfileListener = new OnClickListener() {
-		public void onClick(View v) {
-			Intent profilesListIntent = new Intent(getApplicationContext(),
-					ProfilesListActivity.class);
-			profilesListIntent.putExtra(ProfilesListActivity.EXTRA_MODE_NAME,
-					ProfilesListActivity.EXTRA_MODE_SELECT);
-			Dindy.this.startActivityForResult(profilesListIntent,
-					PROFILE_SELECT_REQUEST_CODE);
-		}
-	};
+	private void setNameDialogVariables(int dialogId) {
+		String title = null;
+		String oldProfileName = null;
+		switch (dialogId) {
+		case ProfileNameDialogHelper.DIALOG_NEW_PROFILE:
+			title = getString(R.string.new_profile_dialog_title);
+			oldProfileName = Consts.EMPTY_STRING;
+			break;
 
-	private OnClickListener mHelpListener = new OnClickListener() {
-		public void onClick(View v) {
-			Dindy.this.showDialog(DIALOG_HELP);
-//			Intent i = new Intent(getApplicationContext(),
-//					net.gnobal.dindy.locale.EditActivity.class);
-//			Dindy.this.startActivity(i);
+		case ProfileNameDialogHelper.DIALOG_RENAME_PROFILE:
+			oldProfileName = mPreferencesHelper.getProfielNameFromId(mSelectedProfileId);
+			title = getString(
+					R.string.dialog_profile_name_rename_title_prefix) +
+					" " + oldProfileName;
+			break;
 		}
-	};
+
+		if (title != null && oldProfileName != null) {
+			ProfileNameDialogHelper.setDialogVariables(title, oldProfileName);
+		}
+	}
 
 	private class DindyBroadcastReceiver extends BroadcastReceiver {
 		public void onReceive(final Context context, final Intent intent) {
 			final String action = intent.getAction();
 			if (Consts.SERVICE_STARTED.equals(action)) {
-				mSelectedProfileId = DindyService.getCurrentProfileId();
+				setSelectedProfileId(DindyService.getCurrentProfileId());
 				setDynamicButtons(true);
 			} else if (Consts.SERVICE_STOPPED.equals(action)) {
 				setDynamicButtons(false);
 			}
 		}
 	}
-
 	
+	private class NewDialogListener implements
+		ProfileNameDialogHelper.Listener {
+		NewDialogListener(Dindy parent) {
+			mParent = parent;
+		}
+
+		public void onSuccess(String newProfileName, long newProfileId) {
+			mProfileNames.clear();
+			mProfileNames.addAll(mPreferencesHelper.getAllProfileNamesSorted());
+			mProfilesAdapter.notifyDataSetChanged();
+			mParent.startProfileEditor(newProfileName, newProfileId);
+			invalidateOptionsMenu();
+		}
+
+		public int getDialogType() {
+			return ProfileNameDialogHelper.DIALOG_NEW_PROFILE;
+		}
+
+		public Activity getOwnerActivity() {
+			return mParent;
+		}
+
+		private Dindy mParent;
+	}
+
+	private class RenameDialogListener implements
+		ProfileNameDialogHelper.Listener {
+		RenameDialogListener(Dindy parent) {
+			mParent = parent;
+		}
+
+		public int getDialogType() {
+			return ProfileNameDialogHelper.DIALOG_RENAME_PROFILE;
+		}
+
+		public void onSuccess(String newProfileName, long newProfileId) {
+			mProfileNames.set(getActionBar().getSelectedNavigationIndex(), newProfileName);
+			mProfilesAdapter.notifyDataSetChanged();
+			setDynamicButtons(DindyService.isRunning());
+			DindySingleProfileAppWidgetProvider.updateAllSingleProfileWidgets(
+					getApplicationContext(), DindyService.getCurrentProfileId(),
+					Consts.NOT_A_PROFILE_ID);
+		}
+
+		public Activity getOwnerActivity() {
+			return mParent;
+		}
+
+		private Dindy mParent;
+	}
+
+	private ActionBar.OnNavigationListener mNavigationListener = new OnNavigationListener() {
+		@Override
+		public boolean onNavigationItemSelected(int itemPosition, long itemId) {
+			final boolean dindyServiceIsRunning = DindyService.isRunning();
+			final long previousProfile = mSelectedProfileId;
+			mSelectedProfileId =
+				mPreferencesHelper.getProfileIdFromName(mProfilesAdapter.getItem(itemPosition));
+			if (dindyServiceIsRunning &&
+				mSelectedProfileId != previousProfile &&
+				previousProfile != Consts.NOT_A_PROFILE_ID) {
+					// Make the service use the new profile
+					startDindyServiceWithTimeLimit();
+			}
+
+			setDynamicButtons(dindyServiceIsRunning);
+			return true;
+		}
+	};
+
+	private LinkedList<String> mProfileNames;
+	private ArrayAdapter<String> mProfilesAdapter;
 	private DindyBroadcastReceiver mBroadcastReceiver = new DindyBroadcastReceiver();
 	private ProfilePreferencesHelper mPreferencesHelper = null;
 	private long mSelectedProfileId = Consts.NOT_A_PROFILE_ID;
-	// We use this indicator to know whether to rely on what 
-	// DindyService.getCurrentProfileId() returns or on our own 
-	// mSelectedProfileId (see onResume()) 
-	private boolean mPendingStartServiceRequest = false;
-	// We use this to know the time limit to use in the time limit dialog that's
-	// about to show up
-	private static final int PROFILE_SELECT_REQUEST_CODE = 1;
-	private static final int PROFILE_MANAGE_REQUEST_CODE = 2;
+	private RenameDialogListener mRenameListener = new RenameDialogListener(this);
+	private NewDialogListener mNewListener = new NewDialogListener(this);
+
+	private static final int PROFILE_EDIT_REQUEST_CODE = 2;
 	private static final int DIALOG_STARTUP_MESSAGE = 0;
 	private static final int DIALOG_HELP = 1;
 }

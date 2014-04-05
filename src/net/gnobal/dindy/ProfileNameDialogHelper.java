@@ -10,6 +10,7 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 
@@ -48,6 +49,8 @@ class ProfileNameDialogHelper {
 
 		dialog.setOwnerActivity(listener.getOwnerActivity());
 		dialog.setOnDismissListener(new DismissListener(listener));
+		dialog.getWindow().setSoftInputMode(
+				WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
 		
 		return dialog;
 	}
@@ -134,7 +137,7 @@ class ProfileNameDialogHelper {
 
 			EditText edit = (EditText) ((AlertDialog) dialog).findViewById(
 					R.id.dialog_profile_name_edit_box);
-			String newProfileName = edit.getText().toString();
+			final String newProfileName = edit.getText().toString().trim();
 			ProfilePreferencesHelper preferencesHelper =
 				ProfilePreferencesHelper.instance();
 			if (preferencesHelper.profileExists(newProfileName)) {
@@ -154,8 +157,8 @@ class ProfileNameDialogHelper {
 					// Nothing to do
 					return;
 				}
-				preferencesHelper.renameProfile(mOldProfileName,
-						newProfileName);
+				preferencesHelper.renameProfile(mOldProfileName, newProfileName);
+				newProfileId = preferencesHelper.getProfileIdFromName(newProfileName);
 				break;
 			}	
 
@@ -180,6 +183,6 @@ class ProfileNameDialogHelper {
 	}
 
 	
-	final static int DIALOG_RENAME_PROFILE = 0;
-	final static int DIALOG_NEW_PROFILE = 1;
+	final static int DIALOG_RENAME_PROFILE = 100;
+	final static int DIALOG_NEW_PROFILE = 101;
 }

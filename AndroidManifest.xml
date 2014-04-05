@@ -40,7 +40,7 @@
         </activity>
         <activity android:name=".ProfilesListActivity" android:label="@string/preferences_profiles_list">
         </activity>
-        <activity android:name=".ProfilePreferencesActivity" android:label="@string/preferences_profile_editor">
+        <activity android:name=".ProfilePreferencesActivity">
         </activity>
         <activity android:name=".ProfileStarterActivity" android:theme="@style/Theme.Transparent">
         </activity>

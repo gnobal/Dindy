@@ -13,7 +13,7 @@
 		android:paddingBottom="3dp"
 		android:paddingTop="@dimen/single_profile_widget_padding_top_land">
 	</ImageButton>
-	<TextView xmlns:android="http://schemas.android.com/apk/res/android" 
+	<TextView 
 		android:layout_width="wrap_content" 
 		android:layout_height="wrap_content" 
 		android:id="@+id/single_profile_app_widget_text" 

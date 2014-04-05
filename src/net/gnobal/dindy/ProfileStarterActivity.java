@@ -84,8 +84,8 @@ public class ProfileStarterActivity extends Activity {
 			timePicker.setIs24HourView(
 				mTimeLimitType == Consts.Prefs.Profile.TimeLimitType.DURATION ||
 				DateFormat.is24HourFormat(getApplicationContext()));
-			timePicker.setCurrentHour(new Integer((int) mTimeLimitHours));
-			timePicker.setCurrentMinute(new Integer((int) mTimeLimitMinutes));
+			timePicker.setCurrentHour(Integer.valueOf((int) mTimeLimitHours));
+			timePicker.setCurrentMinute(Integer.valueOf((int) mTimeLimitMinutes));
 			Button okButton = ((AlertDialog) dialog).getButton(
 					AlertDialog.BUTTON_POSITIVE);
 			RadioButton timeOfDayButton = (RadioButton) dialog.findViewById(
@@ -257,16 +257,16 @@ public class ProfileStarterActivity extends Activity {
 				timePicker.setIs24HourView(true);
 				int[] duration = durationFrom(now, timePicker.getCurrentHour(),
 						timePicker.getCurrentMinute());
-				timePicker.setCurrentHour(new Integer(duration[0]));
-				timePicker.setCurrentMinute(new Integer(duration[1]));
+				timePicker.setCurrentHour(Integer.valueOf((duration[0])));
+				timePicker.setCurrentMinute(Integer.valueOf((duration[1])));
 				RadioButton timeOfDayButton = (RadioButton) mDialog.findViewById(
 						R.id.time_of_day_radio_button);
 				timeOfDayButton.setText(R.string.time_of_day_radio_button_text);
 			} else if (id == R.id.time_of_day_radio_button) {
 				now.add(Calendar.HOUR_OF_DAY, timePicker.getCurrentHour());
 				now.add(Calendar.MINUTE, timePicker.getCurrentMinute());
-		        timePicker.setCurrentHour(new Integer(now.get(Calendar.HOUR_OF_DAY)));
-		        timePicker.setCurrentMinute(new Integer(now.get(Calendar.MINUTE)));
+		        timePicker.setCurrentHour(Integer.valueOf(now.get(Calendar.HOUR_OF_DAY)));
+		        timePicker.setCurrentMinute(Integer.valueOf(now.get(Calendar.MINUTE)));
 		        // Must disable 24-hour view last so that the calculations we made
 		        // will be correct
 				timePicker.setIs24HourView(

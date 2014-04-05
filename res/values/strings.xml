@@ -1,59 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
 <string name="app_name">Dindy</string>
 <string name="dindy_service_started">Dindy is running</string>
 <string name="dindy_service_label">Dindy</string>
-<string name="preferences_profile_editor">Dindy profile editor</string>
-<string name="preferences_new_profile">New profile</string>
-<string name="preferences_new_profile_summary">Add a new profile</string>
-<string name="preferences_main">Dindy Preferences</string>
 <string name="preferences_profile_first_event">First event (call or SMS)</string>
 <string name="preferences_profile_first_event_sound">Play ringtone</string>
 <string name="preferences_profile_first_event_vibrate">Vibrate</string>
-<string name="preferences_profile_first_event_flash">Flash screen</string>
-<string name="preferences_name">Dindy Preferences</string>
-<string name="preferences_profiles_list_summary">Add, remove and edit profiles</string>
 <string name="preferences_profile_second_event">Second event (second call or call after SMS)</string>
 <string name="preferences_profile_second_event_sound">Play ringtone</string>
 <string name="preferences_profile_second_event_vibrate">Vibrate</string>
-<string name="preferences_profile_second_event_flash">Flash screen</string>
-<string name="preferences_profiles_list">Dindy profiles manager</string>
-<string name="preferences_profiles_list_context_menu_edit">Edit</string>
-<string name="preferences_profiles_list_context_menu_rename">Rename</string>
-<string name="preferences_profiles_list_context_menu_delete">Delete</string>
+<string name="preferences_profiles_list">Dindy profiles list</string>
 <string name="dialog_profile_name_new_name">New profile name:</string>
 <string name="dialog_profile_name_ok">OK</string>
 <string name="dialog_profile_name_cancel">Cancel</string>
 <string name="dialog_profile_name_rename_title_prefix">Rename</string>
-<string name="preferences_profiles_list_context_menu_select">Select</string>
-<string name="preferences_profiles_list_menu_new">New profile</string>
 <string name="preferences_profile_sms_message_callers">SMS message (callers)</string>
 <string name="preferences_profile_sms_message_callers_default_unset_value">Hi. This is an automated message. I\'m occupied. Call again in the next 5 minutes if it\'s urgent.</string>
 <string name="main_start">Start</string>
 <string name="main_stop">Stop</string>
-<string name="main_preferences">Preferences</string>
-<string name="preferences_profile_menu_rename">Rename</string>
-<string name="preferences_profile_menu_delete">Delete</string>
-<string name="preferences_profile_menu_done">Done</string>
-<string name="main_button_select_profile">Select profile</string>
 <string name="main_no_available_profile">No profiles defined</string>
-<string name="main_button_add_new_profile">Profiles manager</string>
 <string name="preferences_profile_enable_sms_reply_to_call_title">Enable SMS reply-to-call</string>
 <string name="preferences_profile_sms_reply_to_call">SMS reply-to-call</string>
-<string name="preferences_profile_menu_cancel">Cancel</string>
-<string name="preferences_profile_time_between_events">Time between events</string>
 <string name="preferences_profile_time_between_events_dialog_title">Time between events</string>
 <string name="preferences_profile_time_between_events_title">Time between events</string>
 <string name="preferences_profile_time_between_events_summary">Time period between the first and second events</string>
 <string name="preferences_profile_general">General</string>
-<string name="preferences_profiles_list_no_profiles_text">No profiles are currently defined.&lt;br/&gt;&lt;br/&gt;To create a new profile, press &lt;font color=&quot;white&quot;&gt;&lt;b&gt;Menu&lt;/b&gt;&lt;/font&gt; and select &lt;font color=&quot;white&quot;&gt;&lt;b&gt;New profile&lt;/b&gt;&lt;/font&gt;.</string>
 <string name="preferences_profile_unknown_caller_behavior_dialog_title">Use setting</string>
 <string name="preferences_profile_unknown_caller_behavior_title">Unknown caller</string>
 <string name="preferences_profile_enable_sms_reply_to_call_summary">Enables reply with SMS when a mobile contact calls for the first time</string>
 <string name="preferences_profile_unknown_caller_behavior_summary">Settings to use for an unknown caller</string>
 <string name="preferences_profile_list_preference_current_prefix">current:</string>
 <string name="message_dialog_checkbox_text">Do not show this message again</string>
-<string name="startup_message_dialog_text">This application is partly an automatic SMS responder and, according to your settings, may send text messages. Network charges apply. See the \&quot;Help\&quot; section for details.\n\nFive default profiles have been created: Away, Busy, Car, Meeting and Night. Examine and modify them by choosing \&quot;Manage profiles\&quot;.</string>
+<string name="startup_message_dialog_text">This app is partly an automatic SMS responder and, according to your settings, may send text messages. Network charges apply. See the \&quot;Help\&quot; section for details.\n\nFive default profiles have been created: Away, Busy, Car, Meeting and Night.</string>
 <string name="message_dialog_ok_text">OK</string>
 <string name="default_profile_car_name">Car</string>
 <string name="default_profile_car_sms_message_callers">Hi. This is an automated reply. I\'m driving. Call again in the next 5 minutes if you want me to stop and take the call.</string>
@@ -62,20 +40,16 @@
 <string name="default_profile_night_name">Night</string>
 <string name="default_profile_night_sms_message_callers">Hi. This is an automated reply. I\'m sleeping. Call again if you want me to get up and take the call.</string>
 <string name="startup_message_dialog_title">Notice</string>
-<string name="main_help_button_text">Help/About</string>
 <string name="help_dialog_text">Dindy (DND) is useful when you are busy but still want urgent calls to come through.&lt;br/&gt;&lt;br/&gt;For example, before going to sleep you start the \&quot;Night\&quot; profile. The first time a mobile contact calls or texts, Dindy silences the phone and sends an SMS reply automatically asking to call (or call again) if it\'s important or urgent. If the same person calls, Dindy will make the phone ring to let you know a call requires your attention.&lt;br/&gt;&lt;br/&gt;Other examples where Dindy is useful are in meetings (and the phone is set to vibrate on the second call) or while driving.&lt;br/&gt;&lt;br/&gt;Per-profile settings allow you to customize Dindy\'s behavior. Available settings are:&lt;br/&gt;- &lt;b&gt;Enable SMS reply-to-call&lt;/b&gt;: when disabled, Dindy works the same but SMS messages are not sent to callers.&lt;br/&gt;- &lt;b&gt;SMS message (callers)&lt;/b&gt;: set the message to be sent to mobile phone callers.&lt;br/&gt;- &lt;b&gt;Enable SMS reply-to-SMS&lt;/b&gt;: when disabled, Dindy works the same but SMS messages are not sent to texters.&lt;br/&gt;- &lt;b&gt;SMS message (texters)&lt;/b&gt;: set the message to be sent to known texters.&lt;br/&gt;- &lt;b&gt;First event (call or SMS)&lt;/b&gt;: set whether the phone should ring, vibrate (or both) when a mobile contact calls or texts for the first time.&lt;br/&gt;- &lt;b&gt;Second event (second call or call after SMS)&lt;/b&gt;: set whether the phone should ring, vibrate (or both) when a contact calls for the second time or calls after texting.&lt;br/&gt;- &lt;b&gt;Non-mobile caller&lt;/b&gt;: set how to treat calls that are in your contact list but are not listed as mobile. The choices are to use the first call settings, the second call settings, Dindy\'s behavior for mobile contacts without an SMS reply or your regular call settings from before you started Dindy.&lt;br/&gt;- &lt;b&gt;Unknown caller&lt;/b&gt;: set how to treat calls from unknown callers (that are not in your contact list.) The choices are to use the first call settings, the second call settings, Dindy\'s behavior for mobile contacts without an SMS reply or your regular call settings from before you started Dindy.&lt;br/&gt;- &lt;b&gt;Unknown texter&lt;/b&gt;: set how to treat text messages from unknown texters (that are not in your contact list.) The choices are to ignore the messages or use Dindy\'s behavior for mobile contacts without an SMS reply.&lt;br/&gt;- &lt;b&gt;Time between events&lt;/b&gt;: set the timeframe between the first and second event during which a call is considered urgent. It is advised to let the person know this timeframe in the SMS replies you set. Available options are 5 minutes, 10 minutes, half an hour, one hour and until Dindy is stopped. For the latter option, Dindy will activate the second event notification for every contact that calls more than once until Dindy is stopped.&lt;br/&gt;- &lt;b&gt;Use time limit&lt;/b&gt;: check this option to be asked for a time limit every time the profile is started. The profile will stop automatically according to your setting. Time limit only works from the main screen or widgets. When started from a shortcut, a profile will start with no limit.&lt;br/&gt;&lt;br/&gt;Additional notes:&lt;br/&gt;- Dindy will not send the automatic SMS reply message if the call was accepted or declined.&lt;br/&gt;- Alarms will go off while Dindy is running even if it was set to silence the ringer (so, for example, you can set an alarm to wake you up even if the current profile silences the phone.)&lt;br/&gt;&lt;br/&gt;&lt;b&gt;Using Dindy shortcuts&lt;/b&gt;&lt;br/&gt;A Dindy profile shortcut can be used to start and then stop the same profile. The \&quot;Stop Dindy\&quot; shortcut can be used to stop any running profile.&lt;br/&gt;When using Dindy shortcuts in external applications, after deleting a profile or after uninstalling and reinstalling Dindy you must re-apply all of Dindy\'s settings in these applications (upgrades are safe).&lt;br/&gt;Important note to AppAlarm users: when using Dindy with AppAlarm, UNCHECK the \&quot;Force App Restart On Launch\&quot; option. Failing to do so will leave your phone silent!&lt;br/&gt;&lt;br/&gt;&lt;b&gt;Using Dindy in Locale&lt;/b&gt;&lt;br/&gt;To correctly use Dindy in Locale add the \&quot;Stop Dindy\&quot; setting to each situation where you do NOT want to use Dindy, specifically the default situation.&lt;br/&gt;For each situation where you want to use Dindy, add the desired Dindy profile setting.&lt;br/&gt;After deleting a Dindy profile that is used in Locale you must change the Dindy setting in the relevant situations. If you uninstall and reinstall Dindy, you must re-apply all of Dindy\'s settings in Locale (Dindy upgrades are safe).&lt;br/&gt;&lt;br/&gt;Dindy was conceived and created by Amit Schreiber (aka gnobal). For support, comments, requests and bug reports please contact Amit at &lt;a href=\&quot;mailto:dindyforandroid@gmail.com\&quot;&gt;dindyforandroid@gmail.com&lt;/a&gt;. For more information about Dindy, visit &lt;a href=\&quot;http://gnobal.net/dindy\&quot;&gt;Dindy\'s page&lt;/a&gt;. Check periodically for Dindy updates on the Android App Market.&lt;br/&gt;&lt;br/&gt;The green and red power buttons were &lt;a href=\&quot;http://openclipart.org/media/files/molumen/1773\&quot;&gt;kindly contributed&lt;/a&gt; to public domain by &lt;a href=\&quot;http://www.lumenstudio.net\&quot;&gt;Lumen Media&lt;/a&gt; s.r.o.&lt;br/&gt;&lt;br/&gt;The launcher icon is a combination of two icons from the &lt;a href=\&quot;http://min.frexy.com/article/the_milky_set_is_now_complete/\&quot;&gt;Milky&lt;/a&gt; and &lt;a href=\&quot;http://min.frexy.com/article/bright_a_free_icon_set/\&quot;&gt;Bright!&lt;/a&gt; free icon sets, kindly contributed by &lt;a href=\&quot;http://min.frexy.com/\&quot;&gt;Min Tran&lt;/a&gt; to public domain.&lt;br/&gt;&lt;br/&gt;Copyright &amp;copy; 2011 Amit Schreiber&lt;br/&gt;&lt;br/&gt;All Rights Reserved.&lt;br/&gt;</string>
 <string name="help_dialog_ok_text">OK</string>
 <string name="help_dialog_title">Help/About</string>
-<string name="preferences_profiles_list_item_new">Add new profile&#8230;</string>
 <string name="main_profile">profile</string>
-<string name="main_menu_preferences">Manage profiles</string>
 <string name="default_profile_away_name">Away</string>
 <string name="default_profile_away_sms_message_callers">Hi. This is an automated reply. I\'m away from my phone and will get back to you.</string>
 <string name="default_profile_busy_name">Busy</string>
 <string name="default_profile_busy_sms_message_callers">Hi. This is an automated reply. I\'m busy and will get back to you.</string>
 <string name="locale_plugin_name">Dindy</string>
 <string name="preferences_single_profile_app_widget_name">Profile widget</string>
-<string name="preferences_all_profiles_app_widget_name">Dindy</string>
 <string name="app_widget_profile_deleted">DELETED</string>
 <string name="locale_dialog_cancel_text">Cancel</string>
 <string name="stop_dindy">Stop Dindy</string>
@@ -92,7 +66,6 @@
 <string name="preferences_profile_non_mobile_caller_behavior_dialog_title">Use setting</string>
 <string name="preferences_profile_non_mobile_caller_behavior_title">Non-mobile caller</string>
 <string name="preferences_profile_non_mobile_caller_behavior_summary">Settings to use for a known non-mobile contact</string>
-
 <string name="preferences_profile_use_time_limit_title">Use time limit</string>
 <string name="preferences_profile_use_time_limit_summary">When starting the profile ask for a time limit, after which the profile will be stopped</string>
 <string name="time_limit_dialog_title">Profile time limit</string>
@@ -116,5 +89,11 @@
 <string name="preferences_profile_unknown_texter_behavior_summary">Settings to use for an unknown texter</string>
 <string name="preferences_profile_unknown_texter_behavior_title">Unknown texter</string>
 <string name="preferences_profile_sms_message_texters">SMS message (texters)</string>
+<string name="new_profile_dialog_title">New profile</string>
+<string name="menu_main_add_profile">Add</string>
+<string name="menu_main_rename_profile">Rename</string>
+<string name="menu_main_delete_profile">Delete</string>
+<string name="menu_main_edit_profile">Edit</string>
+<string name="menu_main_help">Help</string>
+<string name="menu_profile_editor_done">Done</string>
 </resources>
-
