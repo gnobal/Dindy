@@ -5,6 +5,8 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.app.DialogFragment;
+import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -14,56 +16,76 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 
-class ProfileNameDialogHelper {
-	interface Listener {
-		int getDialogType();
-		
-		void onSuccess(String newProfileName, long newProfileId);
+public class ProfileNameDialogFragment extends DialogFragment {
+	final static int DIALOG_RENAME_PROFILE = 100;
+	final static int DIALOG_NEW_PROFILE = 101;
 
-		Activity getOwnerActivity();
+	interface Listener {
+		void onSuccess(int type, String newProfileName, long newProfileId);
+	}
+
+	public ProfileNameDialogFragment() {
 	}
 	
-	static void setDialogVariables(String title, String oldProfileName) {
-		mTitle = title;
-		mOldProfileName = oldProfileName;
+	static ProfileNameDialogFragment newInstance(final int type, final String title,
+		final String oldProfileName) {
+		final ProfileNameDialogFragment f = new ProfileNameDialogFragment();
+		final Bundle args = new Bundle();
+		args.putInt("type", type);
+		args.putString("title", title);
+		args.putString("oldProfileName", oldProfileName);
+		f.setArguments(args);
+		return f;
+	}
+
+	@Override
+	public Dialog onCreateDialog(Bundle savedInstanceState) {
+		return buildProfileNameDialog(getActivity(), android.R.drawable.ic_dialog_info);
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		prepareDialog(getDialog());
+	}
+
+	@Override
+	public void onAttach(Activity activity) {
+		super.onAttach(activity);
+		mListener = (Listener) activity;
 	}
 	
-	private static String mTitle = null;
-	private static String mOldProfileName = null;
-		
-	static Dialog buildProfileNameDialog(Context context,
-			int iconResource, Listener listener) {
+	private Dialog buildProfileNameDialog(Context context, int iconResource) {
 		LayoutInflater factory = LayoutInflater.from(context);
 		final View textEntryView = factory.inflate(
 				R.layout.profile_name_dialog, null);
 		
 		AlertDialog dialog = new AlertDialog.Builder(context)
 				.setIcon(iconResource)
-				.setTitle(mTitle)
+				.setTitle(getArguments().getString("title"))
 				.setView(textEntryView)
 				.setPositiveButton(R.string.dialog_profile_name_ok,
-						new OkClickListener(listener))
+						new OkClickListener())
 				.setNegativeButton(R.string.dialog_profile_name_cancel,
 						new CancelClickListener())
 				.create();
 
-		dialog.setOwnerActivity(listener.getOwnerActivity());
-		dialog.setOnDismissListener(new DismissListener(listener));
+		dialog.setOwnerActivity(getActivity());
 		dialog.getWindow().setSoftInputMode(
 				WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
 		
 		return dialog;
 	}
 	
-	static void prepareDialog(int id, Dialog dialog) {
+	private void prepareDialog(Dialog dialog) {
 		EditText editBox = (EditText) dialog.findViewById(
 				R.id.dialog_profile_name_edit_box);
 		editBox.addTextChangedListener(new ProfileNameTextWatcher(
 				((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE),
 				editBox));
-		dialog.setTitle(mTitle);
-		editBox.setText(mOldProfileName);
-		editBox.setSelection(0, mOldProfileName.length());
+		dialog.setTitle(getArguments().getString("title"));
+		editBox.setText(getArguments().getString("oldProfileName"));
+		editBox.setSelection(0, getArguments().getString("oldProfileName").length());
 	}
 
 	private static class ProfileNameTextWatcher implements TextWatcher {
@@ -79,7 +101,9 @@ class ProfileNameDialogHelper {
 			// state so we need to do this
 			int illegalNameReasonStringId = -1;
 			boolean isNameLegal = false;
-			String profileName = s.toString();
+			// Note that we always trim the profile name. This is important because we assume that
+			// names are unique
+			String profileName = s.toString().trim();
 			if (profileName.length() <= 0) {
 				illegalNameReasonStringId =
 					R.string.dialog_profile_name_illegal_name_reason_empty;
@@ -121,22 +145,20 @@ class ProfileNameDialogHelper {
 		private boolean mIsFirstChange = true;
 	}
 
-	private static class CancelClickListener implements DialogInterface.OnClickListener {
+	private class CancelClickListener implements DialogInterface.OnClickListener {
 		public void onClick(DialogInterface dialog, int which) {
 			if (Consts.DEBUG) Log.d(Consts.LOGTAG, "Cancel click");
 		}		
 	}
 	
-	private static class OkClickListener implements DialogInterface.OnClickListener {
-		OkClickListener(Listener listener) {
-			mListener = listener;
-		}
-		
+	private class OkClickListener implements DialogInterface.OnClickListener {		
 		public void onClick(DialogInterface dialog, int which) {
 			if (Consts.DEBUG) Log.d(Consts.LOGTAG, "OK click");
 
 			EditText edit = (EditText) ((AlertDialog) dialog).findViewById(
 					R.id.dialog_profile_name_edit_box);
+			// Note that we always trim the profile name. This is important because we assume that
+			// names are unique
 			final String newProfileName = edit.getText().toString().trim();
 			ProfilePreferencesHelper preferencesHelper =
 				ProfilePreferencesHelper.instance();
@@ -146,43 +168,26 @@ class ProfileNameDialogHelper {
 			}
 			
 			long newProfileId = Consts.NOT_A_PROFILE_ID;
-			switch (mListener.getDialogType()) {
+			switch (getArguments().getInt("type")) {
 			case DIALOG_NEW_PROFILE:
 				newProfileId = preferencesHelper.createNewProfile(
 						newProfileName);
 				break;
 			
 			case DIALOG_RENAME_PROFILE:
-				if (mOldProfileName.equals(newProfileName)) {
+				if (getArguments().getString("oldProfileName").equals(newProfileName)) {
 					// Nothing to do
 					return;
 				}
-				preferencesHelper.renameProfile(mOldProfileName, newProfileName);
+				preferencesHelper.renameProfile(getArguments().getString("oldProfileName"), newProfileName);
 				newProfileId = preferencesHelper.getProfileIdFromName(newProfileName);
 				break;
 			}	
 
 			// Success - inform whoever called us
-			mListener.onSuccess(newProfileName, newProfileId);
+			mListener.onSuccess(getArguments().getInt("type"), newProfileName, newProfileId);
 		}
-		
-		private Listener mListener;
 	}
 	
-	private static class DismissListener implements DialogInterface.OnDismissListener {
-		DismissListener(Listener listener) {
-			mListener = listener;
-		}
-
-		public void onDismiss(DialogInterface dialog) {
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG, "Dismiss");
-			mListener.getOwnerActivity().removeDialog(mListener.getDialogType());
-		}
-		
-		private Listener mListener;
-	}
-
-	
-	final static int DIALOG_RENAME_PROFILE = 100;
-	final static int DIALOG_NEW_PROFILE = 101;
+	private Listener mListener; 
 }

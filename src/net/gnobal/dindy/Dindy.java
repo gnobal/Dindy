@@ -7,6 +7,7 @@ import android.app.ActionBar.OnNavigationListener;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.DialogFragment;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -47,7 +48,7 @@ import android.widget.TextView;
 // - know when in a car dock by using the intent ACTION_DOCK_EVENT/EXTRA_DOCK_STATE/EXTRA_DOCK_STATE_CAR/EXTRA_DOCK_STATE_DESK/EXTRA_DOCK_STATE_UNDOCKED 
 // - "smart mode" - when a number that isn't mobile calls send the SMS to the most called-to mobile number of the same person
 // - Deal with crashes and restart by saving the latest settings and restoring them
-public class Dindy extends Activity {
+public class Dindy extends Activity implements ProfileNameDialogFragment.Listener {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -114,7 +115,7 @@ public class Dindy extends Activity {
 				savedInstanceState.getBoolean(Consts.Prefs.Main.KEY_SHOW_STARTUP_MESSAGE, true);
 		if (userPreferenceShowMessage && thisInstanceShowMessage &&
 			!DindyService.isRunning()) {
-			showDialog(DIALOG_STARTUP_MESSAGE);
+			StartupMessageDialogFragment.newInstance().show(getFragmentManager(), "startup_message");
 		}
 	}
 
@@ -176,10 +177,12 @@ public class Dindy extends Activity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.action_help:
-			showDialog(DIALOG_HELP);
+			HelpDialogFragment.newInstance().show(getFragmentManager(), "help");
 			return true;
 		case R.id.action_add_profile:
-			showDialog(ProfileNameDialogHelper.DIALOG_NEW_PROFILE);
+			ProfileNameDialogFragment.newInstance(ProfileNameDialogFragment.DIALOG_NEW_PROFILE,
+				getString(R.string.new_profile_dialog_title), Consts.EMPTY_STRING)
+				.show(getFragmentManager(), "add_profile");
 			return true;
 		case R.id.action_delete_profile:
 			if (DindyService.isRunning()) {
@@ -200,12 +203,18 @@ public class Dindy extends Activity {
 			if (!lastProfileInListDeleted) {
 				// If a profile on the list gets deleted and there's another profile after it,
 				// we won't get an onNavigationItemSelected notification because the index
-				// doesn't change so we manufacture an artificial event
-				mNavigationListener.onNavigationItemSelected(selectedNavigationIndex, -999);
+				// doesn't change. We change the profile ID manually
+				setSelectedProfileId(mPreferencesHelper.getProfileIdFromName(
+						mProfilesAdapter.getItem(selectedNavigationIndex)));
 			}
 			return true;
 		case R.id.action_rename_profile:
-			showDialog(ProfileNameDialogHelper.DIALOG_RENAME_PROFILE);
+			final String oldProfileName = mPreferencesHelper.getProfielNameFromId(mSelectedProfileId);
+			final String title = getString(
+					R.string.dialog_profile_name_rename_title_prefix) +
+					" " + oldProfileName;
+			ProfileNameDialogFragment.newInstance(ProfileNameDialogFragment.DIALOG_RENAME_PROFILE,
+					title, oldProfileName).show(getFragmentManager(), "add_profile");
 			return true;
 		case R.id.action_edit_profile:
 			startProfileEditor(mPreferencesHelper.getProfielNameFromId(
@@ -214,103 +223,6 @@ public class Dindy extends Activity {
 		default:
 			return super.onOptionsItemSelected(item);
 		}
-	}
-
-	@Override
-	protected void onPrepareDialog(int id, Dialog dialog) {
-		super.onPrepareDialog(id, dialog);
-
-		if (id != ProfileNameDialogHelper.DIALOG_NEW_PROFILE &&
-			id != ProfileNameDialogHelper.DIALOG_RENAME_PROFILE) {
-			return;
-		}
-
-		setNameDialogVariables(id);
-		ProfileNameDialogHelper.prepareDialog(id, dialog);
-	}
-
-	@Override
-	protected Dialog onCreateDialog(int id) {
-		super.onCreateDialog(id);
-		
-		switch (id) {
-		case DIALOG_STARTUP_MESSAGE:
-		{
-			LayoutInflater factory = LayoutInflater.from(this);
-			final View startupMessageView = factory.inflate(
-					R.layout.startup_message_dialog, null);
-			AlertDialog dialog = new AlertDialog.Builder(this)
-				.setIcon(android.R.drawable.ic_dialog_info)
-				.setTitle(R.string.startup_message_dialog_title)
-				.setView(startupMessageView)
-				.setPositiveButton(R.string.message_dialog_ok_text,
-					new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog,
-							int which) {
-						SharedPreferences preferences = getSharedPreferences(
-								Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
-						CheckBox checkBox = (CheckBox) 
-							((AlertDialog) dialog).findViewById(
-								R.id.startup_message_dialog_checkbox);
-						SharedPreferences.Editor editor = 
-							preferences.edit();
-						editor.putBoolean(
-								Consts.Prefs.Main.KEY_SHOW_STARTUP_MESSAGE,
-								!checkBox.isChecked());
-						editor.commit();
-					}})
-				.create();
-			dialog.setOwnerActivity(this);
-			return dialog;
-		}
-		
-		case DIALOG_HELP:
-		{
-			LayoutInflater factory = LayoutInflater.from(this);
-			View helpView = factory.inflate(R.layout.help_dialog, null);
-			TextView helpTextView = (TextView) helpView.findViewById(
-					R.id.help_dialog_text_view);
-			helpTextView.setText(Html.fromHtml(getString(
-	        		R.string.help_dialog_text)));
-			helpTextView.setMovementMethod(LinkMovementMethod.getInstance());
-			
-			AlertDialog dialog = new AlertDialog.Builder(this)
-				.setIcon(android.R.drawable.ic_dialog_info)
-				.setTitle(R.string.help_dialog_title)
-				.setView(helpView)
-				.setPositiveButton(R.string.help_dialog_ok_text,
-					new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog,
-							int which) {
-						removeDialog(DIALOG_HELP);
-					}})
-				.create();
-			dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-				public void onDismiss(DialogInterface dialog) {
-					removeDialog(DIALOG_HELP);
-				}
-			});
-			dialog.setOwnerActivity(this);
-			return dialog;
-		}
-
-		case ProfileNameDialogHelper.DIALOG_NEW_PROFILE:
-		{
-			setNameDialogVariables(ProfileNameDialogHelper.DIALOG_NEW_PROFILE);
-			return ProfileNameDialogHelper.buildProfileNameDialog(this,
-					android.R.drawable.ic_dialog_info, mNewListener);
-		}
-
-		case ProfileNameDialogHelper.DIALOG_RENAME_PROFILE:
-		{
-			setNameDialogVariables(ProfileNameDialogHelper.DIALOG_RENAME_PROFILE);
-			return ProfileNameDialogHelper.buildProfileNameDialog(this,
-					android.R.drawable.ic_dialog_info, mRenameListener);
-		}
-
-		}
-
-		return null;
 	}
 
 	private void startProfileEditor(final String profileName, final long profileId) {
@@ -324,7 +236,17 @@ public class Dindy extends Activity {
 	}
 
 	private void setSelectedProfileId(long profileId) {
-		// This will trigger a navigation change in the navigation listener
+		final boolean dindyServiceIsRunning = DindyService.isRunning();
+		final long previousProfile = mSelectedProfileId;
+		mSelectedProfileId = profileId;
+		if (dindyServiceIsRunning &&
+			mSelectedProfileId != previousProfile &&
+			previousProfile != Consts.NOT_A_PROFILE_ID) {
+				// Make the service use the new profile
+				startDindyServiceWithTimeLimit();
+		}
+
+		setDynamicButtons(dindyServiceIsRunning);
 		getActionBar().setSelectedNavigationItem(mProfilesAdapter.getPosition(
 				mPreferencesHelper.getProfielNameFromId(profileId)));
 	}
@@ -412,28 +334,6 @@ public class Dindy extends Activity {
 		startActivity(profileStartIntent);
 	}
 
-	private void setNameDialogVariables(int dialogId) {
-		String title = null;
-		String oldProfileName = null;
-		switch (dialogId) {
-		case ProfileNameDialogHelper.DIALOG_NEW_PROFILE:
-			title = getString(R.string.new_profile_dialog_title);
-			oldProfileName = Consts.EMPTY_STRING;
-			break;
-
-		case ProfileNameDialogHelper.DIALOG_RENAME_PROFILE:
-			oldProfileName = mPreferencesHelper.getProfielNameFromId(mSelectedProfileId);
-			title = getString(
-					R.string.dialog_profile_name_rename_title_prefix) +
-					" " + oldProfileName;
-			break;
-		}
-
-		if (title != null && oldProfileName != null) {
-			ProfileNameDialogHelper.setDialogVariables(title, oldProfileName);
-		}
-	}
-
 	private class DindyBroadcastReceiver extends BroadcastReceiver {
 		public void onReceive(final Context context, final Intent intent) {
 			final String action = intent.getAction();
@@ -445,86 +345,121 @@ public class Dindy extends Activity {
 			}
 		}
 	}
-	
-	private class NewDialogListener implements
-		ProfileNameDialogHelper.Listener {
-		NewDialogListener(Dindy parent) {
-			mParent = parent;
-		}
 
-		public void onSuccess(String newProfileName, long newProfileId) {
+	@Override
+	public void onSuccess(int type, String newProfileName, long newProfileId) {
+		switch (type) {
+		case ProfileNameDialogFragment.DIALOG_NEW_PROFILE:
 			mProfileNames.clear();
 			mProfileNames.addAll(mPreferencesHelper.getAllProfileNamesSorted());
 			mProfilesAdapter.notifyDataSetChanged();
-			mParent.startProfileEditor(newProfileName, newProfileId);
+			setSelectedProfileId(mPreferencesHelper.getProfileIdFromName(newProfileName));
+			startProfileEditor(newProfileName, newProfileId);
 			invalidateOptionsMenu();
-		}
-
-		public int getDialogType() {
-			return ProfileNameDialogHelper.DIALOG_NEW_PROFILE;
-		}
-
-		public Activity getOwnerActivity() {
-			return mParent;
-		}
-
-		private Dindy mParent;
-	}
-
-	private class RenameDialogListener implements
-		ProfileNameDialogHelper.Listener {
-		RenameDialogListener(Dindy parent) {
-			mParent = parent;
-		}
-
-		public int getDialogType() {
-			return ProfileNameDialogHelper.DIALOG_RENAME_PROFILE;
-		}
-
-		public void onSuccess(String newProfileName, long newProfileId) {
+			break;
+			
+		case ProfileNameDialogFragment.DIALOG_RENAME_PROFILE:
 			mProfileNames.set(getActionBar().getSelectedNavigationIndex(), newProfileName);
 			mProfilesAdapter.notifyDataSetChanged();
 			setDynamicButtons(DindyService.isRunning());
 			DindySingleProfileAppWidgetProvider.updateAllSingleProfileWidgets(
 					getApplicationContext(), DindyService.getCurrentProfileId(),
 					Consts.NOT_A_PROFILE_ID);
-		}
+			break;
 
-		public Activity getOwnerActivity() {
-			return mParent;
+		default:
+			if (Consts.DEBUG) Log.d(Consts.LOGTAG,
+					"Unknown dialog type " + type);
+			return;
 		}
-
-		private Dindy mParent;
 	}
 
+	
 	private ActionBar.OnNavigationListener mNavigationListener = new OnNavigationListener() {
 		@Override
 		public boolean onNavigationItemSelected(int itemPosition, long itemId) {
-			final boolean dindyServiceIsRunning = DindyService.isRunning();
-			final long previousProfile = mSelectedProfileId;
-			mSelectedProfileId =
-				mPreferencesHelper.getProfileIdFromName(mProfilesAdapter.getItem(itemPosition));
-			if (dindyServiceIsRunning &&
-				mSelectedProfileId != previousProfile &&
-				previousProfile != Consts.NOT_A_PROFILE_ID) {
-					// Make the service use the new profile
-					startDindyServiceWithTimeLimit();
-			}
-
-			setDynamicButtons(dindyServiceIsRunning);
+			setSelectedProfileId(mPreferencesHelper.getProfileIdFromName(
+				mProfilesAdapter.getItem(itemPosition)));
 			return true;
 		}
 	};
+
+	public static class StartupMessageDialogFragment extends DialogFragment {
+		public StartupMessageDialogFragment() {
+		}
+		
+		public static StartupMessageDialogFragment newInstance() {
+			return new StartupMessageDialogFragment();
+		}
+		
+		@Override
+		public Dialog onCreateDialog(Bundle savedInstanceState) {
+			LayoutInflater factory = LayoutInflater.from(getActivity());
+			final View startupMessageView = factory.inflate(
+					R.layout.startup_message_dialog, null);
+			AlertDialog dialog = new AlertDialog.Builder(getActivity())
+				.setIcon(android.R.drawable.ic_dialog_info)
+				.setTitle(R.string.startup_message_dialog_title)
+				.setView(startupMessageView)
+				.setPositiveButton(R.string.message_dialog_ok_text,
+					new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog,
+							int which) {
+						SharedPreferences preferences = getActivity().getSharedPreferences(
+								Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
+						CheckBox checkBox = (CheckBox) 
+							((AlertDialog) dialog).findViewById(
+								R.id.startup_message_dialog_checkbox);
+						SharedPreferences.Editor editor = 
+							preferences.edit();
+						editor.putBoolean(
+								Consts.Prefs.Main.KEY_SHOW_STARTUP_MESSAGE,
+								!checkBox.isChecked());
+						editor.commit();
+					}})
+				.create();
+			dialog.setOwnerActivity(getActivity());
+			return dialog;
+		}
+	}
+
+	public static class HelpDialogFragment extends DialogFragment {
+		public HelpDialogFragment() {
+		}
+		
+		public static HelpDialogFragment newInstance() {
+			return new HelpDialogFragment();
+		}
+
+		@Override
+		public Dialog onCreateDialog(Bundle savedInstanceState) {
+			LayoutInflater factory = LayoutInflater.from(getActivity());
+			View helpView = factory.inflate(R.layout.help_dialog, null);
+			TextView helpTextView = (TextView) helpView.findViewById(
+					R.id.help_dialog_text_view);
+			helpTextView.setText(Html.fromHtml(getString(
+	        		R.string.help_dialog_text)));
+			helpTextView.setMovementMethod(LinkMovementMethod.getInstance());
+			
+			AlertDialog dialog = new AlertDialog.Builder(getActivity())
+				.setIcon(android.R.drawable.ic_dialog_info)
+				.setTitle(R.string.help_dialog_title)
+				.setView(helpView)
+				.setPositiveButton(R.string.help_dialog_ok_text,
+					new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int which) {}
+					})
+				.create();
+			dialog.setOwnerActivity(getActivity());
+			return dialog;
+		}
+	}
 
 	private LinkedList<String> mProfileNames;
 	private ArrayAdapter<String> mProfilesAdapter;
 	private DindyBroadcastReceiver mBroadcastReceiver = new DindyBroadcastReceiver();
 	private ProfilePreferencesHelper mPreferencesHelper = null;
 	private long mSelectedProfileId = Consts.NOT_A_PROFILE_ID;
-	private RenameDialogListener mRenameListener = new RenameDialogListener(this);
-	private NewDialogListener mNewListener = new NewDialogListener(this);
 
 	private static final int PROFILE_EDIT_REQUEST_CODE = 2;
-	private static final int DIALOG_STARTUP_MESSAGE = 0;
-	private static final int DIALOG_HELP = 1;
 }
