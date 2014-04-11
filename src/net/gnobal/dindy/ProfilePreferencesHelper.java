@@ -352,7 +352,6 @@ public class ProfilePreferencesHelper {
 
 	private ProfilePreferencesHelper(Context context) {
 		mDatabaseHelper = new Database(context);
-		// mContext = context;
 	}
 	
 	private static final String[] PROFILE_NAME_COLUMNS = { Database.Profiles.NAME };

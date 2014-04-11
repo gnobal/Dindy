@@ -148,5 +148,4 @@ class IncomingCalls {
 	private static final int CALLER_ID_NUMBER_INDEX = 0;
 	private static final int NUMBER_INDEX = 1;
 	private static final int ABSOLUTE_WAKEUP_TIME_MILLIS_INDEX = 2;
-	
 }
