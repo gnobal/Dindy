@@ -14,6 +14,7 @@
     <uses-sdk android:minSdkVersion="15" android:targetSdkVersion="19" />
     
     <uses-feature android:name="android.hardware.telephony" />
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
     
     <supports-screens 
 		android:anyDensity="true" 
