@@ -430,18 +430,30 @@ public class DindyService extends Service {
 	private abstract class AbstractObserver extends ContentObserver {
 		protected AbstractObserver() {
 			super(new Handler());
-			mCursor = getContentResolver().query(getContentUri(),
-				getProjection(), getQuery(), null, getSortOrder());
-			mCursor.registerContentObserver(this);
+			createCursor();
 		}
 		
 		public void destroy() {
+			destroyCursor();
+		}
+		
+		protected void requery() {
+			destroyCursor();
+			createCursor();
+		}
+
+		private void destroyCursor() {
 			mCursor.unregisterContentObserver(this);
-			mCursor.deactivate();
 			mCursor.close();
 			mCursor = null;
 		}
 		
+		private void createCursor() {
+			mCursor = getContentResolver().query(getContentUri(),
+					getProjection(), getQuery(), null, getSortOrder());
+			mCursor.registerContentObserver(this);
+		}
+
 		abstract Uri getContentUri();
 		abstract String[] getProjection();
 		abstract String getQuery();
@@ -455,24 +467,20 @@ public class DindyService extends Service {
 			super();
 			mPreviousCursorCount = mCursor.getCount();
 		}
-		
+
 		@Override
 		public void destroy() {
 			super.destroy();
 			mPreviousCursorCount = Integer.MAX_VALUE;
 		}
-		
+
 		@Override
 		public void onChange(boolean selfChange) {
 			super.onChange(selfChange);
-			if (Consts.DEBUG) 
+			if (Consts.DEBUG)
 				Log.d(Consts.LOGTAG, "CallLog: database changed");
-			if (!mCursor.requery()) {
-				if (Consts.DEBUG) Log.d(Consts.LOGTAG, 
-						"CallLog: requery() failed. Cursor is invalid");
-				// TODO recreate cursor
-				return;
-			}
+
+			requery();
 
 			final int currentCursorCount = mCursor.getCount();
 			if (currentCursorCount <= mPreviousCursorCount) {
