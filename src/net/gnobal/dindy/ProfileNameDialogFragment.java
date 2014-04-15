@@ -26,7 +26,7 @@ public class ProfileNameDialogFragment extends DialogFragment {
 
 	public ProfileNameDialogFragment() {
 	}
-	
+
 	static ProfileNameDialogFragment newInstance(final int type, final String title,
 		final String oldProfileName) {
 		final ProfileNameDialogFragment f = new ProfileNameDialogFragment();
