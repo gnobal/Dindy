@@ -70,9 +70,8 @@ public class DindyShortcuts extends ExternalSourceSelectionActivity {
 
 		public DindyShortcutSelectionUsageDialogFragment() {
 			super(
-				R.layout.shortcuts_usage_dialog,
+				R.string.shortcuts_usage_dialog_text,
 				R.string.shortcuts_usage_dialog_title,
-				R.id.shortcuts_usage_dialog_checkbox,
 				Consts.Prefs.Main.KEY_SHOW_SHORTCUTS_USAGE);
 		}
 

@@ -56,7 +56,7 @@
 <string name="locale_usage_dialog_text">To correctly use Dindy in Locale add the \&quot;Stop Dindy\&quot; setting to each situation where you do NOT want to use Dindy, specifically the default situation.\n\nFor each situation where you want to use Dindy, add the desired Dindy profile setting.\n\nAfter deleting a Dindy profile that is used in Locale you must change the Dindy setting in the relevant situations. If you uninstall and reinstall Dindy, you must re-apply all of Dindy\'s settings in Locale (Dindy upgrades are safe).</string>
 
 <string name="locale_usage_dialog_title">Using Dindy in Locale</string>
-
+<string name="dynamic">DYNAMIC</string>
 <string name="shortcuts_name">Profile shortcut</string>
 <string name="toast_text_profile_doesnt_exist_exit">The requested Dindy profile has been deleted. Dindy will not start.</string>
 <string name="toast_text_profile_doesnt_exist_continue">The requested Dindy profile has been deleted. Dindy will continue with the current profile.</string>

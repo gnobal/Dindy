@@ -1,8 +1,8 @@
 package net.gnobal.dindy;
 
 import android.app.ListActivity;
-import android.os.Bundle;
-import android.widget.ArrayAdapter;
+//import android.os.Bundle;
+//import android.widget.ArrayAdapter;
 
 // Accessing contacts data:
 // https://developer.android.com/training/contacts-provider/index.html

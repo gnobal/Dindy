@@ -46,9 +46,8 @@ public class EditActivity extends net.gnobal.dindy.ExternalSourceSelectionActivi
 		
 		public EditActivitySelectionUsageDialogFragment() {
 			super(
-				R.layout.locale_usage_dialog,
+				R.string.locale_usage_dialog_text,
 				R.string.locale_usage_dialog_title,
-				R.id.locale_usage_dialog_checkbox,
 				Consts.Prefs.Main.KEY_SHOW_LOCALE_USAGE);
 		}
 

@@ -14,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
+import android.widget.TextView;
 
 public class ExternalSourceSelectionActivity extends Activity {
 	@Override
@@ -25,11 +26,11 @@ public class ExternalSourceSelectionActivity extends Activity {
 
 	protected static abstract class ExternalSourceSelectionUsageDialogFragment extends DialogFragment {
 		protected ExternalSourceSelectionUsageDialogFragment(
-			int usageDialogLayoutResId, int usageDialogTitleResId,
-			int usageDialogCheckboxResId, String usageDialogPreferenceKey) {
-			mUsageDialogLayoutResId = usageDialogLayoutResId;
+			int usageDialogTextResId,
+			int usageDialogTitleResId,
+			String usageDialogPreferenceKey) {
+			mUsageDialogTextResId = usageDialogTextResId;
 			mUsageDialogTitleResId = usageDialogTitleResId;
-			mUsageDialogCheckboxResId = usageDialogCheckboxResId;
 			mUsageDialogPreferenceKey = usageDialogPreferenceKey;			
 		}
 
@@ -37,12 +38,15 @@ public class ExternalSourceSelectionActivity extends Activity {
 		public Dialog onCreateDialog(Bundle savedInstanceState) {
 			super.onCreateDialog(savedInstanceState);
 			LayoutInflater factory = LayoutInflater.from(getActivity());
-			final View startupMessageView = factory.inflate(
-					mUsageDialogLayoutResId, null);
+			final View dialogView = factory.inflate(
+					R.layout.message_with_checkbox_dialog, null);
+			final TextView messageView = (TextView) dialogView.findViewById(
+					R.id.message_with_checkbox_dialog_text_view);
+			messageView.setText(mUsageDialogTextResId);
 			AlertDialog dialog = new AlertDialog.Builder(getActivity())
 				.setIcon(android.R.drawable.ic_dialog_info)
 				.setTitle(mUsageDialogTitleResId)
-				.setView(startupMessageView)
+				.setView(dialogView)
 				.setPositiveButton(R.string.message_dialog_ok_text,
 					new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog,
@@ -51,7 +55,7 @@ public class ExternalSourceSelectionActivity extends Activity {
 								Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
 						CheckBox checkBox = (CheckBox) 
 							((AlertDialog) dialog).findViewById(
-								mUsageDialogCheckboxResId);
+								R.id.message_with_checkbox_dialog_checkbox);
 						SharedPreferences.Editor editor = 
 							preferences.edit();
 						editor.putBoolean(
@@ -73,9 +77,8 @@ public class ExternalSourceSelectionActivity extends Activity {
 
 		protected abstract void showSelectionDialog();
 		
-		private final int mUsageDialogLayoutResId;
+		private final int mUsageDialogTextResId;
 		private final int mUsageDialogTitleResId;
-		private final int mUsageDialogCheckboxResId;
 		private final String mUsageDialogPreferenceKey;
 	}
 

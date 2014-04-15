@@ -1,5 +1,5 @@
-
-    <resources>
-        <dimen name="single_profile_widget_padding_top_port">5dp</dimen>
-        <dimen name="single_profile_widget_padding_top_land">3dp</dimen>
-    </resources>
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="single_profile_widget_padding_top_port">0dp</dimen>
+    <dimen name="single_profile_widget_padding_top_land">0dp</dimen>
+</resources>

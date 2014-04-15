@@ -395,12 +395,15 @@ public class Dindy extends Activity implements ProfileNameDialogFragment.Listene
 		@Override
 		public Dialog onCreateDialog(Bundle savedInstanceState) {
 			LayoutInflater factory = LayoutInflater.from(getActivity());
-			final View startupMessageView = factory.inflate(
-					R.layout.startup_message_dialog, null);
+			final View dialogView = factory.inflate(
+					R.layout.message_with_checkbox_dialog, null);
+			final TextView messageView = (TextView) dialogView.findViewById(
+					R.id.message_with_checkbox_dialog_text_view);
+			messageView.setText(R.string.startup_message_dialog_text);
 			AlertDialog dialog = new AlertDialog.Builder(getActivity())
 				.setIcon(android.R.drawable.ic_dialog_info)
 				.setTitle(R.string.startup_message_dialog_title)
-				.setView(startupMessageView)
+				.setView(dialogView)
 				.setPositiveButton(R.string.message_dialog_ok_text,
 					new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog,
@@ -409,7 +412,7 @@ public class Dindy extends Activity implements ProfileNameDialogFragment.Listene
 								Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
 						CheckBox checkBox = (CheckBox) 
 							((AlertDialog) dialog).findViewById(
-								R.id.startup_message_dialog_checkbox);
+								R.id.message_with_checkbox_dialog_checkbox);
 						SharedPreferences.Editor editor = 
 							preferences.edit();
 						editor.putBoolean(
