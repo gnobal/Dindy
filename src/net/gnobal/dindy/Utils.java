@@ -12,6 +12,7 @@ class Utils {
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	static String vibrationSettingToString(int vibrationSetting) {
 		switch (vibrationSetting) {
 		case AudioManager.VIBRATE_SETTING_OFF: return "OFF";

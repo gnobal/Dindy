@@ -119,7 +119,7 @@ class DindyLogic {
 		setRingerAndVibrateModes(mSettings.mFirstRingSettings);
 		mStarted = true;
 	}
-	
+
 	void stop() {
 		if (!mStarted) {
 			return;
@@ -128,7 +128,7 @@ class DindyLogic {
 		setRingerAndVibrateModes(mSettings.mUserSettings);
 		mStarted = false;
 	}
-	
+
 	void destroy() {
 		mContext.unregisterReceiver(mOnSentReceiver);
 		mSM = null;
@@ -238,7 +238,7 @@ class DindyLogic {
 		// The intents will release the WakeLock
 		mSM.sendMultipartTextMessage(number, null, dividedMessage, sentPendingIntents, null);
 	}
-	
+
 	void onMissedCall(String number) {
 		// The wakelock was acquired when the phone was ringing, so unless we 
 		// send the SMS we _must_ release it on each return from the function
@@ -520,7 +520,7 @@ class DindyLogic {
 		boolean mIsKnown = false;
 		boolean mIsMobile = false;
 	}
-	
+
 	private NumberProperties getNumberProperties(String number) {
 		NumberProperties props = new NumberProperties();
 		if (number == null || number.length() <= 0) {
@@ -537,7 +537,6 @@ class DindyLogic {
 				break;
 			}
 		}
-		phonesCursor.deactivate();
 		phonesCursor.close();
 		phonesCursor = null;
 
@@ -557,6 +556,7 @@ class DindyLogic {
 		return props;
 	}
 
+	@SuppressWarnings("deprecation")
 	private void setRingerAndVibrateModes(DindySettings.RingerVibrateSettings
 			settings) {
 		if (mAM.getRingerMode() != settings.mRingerMode) { 
@@ -618,7 +618,7 @@ class DindyLogic {
 					context + ": WakeLock released, " + mWakeLock.toString());
 		}		
 	}
-	
+
 	private static String getCallerIdNumber(String number) {
 		String callerIdNumber = UNKNOWN_PHONE_NUMBER_CALLER_ID;
 		if (number != null && number.trim().length() > 0 &&
@@ -632,7 +632,7 @@ class DindyLogic {
 		
 		return callerIdNumber;
 	}
-	
+
 	class RemoveCallInfoTask extends TimerTask {
 		RemoveCallInfoTask(String numberToRemove) {
 			mNumberToRemove = numberToRemove;

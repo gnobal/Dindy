@@ -26,7 +26,7 @@ public class ProfilePreferencesHelper {
 		if (!mCacheIsOutdated) {
 			return !mCachedNames.isEmpty();
 		}
-		
+
 		SQLiteDatabase db = null;
 		Cursor cursor = null;
 		boolean exist = false;
@@ -39,7 +39,6 @@ public class ProfilePreferencesHelper {
 			}
 		} finally {
 			if (cursor != null) {
-				cursor.deactivate();
 				cursor.close();
 				cursor = null;
 			}
@@ -48,10 +47,10 @@ public class ProfilePreferencesHelper {
 				db = null;
 			}
 		}
-		
+
 		return exist;
 	}
-	
+
 	public LinkedList<String> getAllProfileNamesSorted() {
 		if (mCacheIsOutdated) {
 			loadCache();
@@ -75,7 +74,6 @@ public class ProfilePreferencesHelper {
 			}
 		} finally {
 			if (cursor != null) {
-				cursor.deactivate();
 				cursor.close();
 				cursor = null;
 			}
@@ -103,7 +101,6 @@ public class ProfilePreferencesHelper {
 			}
 		} finally {
 			if (cursor != null) {
-				cursor.deactivate();
 				cursor.close();
 				cursor = null;
 			}
@@ -115,7 +112,7 @@ public class ProfilePreferencesHelper {
 
 		return profileId;
 	}
-	
+
 	boolean profileExists(String name) {
 		if (!mCacheIsOutdated) {
 			return mCachedNames.contains(name);
@@ -131,7 +128,7 @@ public class ProfilePreferencesHelper {
 		SQLiteDatabase db = null;
 		long profileId = Consts.NOT_A_PROFILE_ID;
 		boolean success = true;
-		
+
 		try {
 			db = mDatabaseHelper.getWritableDatabase();
 			ContentValues contentValues = new ContentValues();
@@ -170,7 +167,7 @@ public class ProfilePreferencesHelper {
 		SQLiteDatabase db = null;
 		SharedPreferences.Editor editor = null;
 		boolean success = true;
-		
+
 		try {
 			profilePreferences = getPreferencesForProfile(context, name,
 					Context.MODE_PRIVATE);
@@ -190,7 +187,7 @@ public class ProfilePreferencesHelper {
 				db = null;
 			}
 		}
-		
+
 		if (mCacheIsOutdated) {
 			// no reason to even try update the cache
 			return;
@@ -219,7 +216,7 @@ public class ProfilePreferencesHelper {
 				db = null;
 			}
 		}
-		
+
 		if (mCacheIsOutdated) {
 			// no reason to even try update the cache
 			return;
@@ -236,7 +233,7 @@ public class ProfilePreferencesHelper {
 			SharedPreferences widgetPreferences, int widgetId) {
 		DindySettings.WidgetSettings settings = 
 			new DindySettings.WidgetSettings();
-		
+
 		// See:
 		// http://blog.elsdoerfer.name/2009/06/03/writing-an-android-widget-what-the-docs-dont-tell-you/
 		settings.mWidgetType = widgetPreferences.getInt(
@@ -251,10 +248,10 @@ public class ProfilePreferencesHelper {
 		if (settings.mProfileId == Consts.NOT_A_PROFILE_ID) {
 			return null;
 		}
-		
+
 		return settings;
 	}
-	
+
 	void setWidgetSettings(SharedPreferences widgetPreferences, int widgetId,
 			DindySettings.WidgetSettings settings) {
 		SharedPreferences.Editor editor = null;
@@ -273,7 +270,7 @@ public class ProfilePreferencesHelper {
 			editor = null;
 		}
 	}
-	
+
 	void deleteWidgetSettings(SharedPreferences widgetPreferences,
 			int widgetId) {
 		SharedPreferences.Editor editor = null;
@@ -314,7 +311,7 @@ public class ProfilePreferencesHelper {
 		SQLiteDatabase db = null;
 		Cursor cursor = null;
 		boolean success = true;
-		
+
 		try {
 			db = mDatabaseHelper.getWritableDatabase();
 			cursor = db.query(Database.PROFILES_TABLE_NAME, PROFILE_NAME_COLUMNS,
@@ -327,7 +324,6 @@ public class ProfilePreferencesHelper {
 			success = false;
 		} finally {
 			if (cursor != null) {
-				cursor.deactivate();
 				cursor.close();
 				cursor = null;
 			}
@@ -336,14 +332,14 @@ public class ProfilePreferencesHelper {
 				db = null;
 			}
 		}
-		
+
 		if (success) {
 			mCacheIsOutdated = false;
 		}
-		
+
 		return success;
 	}
-	
+
 	private SharedPreferences getPreferencesForProfile(Context context,
 			String profileName,	int mode) {
 		return context.getSharedPreferences(
@@ -353,7 +349,7 @@ public class ProfilePreferencesHelper {
 	private ProfilePreferencesHelper(Context context) {
 		mDatabaseHelper = new Database(context);
 	}
-	
+
 	private static final String[] PROFILE_NAME_COLUMNS = { Database.Profiles.NAME };
 	private static final int PROFILE_NAME_INDEX = 0;
 
@@ -362,11 +358,11 @@ public class ProfilePreferencesHelper {
 
 	private static final String ANY_PROFILES_EXIST_QUERY =  
 		"SELECT COUNT(*) FROM " + Database.PROFILES_TABLE_NAME;
-	
+
 	private Database mDatabaseHelper;
 	// private Context mContext;
 	private boolean mCacheIsOutdated = true;
 	private LinkedList<String> mCachedNames = new LinkedList<String>(); 
-	
+
 	private static ProfilePreferencesHelper mInstance = null;
 }

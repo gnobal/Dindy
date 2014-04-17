@@ -68,7 +68,7 @@ public class DindyService extends Service {
 		final long previousProfileId = mCurrentProfileId;
 		final boolean firstStart = (mCurrentProfileId == Consts.NOT_A_PROFILE_ID);
 		final boolean restartAfterKill = (intent == null);
-		
+
 		if (!restartAfterKill) {
 			final Bundle extras = intent.getExtras();
 			if (extras == null) {
@@ -81,8 +81,8 @@ public class DindyService extends Service {
 			storeLastStartupSettings(firstStart, extras);
 		}
 		final Bundle startupSettings = retrieveLastStartupSettings();
-		
-		
+
+
 		// Whoever started the service gave us a profile ID to use so we use
 		// it blindly
 		mCurrentProfileId = startupSettings.getLong(Consts.Prefs.Main.KEY_LAST_STARTUP_PROFILE_ID);
@@ -108,7 +108,7 @@ public class DindyService extends Service {
 			DindySingleProfileAppWidgetProvider.updateAllSingleProfileWidgets(
 				getApplicationContext(), mCurrentProfileId, previousProfileId);
 		}
-		
+
 		// We need to remember the user's settings in the following cases:
 		// 1. This is the first startup of the service
 		// 2. The service was killed and restarted. In this case we store whatever we stored when
@@ -117,7 +117,7 @@ public class DindyService extends Service {
 		// set by us
 		refreshSettings(mCurrentProfileId, firstStart || restartAfterKill, startupSettings);
 		saveLastUsedProfileId();
-		
+
 		mLogic.start(restartAfterKill);
 		mAlM.cancel(mPendingIntent);
 		final long absoluteTimeLimitMillis = startupSettings.getLong(
@@ -150,16 +150,16 @@ public class DindyService extends Service {
 				Toast.makeText(getApplicationContext(), refreshText, Toast.LENGTH_SHORT).show();
 			}
 		}
-		
+
 		sendBroadcast(new Intent().setAction(Consts.SERVICE_STARTED));
-		
+
 		return START_STICKY;
 	}
 
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		
+
 		if (Consts.DEBUG) {
 			Log.d(Consts.LOGTAG, "stopping profile " + mCurrentProfileId);
 		}
@@ -281,6 +281,7 @@ public class DindyService extends Service {
 		startForeground(R.string.dindy_service_started, builder.build());
 	}
 
+	@SuppressWarnings("deprecation")
 	private void refreshSettings(long selectedProfileId, boolean rememberUserSettings,
 		Bundle startupSettings) {
 		SharedPreferences profilePreferences = mPreferencesHelper.getPreferencesForProfile(
@@ -313,7 +314,7 @@ public class DindyService extends Service {
 		mSettings.mSecondRingSettings.mVibrateModeRinger = secondRingVibrate ? 
 			AudioManager.VIBRATE_SETTING_ON
 			: AudioManager.VIBRATE_SETTING_OFF;
-		
+
 		mSettings.mEnableSmsReplyToCall = profilePreferences.getBoolean(
 			Consts.Prefs.Profile.KEY_ENABLE_SMS_CALLERS,
 			Consts.Prefs.Profile.VALUE_ENABLE_SMS_CALLERS_DEFAULT);
@@ -326,7 +327,7 @@ public class DindyService extends Service {
 		mSettings.mMessageToTexters = profilePreferences.getString(
 			Consts.Prefs.Profile.KEY_SMS_MESSAGE_TEXTERS, getString(
 				R.string.preferences_profile_sms_message_texters_default_unset_value));
-		
+
 		// First let's see what the new value is. We need to notify DindyLogic
 		// about this change so we need to keep the new setting in a different
 		// variable
@@ -432,11 +433,11 @@ public class DindyService extends Service {
 			super(new Handler());
 			createCursor();
 		}
-		
+
 		public void destroy() {
 			destroyCursor();
 		}
-		
+
 		protected void requery() {
 			destroyCursor();
 			createCursor();
@@ -461,7 +462,7 @@ public class DindyService extends Service {
 		
 		protected Cursor mCursor = null;
 	}
-	
+
 	private class CallLogObserver extends AbstractObserver {
 		CallLogObserver() {
 			super();
@@ -525,10 +526,10 @@ public class DindyService extends Service {
 
 		@Override
 		protected Uri getContentUri() { return CallLog.Calls.CONTENT_URI; }
-		
+
 		@Override
 		protected String[] getProjection() { return mCallLogProjection; }
-		
+
 		@Override
 		protected String getQuery() { return CALL_LOG_QUERY; }
 
@@ -556,7 +557,8 @@ public class DindyService extends Service {
     }
 
 
-    private void storeLastStartupSettings(boolean firstStart, Bundle startupExtras) {
+    @SuppressWarnings("deprecation")
+	private void storeLastStartupSettings(boolean firstStart, Bundle startupExtras) {
 		SharedPreferences preferences = getSharedPreferences(
 			Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
 		SharedPreferences.Editor editor = preferences.edit();
@@ -573,7 +575,7 @@ public class DindyService extends Service {
 		editor.putLong(Consts.Prefs.Main.KEY_LAST_STARTUP_INTENT_ABS_TIME_LIMIT_MILLIS,
 			relativeTimeLimitMillis == Consts.NOT_A_TIME_LIMIT ?
 			Consts.NOT_A_TIME_LIMIT : System.currentTimeMillis() + relativeTimeLimitMillis);
-		
+
 		if (firstStart) {
 			// Only store these if this is the first startup. Otherwise we'll read our own settings
 			editor.putInt(Consts.Prefs.Main.KEY_LAST_STARTUP_VIBRATE_TYPE_RINGER,
@@ -582,14 +584,14 @@ public class DindyService extends Service {
 				mAuM.getVibrateSetting(AudioManager.VIBRATE_TYPE_NOTIFICATION));
 			editor.putInt(Consts.Prefs.Main.KEY_LAST_STARTUP_RINGER_MODE, mAuM.getRingerMode());
 		}
-		
+
 		editor.commit();
 		editor = null;
 		preferences = null;
+	}
 
-    }
-
-    private Bundle retrieveLastStartupSettings() {
+    @SuppressWarnings("deprecation")
+	private Bundle retrieveLastStartupSettings() {
 		SharedPreferences preferences = getSharedPreferences(
 			Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
 		final Bundle startupSettings = new Bundle();
@@ -603,7 +605,7 @@ public class DindyService extends Service {
 		startupSettings.putLong(Consts.Prefs.Main.KEY_LAST_STARTUP_INTENT_ABS_TIME_LIMIT_MILLIS,
 			preferences.getLong(Consts.Prefs.Main.KEY_LAST_STARTUP_INTENT_ABS_TIME_LIMIT_MILLIS,
 				Consts.NOT_A_TIME_LIMIT));
-		
+
 		startupSettings.putInt(Consts.Prefs.Main.KEY_LAST_STARTUP_VIBRATE_TYPE_RINGER,
 			preferences.getInt(Consts.Prefs.Main.KEY_LAST_STARTUP_VIBRATE_TYPE_RINGER,
 				AudioManager.VIBRATE_SETTING_ON));
@@ -614,10 +616,10 @@ public class DindyService extends Service {
 			Consts.Prefs.Main.KEY_LAST_STARTUP_RINGER_MODE,
 			AudioManager.RINGER_MODE_NORMAL));
 		preferences = null;
-		
+
 		return startupSettings;
-    }
-    
+	}
+
 	private DindyLogic mLogic = null;
 	private TelephonyManager mTM = null;
 	private AudioManager mAuM = null;
@@ -635,7 +637,7 @@ public class DindyService extends Service {
 	//private SmsObserver mSmsObserver = null;
 	private static final String SMS_RECEIVED_ACTION =
 		"android.provider.Telephony.SMS_RECEIVED";
-	
+
 	private static final String[] mCallLogProjection = 
 	{ 
 		CallLog.Calls.NUMBER, // 0
@@ -650,5 +652,4 @@ public class DindyService extends Service {
 		CallLog.Calls.TYPE + " = " + CallLog.Calls.MISSED_TYPE + 
 		" OR " + CallLog.Calls.TYPE + " = " + CallLog.Calls.INCOMING_TYPE;
 	private static final String CALL_LOG_SORT_ORDER = CallLog.Calls.DATE + " DESC";
-
 }

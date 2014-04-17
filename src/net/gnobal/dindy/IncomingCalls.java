@@ -12,12 +12,12 @@ class IncomingCalls {
 	IncomingCalls(Context context) {
 		mDatabaseHelper = new Database(context);
 	}
-	
+
 	boolean rebuild() {
 		SQLiteDatabase db = null;
 		Cursor cursor = null;
 		boolean success = true;
-		
+
 		try {
 			db = mDatabaseHelper.getWritableDatabase();
 			cursor = db.query(Database.INCOMING_CALLS_TABLE_NAME, INCOMING_CALLS_COLUMNS,
@@ -34,7 +34,6 @@ class IncomingCalls {
 			success = false;
 		} finally {
 			if (cursor != null) {
-				cursor.deactivate();
 				cursor.close();
 				cursor = null;
 			}
@@ -43,14 +42,14 @@ class IncomingCalls {
 				db = null;
 			}
 		}
-		
+
 		return success;
 	}
-	
+
 	IncomingCallInfo get(String callerIdNumber) {
 		return mCallsMap.get(callerIdNumber);
 	}
-	
+
 	void put(String callerIdNumber, IncomingCallInfo callInfo) {
 		SQLiteDatabase db = null;
 		boolean success = true;
@@ -78,10 +77,10 @@ class IncomingCalls {
 		if (!success) {
 			return;
 		}
-		
+
 		mCallsMap.put(callerIdNumber, callInfo);		
 	}
-	
+
 	IncomingCallInfo remove(String callerIdNumber) {
 		SQLiteDatabase db = null;
 		boolean success = true;		
@@ -98,14 +97,14 @@ class IncomingCalls {
 				db = null;
 			}
 		}
-		
+
 		if (!success) {
 			return null;
 		}
 
 		return mCallsMap.remove(callerIdNumber);
 	}
-	
+
 	void clear() {
 		SQLiteDatabase db = null;
 		boolean success = true;		
@@ -120,22 +119,22 @@ class IncomingCalls {
 				db = null;
 			}
 		}
-		
+
 		if (!success) {
 			return;
 		}
-		
+
 		mCallsMap.clear();
 	}
-	
+
 	boolean numberExists(String callerIdNumber) {
 		return mCallsMap.containsKey(callerIdNumber);
 	}
-	
+
 	Iterator<String> callerIdNumbersIterator() {
 		return mCallsMap.keySet().iterator();
 	}
-	
+
 	private HashMap<String, IncomingCallInfo> mCallsMap = new HashMap<String, IncomingCallInfo>();
 	private Database mDatabaseHelper;
 
