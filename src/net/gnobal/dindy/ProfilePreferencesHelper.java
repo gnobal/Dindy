@@ -87,7 +87,7 @@ public class ProfilePreferencesHelper {
 
 		return name;
 	}
-	
+
 	public long getProfileIdFromName(String name) {
 		SQLiteDatabase db = null;
 		Cursor cursor = null;

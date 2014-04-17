@@ -68,7 +68,7 @@ public class ProfileStarterActivity extends Activity {
 		
 		return new int[]{hour, minute};
 	}
-	
+
 	static private long diffTimeMillis(Calendar c, int toHour, int toMinute,
 			boolean adjustToMinuteStart) {
 		Calendar selected = Calendar.getInstance();
@@ -92,7 +92,7 @@ public class ProfileStarterActivity extends Activity {
 		
 		return diffMillis;
 	}
-	
+
 	private void startDindyServiceWithTimeLimit() {
 		SharedPreferences profilePreferences =
 			mPreferencesHelper.getPreferencesForProfile(getApplicationContext(),
@@ -343,7 +343,7 @@ public class ProfileStarterActivity extends Activity {
 				mSelectedProfileId, null, mIntentSource,
 				timeLimitMillis));
 	}
-	
+
 	private ProfilePreferencesHelper mPreferencesHelper = null;
 	private int mTimeLimitType;
 	private long mTimeLimitMinutes;

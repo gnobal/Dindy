@@ -150,7 +150,7 @@ public class ProfileNameDialogFragment extends DialogFragment {
 			if (Consts.DEBUG) Log.d(Consts.LOGTAG, "Cancel click");
 		}		
 	}
-	
+
 	private class OkClickListener implements DialogInterface.OnClickListener {		
 		public void onClick(DialogInterface dialog, int which) {
 			if (Consts.DEBUG) Log.d(Consts.LOGTAG, "OK click");
@@ -188,6 +188,6 @@ public class ProfileNameDialogFragment extends DialogFragment {
 			mListener.onSuccess(getArguments().getInt("type"), newProfileName, newProfileId);
 		}
 	}
-	
+
 	private Listener mListener; 
 }
