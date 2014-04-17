@@ -16,8 +16,9 @@
 <string name="dialog_profile_name_rename_title_prefix">Rename</string>
 <string name="preferences_profile_sms_message_callers">SMS message (callers)</string>
 <string name="preferences_profile_sms_message_callers_default_unset_value">Hi. This is an automated message. I\'m occupied. Call again in the next 5 minutes if it\'s urgent.</string>
-<string name="main_start">Start</string>
-<string name="main_stop">Stop</string>
+<string name="start_stop">Start/Stop</string>
+<string name="start">Start</string>
+<string name="stop">Stop</string>
 <string name="main_no_available_profile">No profiles defined</string>
 <string name="preferences_profile_enable_sms_reply_to_call_title">Enable SMS reply-to-call</string>
 <string name="preferences_profile_sms_reply_to_call">SMS reply-to-call</string>

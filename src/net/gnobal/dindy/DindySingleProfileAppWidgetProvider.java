@@ -112,6 +112,8 @@ public class DindySingleProfileAppWidgetProvider extends AppWidgetProvider {
     				R.layout.single_profile_appwidget);
     		views.setImageViewResource(R.id.single_profile_app_widget_image_button,
     				R.drawable.app_widget_button_selector_off);
+    		views.setContentDescription(R.id.single_profile_app_widget_image_button,
+    				context.getString(R.string.stop));
     		pendingIntent = PendingIntent.getBroadcast(context, 0,
     				DindyService.getStopServiceBroadcastIntent(), 0);	
     	} else if (!(profileExists = prefsHelper.profileExists(widgetSettings.mProfileId))) {
@@ -135,6 +137,8 @@ public class DindySingleProfileAppWidgetProvider extends AppWidgetProvider {
     				R.layout.single_profile_appwidget);
     		views.setImageViewResource(R.id.single_profile_app_widget_image_button,
     				R.drawable.app_widget_button_selector_on);
+    		views.setContentDescription(R.id.single_profile_app_widget_image_button,
+    				context.getString(R.string.start));
         	//pendingIntent = PendingIntent.getService(context, 0, 
             //		DindyService.getStartServiceIntent(context,
             //				widgetSettings.mProfileId, null, 

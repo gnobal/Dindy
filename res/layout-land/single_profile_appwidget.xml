@@ -11,13 +11,14 @@
 		android:layout_height="wrap_content" 
 		android:layout_width="wrap_content" 
 		android:paddingBottom="3dp"
+		android:contentDescription="@string/start_stop"
 		android:paddingTop="@dimen/single_profile_widget_padding_top_land">
 	</ImageButton>
 	<TextView 
 		android:layout_width="wrap_content" 
 		android:layout_height="wrap_content" 
 		android:id="@+id/single_profile_app_widget_text" 
-		android:text="Test" 
+		android:text="@string/dynamic" 
 		android:lines="1" 
 		android:background="#B2191919" 
 		android:singleLine="true" 

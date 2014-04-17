@@ -241,11 +241,6 @@ public class ProfilePreferencesActivity extends PreferenceActivity {
         		R.string.preferences_profile_time_between_events_summary,
         		timeBetweenCallsPref.getEntry());
 
-		// Time limit category
-		//PreferenceCategory timeLimitCat = new PreferenceCategory(this);
-		//timeLimitCat.setTitle(R.string.preferences_profile_time_limit_cat);
-		//root.addPreference(timeLimitCat);
-
 		CheckBoxPreference useTimeLimitPref = new CheckBoxPreference(this);
 		useTimeLimitPref.setKey(Consts.Prefs.Profile.KEY_USE_TIME_LIMIT);
 		useTimeLimitPref.setTitle(

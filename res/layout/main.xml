@@ -10,6 +10,7 @@
         android:focusable="false"
         android:layout_height="wrap_content"
         android:id="@+id/main_power_button"
+        android:contentDescription="@string/start_stop"
         android:background="@drawable/transparent_background">    
     </ImageButton>
     <LinearLayout

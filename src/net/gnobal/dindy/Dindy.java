@@ -280,7 +280,7 @@ public class Dindy extends Activity implements ProfileNameDialogFragment.Listene
 			mPreferencesHelper.getProfielNameFromId(mSelectedProfileId));
 
 		if (isDindyServiceRunning) {
-			startStopTextView.setText(getString(R.string.main_stop));
+			startStopTextView.setText(getString(R.string.stop));
 
 			if (mSelectedProfileId != Consts.NOT_A_PROFILE_ID) {
 				profileTextView.setText(" " + getString(R.string.main_profile) 
@@ -293,9 +293,10 @@ public class Dindy extends Activity implements ProfileNameDialogFragment.Listene
 			}
 			powerButton.setEnabled(true);
 			powerButton.setImageResource(R.drawable.power_button_selector_off);
+			powerButton.setContentDescription(getString(R.string.stop));
 		} else {
 			if (mSelectedProfileId != Consts.NOT_A_PROFILE_ID) {
-				startStopTextView.setText(getString(R.string.main_start));
+				startStopTextView.setText(getString(R.string.start));
 				profileTextView.setText(" " + getString(R.string.main_profile) +
 						" ");
 				profileNameView.setText(
@@ -303,6 +304,7 @@ public class Dindy extends Activity implements ProfileNameDialogFragment.Listene
 								mSelectedProfileId));
 				powerButton.setEnabled(true);
 				powerButton.setImageResource(R.drawable.power_button_selector_on);
+				powerButton.setContentDescription(getString(R.string.start));
 			} else {
 				startStopTextView.setText(R.string.main_no_available_profile);
 				profileTextView.setText(Consts.EMPTY_STRING);
