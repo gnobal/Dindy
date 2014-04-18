@@ -556,7 +556,6 @@ class DindyLogic {
 		return props;
 	}
 
-	@SuppressWarnings("deprecation")
 	private void setRingerAndVibrateModes(DindySettings.RingerVibrateSettings
 			settings) {
 		if (mAM.getRingerMode() != settings.mRingerMode) { 
@@ -565,20 +564,20 @@ class DindyLogic {
 					Utils.ringerModeToString(settings.mRingerMode));
 			mAM.setRingerMode(settings.mRingerMode);
 		}
-		if (mAM.getVibrateSetting(AudioManager.VIBRATE_TYPE_RINGER) != 
+		if (AudioManagerCompat.getVibrateSetting(mAM, AudioManagerCompat.VIBRATE_TYPE_RINGER) !=
 			settings.mVibrateModeRinger) {
 			if (Consts.DEBUG) Log.d(Consts.LOGTAG,
 					"setRingerAndVibrateModes: setting vibrateRinger=" +
 					Utils.vibrationSettingToString(settings.mVibrateModeRinger));
-			mAM.setVibrateSetting(AudioManager.VIBRATE_TYPE_RINGER,
+			AudioManagerCompat.setVibrateSetting(mAM, AudioManagerCompat.VIBRATE_TYPE_RINGER,
 					settings.mVibrateModeRinger);
 		}
-		if (mAM.getVibrateSetting(AudioManager.VIBRATE_TYPE_NOTIFICATION) !=
+		if (AudioManagerCompat.getVibrateSetting(mAM, AudioManagerCompat.VIBRATE_TYPE_NOTIFICATION) !=
 			settings.mVibrateModeNotification) {
 			if (Consts.DEBUG) Log.d(Consts.LOGTAG,
 					"setRingerAndVibrateModes: setting vibrateNotification=" +
 					Utils.vibrationSettingToString(settings.mVibrateModeNotification));
-			mAM.setVibrateSetting(AudioManager.VIBRATE_TYPE_NOTIFICATION,
+			AudioManagerCompat.setVibrateSetting(mAM, AudioManagerCompat.VIBRATE_TYPE_NOTIFICATION,
 					settings.mVibrateModeNotification);
 		}
 	}

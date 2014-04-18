@@ -281,7 +281,6 @@ public class DindyService extends Service {
 		startForeground(R.string.dindy_service_started, builder.build());
 	}
 
-	@SuppressWarnings("deprecation")
 	private void refreshSettings(long selectedProfileId, boolean rememberUserSettings,
 		Bundle startupSettings) {
 		SharedPreferences profilePreferences = mPreferencesHelper.getPreferencesForProfile(
@@ -303,8 +302,8 @@ public class DindyService extends Service {
 				: AudioManager.RINGER_MODE_SILENT);
 		mSettings.mFirstRingSettings.mVibrateModeNotification =
 		mSettings.mFirstRingSettings.mVibrateModeRinger = firstRingVibrate ? 
-			AudioManager.VIBRATE_SETTING_ON
-			: AudioManager.VIBRATE_SETTING_OFF;
+			AudioManagerCompat.VIBRATE_SETTING_ON
+			: AudioManagerCompat.VIBRATE_SETTING_OFF;
 		mSettings.mSecondRingSettings.mRingerMode = secondRingSound ? 
 			AudioManager.RINGER_MODE_NORMAL
 			: (secondRingVibrate ? 
@@ -312,8 +311,8 @@ public class DindyService extends Service {
 				: AudioManager.RINGER_MODE_SILENT);
 		mSettings.mSecondRingSettings.mVibrateModeNotification =
 		mSettings.mSecondRingSettings.mVibrateModeRinger = secondRingVibrate ? 
-			AudioManager.VIBRATE_SETTING_ON
-			: AudioManager.VIBRATE_SETTING_OFF;
+			AudioManagerCompat.VIBRATE_SETTING_ON
+			: AudioManagerCompat.VIBRATE_SETTING_OFF;
 
 		mSettings.mEnableSmsReplyToCall = profilePreferences.getBoolean(
 			Consts.Prefs.Profile.KEY_ENABLE_SMS_CALLERS,
@@ -556,8 +555,6 @@ public class DindyService extends Service {
         return addresses;
     }
 
-
-    @SuppressWarnings("deprecation")
 	private void storeLastStartupSettings(boolean firstStart, Bundle startupExtras) {
 		SharedPreferences preferences = getSharedPreferences(
 			Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
@@ -579,9 +576,9 @@ public class DindyService extends Service {
 		if (firstStart) {
 			// Only store these if this is the first startup. Otherwise we'll read our own settings
 			editor.putInt(Consts.Prefs.Main.KEY_LAST_STARTUP_VIBRATE_TYPE_RINGER,
-				mAuM.getVibrateSetting(AudioManager.VIBRATE_TYPE_RINGER));
+				AudioManagerCompat.getVibrateSetting(mAuM, AudioManagerCompat.VIBRATE_TYPE_RINGER));
 			editor.putInt(Consts.Prefs.Main.KEY_LAST_STARTUP_VIBRATE_TYPE_NOTIFICATION,
-				mAuM.getVibrateSetting(AudioManager.VIBRATE_TYPE_NOTIFICATION));
+				AudioManagerCompat.getVibrateSetting(mAuM, AudioManagerCompat.VIBRATE_TYPE_NOTIFICATION));
 			editor.putInt(Consts.Prefs.Main.KEY_LAST_STARTUP_RINGER_MODE, mAuM.getRingerMode());
 		}
 
@@ -590,7 +587,6 @@ public class DindyService extends Service {
 		preferences = null;
 	}
 
-    @SuppressWarnings("deprecation")
 	private Bundle retrieveLastStartupSettings() {
 		SharedPreferences preferences = getSharedPreferences(
 			Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
@@ -608,10 +604,10 @@ public class DindyService extends Service {
 
 		startupSettings.putInt(Consts.Prefs.Main.KEY_LAST_STARTUP_VIBRATE_TYPE_RINGER,
 			preferences.getInt(Consts.Prefs.Main.KEY_LAST_STARTUP_VIBRATE_TYPE_RINGER,
-				AudioManager.VIBRATE_SETTING_ON));
+				AudioManagerCompat.VIBRATE_SETTING_ON));
 		startupSettings.putInt(Consts.Prefs.Main.KEY_LAST_STARTUP_VIBRATE_TYPE_NOTIFICATION,
 			preferences.getInt(Consts.Prefs.Main.KEY_LAST_STARTUP_VIBRATE_TYPE_NOTIFICATION,
-				AudioManager.VIBRATE_SETTING_ON));
+				AudioManagerCompat.VIBRATE_SETTING_ON));
 		startupSettings.putInt(Consts.Prefs.Main.KEY_LAST_STARTUP_RINGER_MODE, preferences.getInt(
 			Consts.Prefs.Main.KEY_LAST_STARTUP_RINGER_MODE,
 			AudioManager.RINGER_MODE_NORMAL));

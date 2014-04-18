@@ -12,12 +12,11 @@ class Utils {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
 	static String vibrationSettingToString(int vibrationSetting) {
 		switch (vibrationSetting) {
-		case AudioManager.VIBRATE_SETTING_OFF: return "OFF";
-		case AudioManager.VIBRATE_SETTING_ON: return "ON";
-		case AudioManager.VIBRATE_SETTING_ONLY_SILENT: return "ONLY_SILENT";
+		case AudioManagerCompat.VIBRATE_SETTING_OFF: return "OFF";
+		case AudioManagerCompat.VIBRATE_SETTING_ON: return "ON";
+		case AudioManagerCompat.VIBRATE_SETTING_ONLY_SILENT: return "ONLY_SILENT";
 		default: return Integer.toString(vibrationSetting);
 		}
 	}
