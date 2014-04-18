@@ -2,16 +2,16 @@ package net.gnobal.dindy;
 
 public class Consts {
 
-	class IncomingCallState
+	static class IncomingCallState
 	{
 		static final int IDLE = 0;
 		static final int RINGING = 1;
 		static final int OFFHOOK = 2;
 	}
 
-	public class Prefs
+	public static class Prefs
 	{
-		public class Main
+		public static class Main
 		{
 			public static final String NAME = "main_preferences";
 			static final String LAST_USED_PROFILE_ID = "last_profile_id";
@@ -41,13 +41,13 @@ public class Consts {
 				"last_startup_ringer_mode";
 		}
 		
-		class Widget
+		static class Widget
 		{
 			static final String NAME = "widget_preferences";
 			static final String KEY_TYPE = "_type";
 			static final String KEY_PROFILE_ID = "_profile";
 			
-			class Type
+			static class Type
 			{
 			    // Never change these values - they're kept in preferences
 			    final static int INVALID = -1;
@@ -56,7 +56,7 @@ public class Consts {
 			}
 		}
 		
-		class Profile
+		static class Profile
 		{
 			static final String PREFIX = "_profile_";
 			static final String KEY_TIME_BETWEEN_EVENTS_MINUTES =
@@ -93,7 +93,7 @@ public class Consts {
 			static final String KEY_FIRST_EVENT_VIBRATE = "first_ring_vibrate";
 			static final String KEY_SECOND_EVENT_SOUND =  "second_ring_sound";
 			static final String KEY_SECOND_EVENT_VIBRATE = "second_ring_vibrate";
-			class TimeLimitType
+			static class TimeLimitType
 			{
 				static final int DURATION = 1;
 				static final int TIME_OF_DAY = 2;
