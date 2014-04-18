@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="single_profile_widget_padding_bottom">3dp</dimen>
+</resources>
