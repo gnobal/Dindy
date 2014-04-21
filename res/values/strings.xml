@@ -26,6 +26,9 @@
 <string name="preferences_profile_time_between_events_title">Time between events</string>
 <string name="preferences_profile_time_between_events_summary">Time period between the first and second events</string>
 <string name="preferences_profile_general">General</string>
+<string name="preferences_profile_whitelist_caller_behavior_dialog_title">Use setting</string>
+<string name="preferences_profile_whitelist_caller_behavior_title">Whitelist caller</string>
+<string name="preferences_profile_whitelist_caller_behavior_summary">Settings to use for a caller in the whitelist</string>
 <string name="preferences_profile_unknown_caller_behavior_dialog_title">Use setting</string>
 <string name="preferences_profile_unknown_caller_behavior_title">Unknown caller</string>
 <string name="preferences_profile_enable_sms_reply_to_call_summary">Enables reply with SMS when a mobile contact calls for the first time</string>
@@ -95,6 +98,15 @@
 <string name="menu_main_rename_profile">Rename</string>
 <string name="menu_main_delete_profile">Delete</string>
 <string name="menu_main_edit_profile">Edit</string>
+<string name="menu_main_whitelist">Whitelist</string>
 <string name="menu_main_help">Help</string>
 <string name="menu_profile_editor_done">Done</string>
+<string name="menu_whitelist_editor_done">Done</string>
+<string name="menu_whitelist_add">Add</string>
+<string name="whitelist">Whitelist</string>
+<string name="whitelist_usage_text">The contacts added to the whitelist apply to all profiles.\n\nYou can edit Dindy\'s behavior for whitelisted contacts in every profile separately.</string>
+<string name="whitelist_usage_title">Whitelist usage</string>
+<string name="whitelist_loading">Loading&#8230; please wait</string>
+<string name="whitelist_empty">The whitelist is empty</string>
+<string name="whitelist_remove_contact">Remove contact from whitelist</string>
 </resources>

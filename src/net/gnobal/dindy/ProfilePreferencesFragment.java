@@ -177,6 +177,20 @@ public class ProfilePreferencesFragment extends PreferenceFragment {
 		callersCat.setTitle(R.string.preferences_profile_callers);
 		root.addPreference(callersCat);
 
+		// Treat whitelist callers as
+		ListPreference whitelistPref = new ListPreference(getActivity());
+		whitelistPref.setEntries(R.array.whitelist_caller_behavior_array_strings);
+		whitelistPref.setEntryValues(R.array.whitelist_caller_behavior_array_values);
+		whitelistPref.setDialogTitle(R.string.preferences_profile_whitelist_caller_behavior_dialog_title);
+		whitelistPref.setKey(Consts.Prefs.Profile.KEY_TREAT_WHITELIST_CALLERS);
+		whitelistPref.setTitle(R.string.preferences_profile_whitelist_caller_behavior_title);
+		whitelistPref.setOnPreferenceChangeListener(new SummaryWithValuePreferenceChangeListener(
+				R.string.preferences_profile_whitelist_caller_behavior_summary));
+		callersCat.addPreference(whitelistPref);
+		setListPrefernceSummaryWithValue(whitelistPref,
+				R.string.preferences_profile_whitelist_caller_behavior_summary,
+				whitelistPref.getEntry());
+
 		// Treat non-mobile callers as
 		ListPreference treatNonMobileCallersPref = new ListPreference(
 				getActivity());
@@ -423,6 +437,12 @@ public class ProfilePreferencesFragment extends PreferenceFragment {
 			editor.putString(
 					Consts.Prefs.Profile.KEY_TIME_BETWEEN_EVENTS_MINUTES,
 					Consts.Prefs.Profile.VALUE_TIME_BETWEEN_EVENTS_DEFAULT);
+		}
+		if (!sharedPreferences
+				.contains(Consts.Prefs.Profile.KEY_TREAT_WHITELIST_CALLERS)) {
+			editor.putString(
+					Consts.Prefs.Profile.KEY_TREAT_WHITELIST_CALLERS, 
+					Consts.Prefs.Profile.VALUE_TREAT_WHITELIST_CALLERS_DEFAULT);
 		}
 		if (!sharedPreferences
 				.contains(Consts.Prefs.Profile.KEY_TREAT_UNKNOWN_CALLERS)) {

@@ -78,6 +78,7 @@ class DindyLogic {
 	    mContext.registerReceiver(mOnSentReceiver, new IntentFilter(
 	    		SMS_PENDING_INTENT_NAME));
 	    mSM = SmsManager.getDefault();
+	    mWhitelistHelper = new WhitelistHelper(context);
 	}
 
 	void start(boolean rebuildIncomingCalls) {
@@ -144,6 +145,7 @@ class DindyLogic {
 		mAM = null;
 		mResolver = null;
 		mSettings = null;
+		mWhitelistHelper = null;
 	}
 
 	void onCallStateChange(int newState, String number) {
@@ -252,6 +254,16 @@ class DindyLogic {
 		}
 		if (Consts.DEBUG) Log.d(Consts.LOGTAG, 
 			"onMissedCall: number " + number + ", callerIdNumber " + callerIdNumber);
+
+		final NumberProperties numberProps = getNumberProperties(number);
+		if (numberProps.mIsInWhitelist &&
+			!Consts.Prefs.Profile.VALUE_TREAT_WHITELIST_CALLERS_AS_NO_PRIORITY.equals(mSettings.mTreatWhitelistCallers)) {
+			if (Consts.DEBUG) Log.d(Consts.LOGTAG, 
+				"onMissedCall: callerIdNumber " + callerIdNumber + " is in whitelist");
+			releaseWakeLockIfHeld("onMissedCall");
+			return;
+		}
+		
 		// if the number that's missed was the last one we remember as ringing
 		// and a new missed call with the same number appeared in the call log -
 		// it's safe to say that we found a missed call and we should probably 
@@ -271,7 +283,6 @@ class DindyLogic {
 
 		// A new missed call that we haven't saved yet
 		// Is it a number we need to remember?
-		NumberProperties numberProps = getNumberProperties(number);
 		final boolean shouldRemember = numberProps.mIsMobile ||
 			(numberProps.mIsKnown && Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_MOBILE_NO_SMS.equals(mSettings.mTreatNonMobileCallers)) ||
 			(!numberProps.mIsKnown && Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_MOBILE_NO_SMS.equals(mSettings.mTreatUnknownCallers));
@@ -409,6 +420,26 @@ class DindyLogic {
 			return;
 		}
 
+		final NumberProperties numberProps = getNumberProperties(number);
+		// Whitelist gets precedence
+		if (numberProps.mIsInWhitelist) {
+			if (Consts.Prefs.Profile.VALUE_TREAT_WHITELIST_CALLERS_AS_SECOND.equals(mSettings.mTreatWhitelistCallers)) {
+				setRingerAndVibrateModes(mSettings.mSecondRingSettings);
+				return;
+			} else if (Consts.Prefs.Profile.VALUE_TREAT_WHITELIST_CALLERS_AS_NORMAL.equals(mSettings.mTreatWhitelistCallers)) {
+				setRingerAndVibrateModes(mSettings.mUserSettings);
+				return;
+			} else if (Consts.Prefs.Profile.VALUE_TREAT_WHITELIST_CALLERS_AS_NO_PRIORITY.equals(mSettings.mTreatWhitelistCallers)) {
+				// Simply let the code continue to apply the other settings to this call
+			} else {
+				if (Consts.DEBUG) Log.d(Consts.LOGTAG,
+						"Code should never get here. Selected whitelist option: " + mSettings.mTreatWhitelistCallers);
+				// Use the default
+				setRingerAndVibrateModes(mSettings.mSecondRingSettings);
+				return;
+			}
+		}
+
 		// Do we care about this call:
 		// Is it a returning number? Should we treat as second call?
 		synchronized (mIncomingCalls) {
@@ -441,7 +472,6 @@ class DindyLogic {
 		// It's not a number that called us. Let's see if it's a number that 
 		// we're supposed to remember. If it is, we use the first ring settings.
 		// If it's not, we use whatever the user asked us to in this case
-		NumberProperties numberProps = getNumberProperties(number);
 		if (numberProps.mIsMobile) {
 			// Quiet the phone down according to user's setting
 			setRingerAndVibrateModes(mSettings.mFirstRingSettings);
@@ -519,6 +549,7 @@ class DindyLogic {
 	{
 		boolean mIsKnown = false;
 		boolean mIsMobile = false;
+		boolean mIsInWhitelist = false;
 	}
 
 	private NumberProperties getNumberProperties(String number) {
@@ -532,6 +563,9 @@ class DindyLogic {
 		int count = phonesCursor.getCount();
 		props.mIsKnown = count >= 1;
 		while (phonesCursor.moveToNext()) {
+			if (mWhitelistHelper.isInWhitelist(phonesCursor.getLong(CONTACT_ID_INDEX))) {
+				props.mIsInWhitelist = true;
+			}
 			if (phonesCursor.getInt(PHONE_TYPE_INDEX) == CommonDataKinds.Phone.TYPE_MOBILE) {
 				props.mIsMobile = true;
 				break;
@@ -547,6 +581,13 @@ class DindyLogic {
 			} else {
 				if (Consts.DEBUG) Log.d(Consts.LOGTAG, 
 					"getNumberProperties: known non-mobile number " + number);
+			}
+			if (props.mIsInWhitelist) {
+				if (Consts.DEBUG) Log.d(Consts.LOGTAG,
+					"getNumberProperties: " + number + " is in the whitelist");
+			} else {
+				if (Consts.DEBUG) Log.d(Consts.LOGTAG,
+					"getNumberProperties: " + number + " is not in the whitelist");
 			}
 		} else {
 			if (Consts.DEBUG) Log.d(Consts.LOGTAG, 
@@ -662,11 +703,13 @@ class DindyLogic {
 	private IncomingCalls mIncomingCalls;
 	private int mPreviousCallState = Consts.IncomingCallState.IDLE;
 	private Context mContext;
+	private WhitelistHelper mWhitelistHelper;
 	private AudioManager mAM = null;
 	private PowerManager mPM = null;
 	private PowerManager.WakeLock mWakeLock = null;
-	private static final String[] PHONES_PROJECTION = { PhoneLookup.TYPE };
+	private static final String[] PHONES_PROJECTION = { PhoneLookup.TYPE, PhoneLookup._ID };
 	private static final int PHONE_TYPE_INDEX = 0; 
+	private static final int CONTACT_ID_INDEX = 1; 
 	private ContentResolver mResolver = null;
 	private BroadcastReceiver mOnSentReceiver = new BroadcastReceiver() {
 		@Override

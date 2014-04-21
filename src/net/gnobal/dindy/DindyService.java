@@ -351,6 +351,9 @@ public class DindyService extends Service {
 		mSettings.mTreatUnknownTexters = profilePreferences.getString(
 			Consts.Prefs.Profile.KEY_TREAT_UNKNOWN_TEXTERS,
 			Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_TEXTERS_DEFAULT);
+		mSettings.mTreatWhitelistCallers = profilePreferences.getString(
+			Consts.Prefs.Profile.KEY_TREAT_WHITELIST_CALLERS,
+			Consts.Prefs.Profile.VALUE_TREAT_WHITELIST_CALLERS_DEFAULT);
 		
 		if (rememberUserSettings) {
 			mSettings.mUserSettings.mVibrateModeNotification = 

@@ -17,6 +17,7 @@ class Database extends SQLiteOpenHelper {
 			Profiles.NAME + " TEXT" + ");");
 		
 		createIncomingCallsTable(db);
+		createWhitelistTable(db);
 	}
 
 	@Override
@@ -25,30 +26,46 @@ class Database extends SQLiteOpenHelper {
 			// Upgrade from version 1 to 2
 			createIncomingCallsTable(db);
 		}
+		if (oldVersion < 3) {
+			// Upgrade from version 2 to 3
+			createWhitelistTable(db);
+		}
 	}
-	
+
 	static final class Profiles implements BaseColumns {
 		public static final String NAME = "name";
 	}
-	
+
 	static final class DbIncomingCallInfo implements BaseColumns {
 		public static final String CALLER_ID_NUMBER = "caller_id_number";
 		public static final String NUMBER = "number";
 		public static final String ABSOLUTE_WAKEUP_TIME_MILLIS = "abs_wakeup_time_millis";
 	}
-	
+
+	static final class DbWhitelist implements BaseColumns {
+		public static final String CONTACT_ID = "contact_id";
+	}
+
 	static final String PROFILES_TABLE_NAME = "profiles";
 	static final String INCOMING_CALLS_TABLE_NAME = "incoming_calls";
-	
-	
+	static final String WHITELIST_TABLE_NAME = "whitelist";
+
 	private void createIncomingCallsTable(SQLiteDatabase db) {
 		db.execSQL("CREATE TABLE " + INCOMING_CALLS_TABLE_NAME + " (" +
 			DbIncomingCallInfo._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
 			DbIncomingCallInfo.CALLER_ID_NUMBER + " TEXT," +
 			DbIncomingCallInfo.NUMBER + " TEXT," + 
-			DbIncomingCallInfo.ABSOLUTE_WAKEUP_TIME_MILLIS + " BIGINT" + ");");
+			DbIncomingCallInfo.ABSOLUTE_WAKEUP_TIME_MILLIS + " BIGINT" +
+			");");
 	}
-	
+
+	private void createWhitelistTable(SQLiteDatabase db) {
+		db.execSQL("CREATE TABLE " + WHITELIST_TABLE_NAME + " (" +
+			DbWhitelist._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+			DbWhitelist.CONTACT_ID + " INTEGER UNIQUE" +
+			");");
+	}
+
 	private static final String DATABASE_NAME = "dindy.db";
-	private static final int DATABASE_VERSION = 2;
+	private static final int DATABASE_VERSION = 3;
 }

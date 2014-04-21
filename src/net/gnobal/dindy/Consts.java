@@ -20,6 +20,7 @@ public class Consts {
 				"show_startup_message";
 			public static final String KEY_SHOW_LOCALE_USAGE = "show_locale_usage";
 			public static final String KEY_SHOW_SHORTCUTS_USAGE = "show_shortcuts_usage";
+			public static final String KEY_SHOW_WHITELIST_USAGE = "show_whitelist_usage";
 			
 			// The following keys should match the keys associated with EXTRA_* below
 			public static final String KEY_LAST_STARTUP_PROFILE_ID =
@@ -68,6 +69,8 @@ public class Consts {
 				"treat_unknown_callers";
 			static final String KEY_TREAT_UNKNOWN_TEXTERS =
 				"treat_unknown_texters";
+			static final String KEY_TREAT_WHITELIST_CALLERS =
+				"treat_whitelist_callers";
 			// NOTE the following 3 values match values in the array resource
 			// unknown_caller_behavior_array_values. DO NOT change them unless
 			// you know what you're doing
@@ -85,6 +88,12 @@ public class Consts {
 				"ignore";
 			static final String VALUE_TREAT_UNKNOWN_TEXTERS_AS_MOBILE_NO_SMS =
 				"mobile_no_sms";
+			static final String VALUE_TREAT_WHITELIST_CALLERS_AS_SECOND =
+				"second";
+			static final String VALUE_TREAT_WHITELIST_CALLERS_AS_NORMAL =
+				"normal";
+			static final String VALUE_TREAT_WHITELIST_CALLERS_AS_NO_PRIORITY =
+				"no_priority";
 			static final String KEY_ENABLE_SMS_CALLERS = "enable_sms";			
 			static final String KEY_SMS_MESSAGE_CALLERS = "sms_message";
 			static final String KEY_ENABLE_SMS_TEXTERS = "enable_sms_texters";
@@ -123,6 +132,8 @@ public class Consts {
 				VALUE_TREAT_UNKNOWN_CALLERS_DEFAULT;
 			static final String VALUE_TREAT_UNKNOWN_TEXTERS_DEFAULT =
 				VALUE_TREAT_UNKNOWN_TEXTERS_IGNORE;
+			static final String VALUE_TREAT_WHITELIST_CALLERS_DEFAULT =
+				VALUE_TREAT_WHITELIST_CALLERS_AS_SECOND;
 			static final int VALUE_LAST_TIME_LIMIT_DEFAULT_TYPE =
 				TimeLimitType.DURATION;
 			static final long VALUE_LAST_TIME_LIMIT_DEFAULT_MINUTES = 0;

@@ -26,7 +26,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
-import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -220,6 +219,9 @@ public class Dindy extends Activity implements ProfileNameDialogFragment.Listene
 			startProfileEditor(mPreferencesHelper.getProfielNameFromId(
 				mSelectedProfileId), mSelectedProfileId);
 			return true;
+		case R.id.action_whitelist:
+			startActivity(new Intent(getApplicationContext(), WhitelistActivity.class));
+			return true;
 		default:
 			return super.onOptionsItemSelected(item);
 		}
@@ -386,45 +388,16 @@ public class Dindy extends Activity implements ProfileNameDialogFragment.Listene
 		}
 	};
 
-	public static class StartupMessageDialogFragment extends DialogFragment {
+	public static class StartupMessageDialogFragment extends MessageWithCheckboxDialogFragmentBase {
 		public StartupMessageDialogFragment() {
+			super(
+				R.string.startup_message_dialog_text,
+				R.string.startup_message_dialog_title,
+				Consts.Prefs.Main.KEY_SHOW_STARTUP_MESSAGE);
 		}
 		
 		public static StartupMessageDialogFragment newInstance() {
 			return new StartupMessageDialogFragment();
-		}
-		
-		@Override
-		public Dialog onCreateDialog(Bundle savedInstanceState) {
-			LayoutInflater factory = LayoutInflater.from(getActivity());
-			final View dialogView = factory.inflate(
-					R.layout.message_with_checkbox_dialog, null);
-			final TextView messageView = (TextView) dialogView.findViewById(
-					R.id.message_with_checkbox_dialog_text_view);
-			messageView.setText(R.string.startup_message_dialog_text);
-			AlertDialog dialog = new AlertDialog.Builder(getActivity())
-				.setIcon(android.R.drawable.ic_dialog_info)
-				.setTitle(R.string.startup_message_dialog_title)
-				.setView(dialogView)
-				.setPositiveButton(R.string.message_dialog_ok_text,
-					new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog,
-							int which) {
-						SharedPreferences preferences = getActivity().getSharedPreferences(
-								Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
-						CheckBox checkBox = (CheckBox) 
-							((AlertDialog) dialog).findViewById(
-								R.id.message_with_checkbox_dialog_checkbox);
-						SharedPreferences.Editor editor = 
-							preferences.edit();
-						editor.putBoolean(
-								Consts.Prefs.Main.KEY_SHOW_STARTUP_MESSAGE,
-								!checkBox.isChecked());
-						editor.commit();
-					}})
-				.create();
-			dialog.setOwnerActivity(getActivity());
-			return dialog;
 		}
 	}
 

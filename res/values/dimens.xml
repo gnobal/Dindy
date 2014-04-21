@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="whitelist_side_padding">10dp</dimen>
+    <dimen name="detail_vertical_divider_vertical_margin">16dp</dimen>
+    <dimen name="detail_item_icon_margin">8dp</dimen>
+</resources>

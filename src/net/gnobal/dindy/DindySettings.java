@@ -24,4 +24,5 @@ class DindySettings {
 	String mTreatNonMobileCallers;
 	String mTreatUnknownCallers;
 	String mTreatUnknownTexters;
+	String mTreatWhitelistCallers;
 }

@@ -36,6 +36,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".WhitelistActivity" android:label="@string/whitelist">
+        </activity>
         <activity android:name=".ProfilesListActivity" android:label="@string/preferences_profiles_list">
         </activity>
         <activity android:name=".ProfilePreferencesActivity">

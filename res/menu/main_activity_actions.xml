@@ -12,6 +12,9 @@
     <item android:id="@+id/action_delete_profile"
           android:title="@string/menu_main_delete_profile"
           android:showAsAction="never" />
+    <item android:id="@+id/action_whitelist"
+          android:title="@string/menu_main_whitelist"
+          android:showAsAction="never" />
     <item android:id="@+id/action_help"
           android:title="@string/menu_main_help"
           android:showAsAction="never" />

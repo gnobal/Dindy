@@ -1,19 +1,33 @@
 package net.gnobal.dindy;
 
-import android.app.ListActivity;
-//import android.os.Bundle;
-//import android.widget.ArrayAdapter;
+import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.Bundle;
 
-// Accessing contacts data:
-// https://developer.android.com/training/contacts-provider/index.html
-public class WhitelistActivity extends ListActivity {
-//	@Override
-//	protected void onCreate(Bundle savedInstanceState) {
-//		super.onCreate(savedInstanceState);
-//		mArrayAdapter = new ArrayAdapter<String>(this,
-//				android.R.layout.simple_list_item_1, mListItems);
-//		setListAdapter(mArrayAdapter);
-//	}
-//
-//	private ArrayAdapter<String> mArrayAdapter = null;
+public class WhitelistActivity extends Activity {
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		
+		setContentView(R.layout.whitelist_activity);
+		final SharedPreferences preferences = getSharedPreferences(
+				Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
+		if (preferences.getBoolean(Consts.Prefs.Main.KEY_SHOW_WHITELIST_USAGE, true)) {
+			WhitelistUsageDialogFragment.newInstance().show(getFragmentManager(), "whitelist_usage");
+		}
+	}
+
+	public static class WhitelistUsageDialogFragment extends MessageWithCheckboxDialogFragmentBase {
+		public WhitelistUsageDialogFragment() {
+			super(
+				R.string.whitelist_usage_text,
+				R.string.whitelist_usage_title,
+				Consts.Prefs.Main.KEY_SHOW_WHITELIST_USAGE);
+		}
+		
+		public static WhitelistUsageDialogFragment newInstance() {
+			return new WhitelistUsageDialogFragment();
+		}
+	}
 }

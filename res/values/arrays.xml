@@ -27,7 +27,8 @@
 <string-array name="unknown_caller_behavior_array_values" translatable="false">
 <item>first</item>
 <item>second</item>
-<item>mobile_no_sms</item><item>normal</item>
+<item>mobile_no_sms</item>
+<item>normal</item>
 </string-array>
 
 <string-array name="unknown_texter_behavior_array_strings">
@@ -38,6 +39,18 @@
 <string-array name="unknown_texter_behavior_array_values" translatable="false">
 <item>ignore</item>
 <item>mobile_no_sms</item>
+</string-array>
+
+<string-array name="whitelist_caller_behavior_array_strings">
+<item>Second call</item>
+<item>Regular call</item>
+<item>No priority (Dindy behavior)</item>
+</string-array>
+
+<string-array name="whitelist_caller_behavior_array_values" translatable="false">
+<item>second</item>
+<item>normal</item>
+<item>no_priority</item>
 </string-array>
 
 </resources>

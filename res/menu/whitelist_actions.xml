@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item android:id="@+id/action_whitelist_add"
+          android:title="@string/menu_whitelist_add"
+          android:showAsAction="always" />
+    <item android:id="@+id/action_done_editing_whitelist"
+          android:title="@string/menu_whitelist_editor_done"
+          android:showAsAction="always" />
+</menu>
