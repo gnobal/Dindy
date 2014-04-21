@@ -82,7 +82,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity-alias android:name=".CreateShortcuts" android:targetActivity=".DindyShortcuts" android:label="@string/shortcuts_name" android:theme="@style/Theme.Transparent">
+        <activity-alias android:name=".CreateShortcuts" android:targetActivity=".DindyShortcuts" android:label="@string/shortcuts_name" android:theme="@style/Theme.Transparent" android:icon="@drawable/shortcut_button">
             <intent-filter>
                 <action android:name="android.intent.action.CREATE_SHORTCUT" />
                 <category android:name="android.intent.category.DEFAULT" />
