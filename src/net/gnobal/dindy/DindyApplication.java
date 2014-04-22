@@ -20,6 +20,7 @@ public class DindyApplication extends Application {
 					R.string.default_profile_away_sms_message_callers,
 					R.string.default_profile_away_sms_message_callers,
 					false, false, false, false, Consts.INFINITE_TIME,
+					Consts.Prefs.Profile.VALUE_TREAT_WHITELIST_CALLERS_AS_NO_PRIORITY,
 					Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_FIRST,
 					false, Consts.Prefs.Profile.VALUE_LAST_TIME_LIMIT_DEFAULT_TYPE,
 					Consts.Prefs.Profile.VALUE_LAST_TIME_LIMIT_DEFAULT_HOURS,
@@ -28,6 +29,7 @@ public class DindyApplication extends Application {
 					R.string.default_profile_busy_sms_message_callers,
 					R.string.default_profile_busy_sms_message_callers,
 					false, false, false, false, Consts.INFINITE_TIME,
+					Consts.Prefs.Profile.VALUE_TREAT_WHITELIST_CALLERS_AS_NO_PRIORITY,
 					Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_FIRST,
 					false, Consts.Prefs.Profile.VALUE_LAST_TIME_LIMIT_DEFAULT_TYPE,
 					Consts.Prefs.Profile.VALUE_LAST_TIME_LIMIT_DEFAULT_HOURS,
@@ -36,6 +38,7 @@ public class DindyApplication extends Application {
 					R.string.default_profile_car_sms_message_callers,
 					R.string.default_profile_car_sms_message_texters,
 					false, false, true, false, 5,
+					Consts.Prefs.Profile.VALUE_TREAT_WHITELIST_CALLERS_AS_SECOND,
 					Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_NORMAL,
 					false, Consts.Prefs.Profile.VALUE_LAST_TIME_LIMIT_DEFAULT_TYPE,
 					Consts.Prefs.Profile.VALUE_LAST_TIME_LIMIT_DEFAULT_HOURS,
@@ -44,6 +47,7 @@ public class DindyApplication extends Application {
 					R.string.default_profile_meeting_sms_message_callers,
 					R.string.default_profile_meeting_sms_message_texters,
 					false, false, false, true, 10,
+					Consts.Prefs.Profile.VALUE_TREAT_WHITELIST_CALLERS_AS_SECOND,
 					Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_FIRST,
 					false, Consts.Prefs.Profile.TimeLimitType.DURATION,
 					1, 0);
@@ -51,6 +55,7 @@ public class DindyApplication extends Application {
 					R.string.default_profile_night_sms_message_callers,
 					R.string.default_profile_night_sms_message_texters,
 					false, false, true, true, Consts.INFINITE_TIME,
+					Consts.Prefs.Profile.VALUE_TREAT_WHITELIST_CALLERS_AS_SECOND,
 					Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_SECOND,
 					false, Consts.Prefs.Profile.TimeLimitType.TIME_OF_DAY,
 					7, 30);
@@ -62,6 +67,7 @@ public class DindyApplication extends Application {
 			boolean firstRingPlaySound, boolean firstRingVibrate,
 			boolean secondRingPlaySound, boolean secondRingVibrate,
 			long timeBetweenCallsMinutes,
+			String treatWhitelistCallers,
 			String treatUnknownAndNonMobileCallers,
 			boolean useTimeLimit, int timeLimitType, long hour, long minute) {
 		String profileName = getString(profileNameResource);
@@ -95,6 +101,8 @@ public class DindyApplication extends Application {
 				secondRingVibrate);
 		editor.putString(Consts.Prefs.Profile.KEY_TIME_BETWEEN_EVENTS_MINUTES,
 				Long.toString(timeBetweenCallsMinutes));
+		editor.putString(Consts.Prefs.Profile.KEY_TREAT_WHITELIST_CALLERS,
+				treatWhitelistCallers);
 		editor.putString(Consts.Prefs.Profile.KEY_TREAT_NON_MOBILE_CALLERS,
 				treatUnknownAndNonMobileCallers);
 		editor.putString(Consts.Prefs.Profile.KEY_TREAT_UNKNOWN_CALLERS,
