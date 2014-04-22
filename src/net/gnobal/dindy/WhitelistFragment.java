@@ -38,12 +38,12 @@ public class WhitelistFragment extends ListFragment implements
 	}
 
 	@Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-    	Bundle savedInstanceState) {
+	public View onCreateView(LayoutInflater inflater, ViewGroup container,
+		Bundle savedInstanceState) {
 		super.onCreateView(inflater, container, savedInstanceState);
 
-        return inflater.inflate(R.layout.whitelist_fragment, container, false);
-    }
+		return inflater.inflate(R.layout.whitelist_fragment, container, false);
+	}
 
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
@@ -96,10 +96,10 @@ public class WhitelistFragment extends ListFragment implements
 		if (!c.moveToFirst()) {
 			return;
 		}
-		final long contactId = c.getLong(
-				c.getColumnIndexOrThrow(ContactsContract.Contacts._ID));
+		final String contactLookupKey = c.getString(
+				c.getColumnIndexOrThrow(ContactsContract.Contacts.LOOKUP_KEY));
 		c.close();
-		mDbHelper.addContact(contactId);
+		mDbHelper.addContact(contactLookupKey);
 		getLoaderManager().restartLoader(WHITELIST_LOADER_ID, null, this);
 	}
 
@@ -107,15 +107,15 @@ public class WhitelistFragment extends ListFragment implements
 	public Loader<Cursor> onCreateLoader(int loaderId, Bundle args) {
 		// TODO: Use a dynamic selection and selection args (argument after SELECTION)
 		// to get all the IDs we want
-		final List<Long> allContactIds = mDbHelper.getAllContactIds();
+		final List<String> allContactLookupKeys = mDbHelper.getAllContactLookupKeys();
 		final StringBuilder contactsString = new StringBuilder();
-		for (long contactId : allContactIds) {
-			contactsString.append(contactId).append(',');
+		for (String contactLookupKey : allContactLookupKeys) {
+			contactsString.append('\'').append(contactLookupKey).append('\'').append(',');
 		}
 		if (contactsString.length() > 0) {
 			contactsString.deleteCharAt(contactsString.length() - 1);
 		}
-		final String selection = ContactsContract.Data._ID + " IN (" + contactsString.toString() + ")";
+		final String selection = ContactsContract.Data.LOOKUP_KEY + " IN (" + contactsString.toString() + ")";
 		return new CursorLoader(
 				getActivity(), Contacts.CONTENT_URI, PROJECTION, selection,	null, ORDER);
 	}
@@ -142,7 +142,7 @@ public class WhitelistFragment extends ListFragment implements
 		@Override
 		public View newView(Context context, Cursor cursor, ViewGroup parent) {
 			final View v = super.newView(context, cursor, parent);
-			v.setTag(cursor.getLong(CONTACT_ID_COLUMN_INDEX));
+			v.setTag(cursor.getString(CONTACT_LOOKUP_KEY_COLUMN_INDEX));
 			return v;
 		}
 		
@@ -153,21 +153,21 @@ public class WhitelistFragment extends ListFragment implements
 			final View removeView =
 					view.findViewById(R.id.whitelist_remove_contact_button);
 			removeView.setOnClickListener(mRemoveClickListener);
-			removeView.setTag(cursor.getLong(CONTACT_ID_COLUMN_INDEX));
+			removeView.setTag(cursor.getString(CONTACT_LOOKUP_KEY_COLUMN_INDEX));
 		}
 	}
 
 	private View.OnClickListener mRemoveClickListener = new View.OnClickListener() {
 		@Override
 		public void onClick(View v) {
-			final long contactId = (Long) v.getTag();
-			mDbHelper.removeContact(contactId);
+			final String contactLookupKey = (String) v.getTag();
+			mDbHelper.removeContact(contactLookupKey);
 			getLoaderManager().restartLoader(WHITELIST_LOADER_ID, null, WhitelistFragment.this);
 		}
 	};
 	
 	private static final String[] FROM_COLUMNS = {
-    	Contacts.DISPLAY_NAME_PRIMARY
+		Contacts.DISPLAY_NAME_PRIMARY
 	};
 	private static final String ORDER =
 		"LOWER(" + ContactsContract.Data.DISPLAY_NAME_PRIMARY + ") ASC";
@@ -177,9 +177,10 @@ public class WhitelistFragment extends ListFragment implements
 	private static final String[] PROJECTION =
 	{
 			ContactsContract.Data._ID,
+			ContactsContract.Data.LOOKUP_KEY,
 			ContactsContract.Data.DISPLAY_NAME_PRIMARY,
-    };
-	private static final int CONTACT_ID_COLUMN_INDEX = 0;
+	};
+	private static final int CONTACT_LOOKUP_KEY_COLUMN_INDEX = 1;
 	
 	private static final int WHITELIST_LOADER_ID = 0;
 	private static final int PICK_CONTACT_REQUEST_CODE = 0;

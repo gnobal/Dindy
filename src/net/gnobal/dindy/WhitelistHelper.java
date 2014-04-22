@@ -7,23 +7,87 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.provider.ContactsContract.Contacts;
+import android.support.v4.content.CursorLoader;
+import android.util.Log;
 
 class WhitelistHelper {
 	WhitelistHelper(Context context) {
 		mDb = new Database(context);
+		// To prepare for consistent backup across devices we needed to switch from storing
+		// contact IDs to storing lookup keys, which are resilient to sync and aggregation
+		// See: https://developer.android.com/reference/android/provider/ContactsContract.ContactsColumns.html#LOOKUP_KEY
+		// Row IDs in general aren't safe to use and may change
+		updateIdsToLookupKeys(context);
 	}
 
-	List<Long> getAllContactIds() {
+	void updateIdsToLookupKeys(Context context) {
 		SQLiteDatabase db = null;
-		Cursor cursor = null;
-		final ArrayList<Long> contactIds = new ArrayList<Long>();
+		Cursor cursorRowsWithoutKey = null;
 
 		try {
 			db = mDb.getWritableDatabase();
-			cursor = db.query(Database.WHITELIST_TABLE_NAME, CONTACT_ID_COLUMNS,
+			cursorRowsWithoutKey = db.query(Database.WHITELIST_TABLE_NAME,
+					new String[] { Database.DbWhitelist.CONTACT_ID },
+					Database.DbWhitelist.CONTACT_LOOKUP_KEY + " IS NULL",
+					null, null, null, null);
+			while (cursorRowsWithoutKey.moveToNext()) {
+				Cursor cursorLookupKey = null;
+				try {
+					final long contactId = cursorRowsWithoutKey.getLong(0);
+					cursorLookupKey = new CursorLoader(
+						context, Contacts.CONTENT_URI, new String[] { Contacts.LOOKUP_KEY },
+						Contacts._ID + " = " + contactId, null, null).loadInBackground();
+					if (cursorLookupKey.moveToNext()) {
+						
+						final String contactLookupKey = cursorLookupKey.getString(0);
+						// Update the table with contactLookupKey where contact ID equals contactId
+						ContentValues contentValues = new ContentValues();
+						contentValues.put(Database.DbWhitelist.CONTACT_LOOKUP_KEY, contactLookupKey);
+						int numRows = db.update(Database.WHITELIST_TABLE_NAME, contentValues,
+								Database.DbWhitelist.CONTACT_ID + " = "+ contactId, null);
+						if (Consts.DEBUG) {
+							if (numRows == 1) {
+								Log.d(Consts.LOGTAG, "Successfully updated contact ID " + 
+										contactId + " with lookup key " + contactLookupKey);
+							} else {
+								Log.d(Consts.LOGTAG, "Failed to update contact ID " + 
+										contactId + " with lookup key " + contactLookupKey);
+							}
+						}
+					}
+				} catch (Throwable t) {
+				} finally {
+					if (cursorLookupKey != null) {
+						cursorLookupKey.close();
+						cursorLookupKey = null;
+					}
+				}
+			}
+		} catch (Throwable t) {
+		} finally {
+			if (cursorRowsWithoutKey != null) {
+				cursorRowsWithoutKey.close();
+				cursorRowsWithoutKey = null;
+			}
+			if (db != null) {
+				db.close();
+				db = null;
+			}
+		}
+	}
+
+	List<String> getAllContactLookupKeys() {
+		SQLiteDatabase db = null;
+		Cursor cursor = null;
+		final ArrayList<String> contactLookupKeys = new ArrayList<String>();
+
+		try {
+			db = mDb.getWritableDatabase();
+			cursor = db.query(Database.WHITELIST_TABLE_NAME, CONTACT_LOOKUP_KEY_COLUMNS,
 					null, null, null, null, null);
 			while (cursor.moveToNext()) {
-				contactIds.add(cursor.getLong(CONTACT_ID_INDEX));
+				contactLookupKeys.add(cursor.getString(CONTACT_LOOKUP_KEY_INDEX));
 			}
 		} catch (Throwable t) {
 		} finally {
@@ -37,10 +101,10 @@ class WhitelistHelper {
 			}
 		}
 
-		return contactIds;
+		return contactLookupKeys;
 	}
 
-	boolean addContact(long contactId) {
+	boolean addContact(String contectLookupKey) {
 		SQLiteDatabase db = null;
 		long rowId = Consts.NOT_A_PROFILE_ID;
 		boolean success = true;
@@ -48,7 +112,7 @@ class WhitelistHelper {
 		try {
 			db = mDb.getWritableDatabase();
 			ContentValues contentValues = new ContentValues();
-			contentValues.put(Database.DbWhitelist.CONTACT_ID, contactId);
+			contentValues.put(Database.DbWhitelist.CONTACT_LOOKUP_KEY, contectLookupKey);
 			rowId = db.insert(Database.WHITELIST_TABLE_NAME, null, contentValues);
 			if (rowId == -1) {
 				success = false;
@@ -65,13 +129,13 @@ class WhitelistHelper {
 		return success;
 	}
 
-	void removeContact(long contactId) {
+	void removeContact(String contactLookupKey) {
 		SQLiteDatabase db = null;
 
 		try {
 			db = mDb.getWritableDatabase();
-			db.delete(Database.WHITELIST_TABLE_NAME, Database.DbWhitelist.CONTACT_ID
-					+ " = " + contactId, null);
+			db.delete(Database.WHITELIST_TABLE_NAME, Database.DbWhitelist.CONTACT_LOOKUP_KEY
+					+ " = '" + contactLookupKey + "'", null);
 		} catch (Throwable t) {
 		} finally {
 			if (db != null) {
@@ -81,14 +145,14 @@ class WhitelistHelper {
 		}
 	}
 
-	boolean isInWhitelist(long contactId) {
+	boolean isInWhitelist(String contactLookupKey) {
 		SQLiteDatabase db = null;
 		Cursor cursor = null;
 		
 		try {
 			db = mDb.getWritableDatabase();
-			cursor = db.query(Database.WHITELIST_TABLE_NAME, CONTACT_ID_COLUMNS,
-					Database.DbWhitelist.CONTACT_ID + " = " + contactId, null, null, null,
+			cursor = db.query(Database.WHITELIST_TABLE_NAME, CONTACT_LOOKUP_KEY_COLUMNS,
+					Database.DbWhitelist.CONTACT_LOOKUP_KEY + " = '" + contactLookupKey + "'", null, null, null,
 					null, "1");
 			return cursor.getCount() > 0;
 		} finally {
@@ -103,8 +167,8 @@ class WhitelistHelper {
 		}
 	}
 
-	private static final String[] CONTACT_ID_COLUMNS = { Database.DbWhitelist.CONTACT_ID };
-	private static final int CONTACT_ID_INDEX = 0;
+	private static final String[] CONTACT_LOOKUP_KEY_COLUMNS = { Database.DbWhitelist.CONTACT_LOOKUP_KEY };
+	private static final int CONTACT_LOOKUP_KEY_INDEX = 0;
 
 	private Database mDb;
 }

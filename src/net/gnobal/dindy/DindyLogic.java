@@ -563,7 +563,7 @@ class DindyLogic {
 		int count = phonesCursor.getCount();
 		props.mIsKnown = count >= 1;
 		while (phonesCursor.moveToNext()) {
-			if (mWhitelistHelper.isInWhitelist(phonesCursor.getLong(CONTACT_ID_INDEX))) {
+			if (mWhitelistHelper.isInWhitelist(phonesCursor.getString(CONTACT_LOOKUP_KEY_INDEX))) {
 				props.mIsInWhitelist = true;
 			}
 			if (phonesCursor.getInt(PHONE_TYPE_INDEX) == CommonDataKinds.Phone.TYPE_MOBILE) {
@@ -707,9 +707,9 @@ class DindyLogic {
 	private AudioManager mAM = null;
 	private PowerManager mPM = null;
 	private PowerManager.WakeLock mWakeLock = null;
-	private static final String[] PHONES_PROJECTION = { PhoneLookup.TYPE, PhoneLookup._ID };
+	private static final String[] PHONES_PROJECTION = { PhoneLookup.TYPE, PhoneLookup.LOOKUP_KEY };
 	private static final int PHONE_TYPE_INDEX = 0; 
-	private static final int CONTACT_ID_INDEX = 1; 
+	private static final int CONTACT_LOOKUP_KEY_INDEX = 1; 
 	private ContentResolver mResolver = null;
 	private BroadcastReceiver mOnSentReceiver = new BroadcastReceiver() {
 		@Override

@@ -18,6 +18,7 @@ class Database extends SQLiteOpenHelper {
 		
 		createIncomingCallsTable(db);
 		createWhitelistTable(db);
+		addWhitelistLookupKeyColumn(db);
 	}
 
 	@Override
@@ -29,6 +30,11 @@ class Database extends SQLiteOpenHelper {
 		if (oldVersion < 3) {
 			// Upgrade from version 2 to 3
 			createWhitelistTable(db);
+		}
+		
+		if (oldVersion < 4) {
+			// Upgrade from version 3 to 4
+			addWhitelistLookupKeyColumn(db);
 		}
 	}
 
@@ -44,6 +50,7 @@ class Database extends SQLiteOpenHelper {
 
 	static final class DbWhitelist implements BaseColumns {
 		public static final String CONTACT_ID = "contact_id";
+		public static final String CONTACT_LOOKUP_KEY = "contact_lookup_key";
 	}
 
 	static final String PROFILES_TABLE_NAME = "profiles";
@@ -66,6 +73,11 @@ class Database extends SQLiteOpenHelper {
 			");");
 	}
 
+	private void addWhitelistLookupKeyColumn(SQLiteDatabase db) {
+		db.execSQL("ALTER TABLE " + WHITELIST_TABLE_NAME +
+			" ADD COLUMN " + DbWhitelist.CONTACT_LOOKUP_KEY + " TEXT");
+	}
+
 	private static final String DATABASE_NAME = "dindy.db";
-	private static final int DATABASE_VERSION = 3;
+	private static final int DATABASE_VERSION = 4;
 }
