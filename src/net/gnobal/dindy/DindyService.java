@@ -137,7 +137,7 @@ public class DindyService extends Service {
 		// Display a notification about us starting. We put an icon in the
 		// status bar.
 		if (firstStart) {
-			showNotification();
+			startForegroundWithNotification();
 		} else {
 			String refreshText = getString(R.string.dindy_service_refreshed_text);
 			if (profileName != null && profileName.length() > 0) {
@@ -258,27 +258,27 @@ public class DindyService extends Service {
 		preferences = null;
 	}
 
-	private void showNotification() {
+	private void startForegroundWithNotification() {
 		final CharSequence title = getText(R.string.dindy_service_label);
 		final CharSequence text = getText(R.string.dindy_service_started);
-		final NotificationCompat.Builder builder =
-				new NotificationCompat.Builder(getApplicationContext());
-		final PendingIntent contentIntent =
+		final PendingIntent mainPendingIntent =
 				Dindy.getPendingIntent(getApplicationContext());
-		final PendingIntent pendingIntent = PendingIntent.getBroadcast(
+		final PendingIntent stopPendingIntent = PendingIntent.getBroadcast(
 				getApplicationContext(), 0, getStopServiceBroadcastIntent(), 0);
 
+		final NotificationCompat.Builder builder =
+				new NotificationCompat.Builder(getApplicationContext());
 		builder
 			.setOngoing(true)
 			.setWhen(System.currentTimeMillis())
 			.setSmallIcon(R.drawable.notification_icon)
 			.setContentTitle(title)
 			.setContentText(text)
-			.setContentIntent(contentIntent)
+			.setContentIntent(mainPendingIntent)
 			.setTicker(text)
-			.addAction(R.drawable.ic_action_cancel, getText(R.string.stop_dindy), pendingIntent);
+			.addAction(R.drawable.ic_action_cancel, getText(R.string.stop_dindy), stopPendingIntent);
 
-		startForeground(R.string.dindy_service_started, builder.build());
+		startForeground(NOTIFICATION_ID, builder.build());
 	}
 
 	private void refreshSettings(long selectedProfileId, boolean rememberUserSettings,
@@ -651,4 +651,5 @@ public class DindyService extends Service {
 		CallLog.Calls.TYPE + " = " + CallLog.Calls.MISSED_TYPE + 
 		" OR " + CallLog.Calls.TYPE + " = " + CallLog.Calls.INCOMING_TYPE;
 	private static final String CALL_LOG_SORT_ORDER = CallLog.Calls.DATE + " DESC";
+	private static final int NOTIFICATION_ID = R.string.dindy_service_started;
 }
