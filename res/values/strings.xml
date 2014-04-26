@@ -109,4 +109,6 @@
 <string name="whitelist_loading">Loading&#8230; please wait</string>
 <string name="whitelist_empty">The whitelist is empty</string>
 <string name="whitelist_remove_contact">Remove contact from whitelist</string>
+<string name="whitelist_contact_exists">The selected contact is already in the whitelist.</string>
+<string name="whitelist_contact_cannot_be_added">Cannot add this contact to the whitelist right now. Please try again later.</string>
 </resources>

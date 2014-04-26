@@ -23,6 +23,7 @@ import android.view.ViewGroup;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class WhitelistFragment extends ListFragment implements
 	LoaderManager.LoaderCallbacks<Cursor> {
@@ -99,6 +100,14 @@ public class WhitelistFragment extends ListFragment implements
 		final String contactLookupKey = c.getString(
 				c.getColumnIndexOrThrow(ContactsContract.Contacts.LOOKUP_KEY));
 		c.close();
+		if (contactLookupKey == null || contactLookupKey.equals(Consts.EMPTY_STRING)) {
+			Toast.makeText(getActivity(), R.string.whitelist_contact_cannot_be_added, Toast.LENGTH_LONG).show();
+			return;
+		}
+		if (mDbHelper.isInWhitelist(contactLookupKey)) {
+			Toast.makeText(getActivity(), R.string.whitelist_contact_exists, Toast.LENGTH_SHORT).show();
+			return;
+		}
 		mDbHelper.addContact(contactLookupKey);
 		getLoaderManager().restartLoader(WHITELIST_LOADER_ID, null, this);
 	}
