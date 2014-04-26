@@ -106,14 +106,13 @@ class WhitelistHelper {
 
 	boolean addContact(String contectLookupKey) {
 		SQLiteDatabase db = null;
-		long rowId = Consts.NOT_A_PROFILE_ID;
 		boolean success = true;
 
 		try {
 			db = mDb.getWritableDatabase();
 			ContentValues contentValues = new ContentValues();
 			contentValues.put(Database.DbWhitelist.CONTACT_LOOKUP_KEY, contectLookupKey);
-			rowId = db.insert(Database.WHITELIST_TABLE_NAME, null, contentValues);
+			final long rowId = db.insert(Database.WHITELIST_TABLE_NAME, null, contentValues);
 			if (rowId == -1) {
 				success = false;
 			}
