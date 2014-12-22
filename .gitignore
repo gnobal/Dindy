@@ -1,6 +1,14 @@
 .gradle
 /local.properties
+/dindy/local.properties
+/localeapinolocalization/local.properties
 /.idea/workspace.xml
+/dindy/.idea/workspace.xml
+/localeapinolocalization/.idea/workspace.xml
 /.idea/libraries
+/dindy/.idea/libraries
+/localeapinolocalization/.idea/libraries
 .DS_Store
 /build
+/dindy/build
+/localeapinolocalization/build
