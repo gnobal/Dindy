@@ -69,6 +69,10 @@ public class DindyService extends Service {
 		final boolean firstStart = (mCurrentProfileId == Consts.NOT_A_PROFILE_ID);
 		final boolean restartAfterKill = (intent == null);
 
+		if (Consts.DEBUG) {
+			Log.d(Consts.LOGTAG, "firstStart=" + firstStart + ", restartAfterKill=" + restartAfterKill);
+		}
+
 		if (!restartAfterKill) {
 			final Bundle extras = intent.getExtras();
 			if (extras == null) {
