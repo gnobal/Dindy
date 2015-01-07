@@ -170,7 +170,8 @@ public class Consts {
 	public static final String EXTRA_PROFILE_NAME =  "profile_name";
 	public static final String EXTRA_INTENT_SOURCE = "intent_source";
 	public static final String EXTRA_INTENT_TIME_LIMIT_MILLIS = "time_limit";
-	
+	public static final String EXTRA_STOP_SERVICE = "stop_service";
+
 	public static final int INTENT_SOURCE_UNKNOWN = 0;
 	public static final int INTENT_SOURCE_SHORTCUT = 1;
 	public static final int INTENT_SOURCE_WIDGET = 2;

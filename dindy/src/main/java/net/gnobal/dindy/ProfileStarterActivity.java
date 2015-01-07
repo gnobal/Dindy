@@ -341,7 +341,7 @@ public class ProfileStarterActivity extends Activity {
 	private void startDindyServiceWithSelectedProfileId(long timeLimitMillis) {
 		startService(DindyService.getStartServiceIntent(getApplicationContext(),
 				mSelectedProfileId, null, mIntentSource,
-				timeLimitMillis));
+				timeLimitMillis, false));
 	}
 
 	private ProfilePreferencesHelper mPreferencesHelper = null;

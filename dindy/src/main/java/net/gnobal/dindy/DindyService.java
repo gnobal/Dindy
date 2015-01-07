@@ -47,8 +47,8 @@ public class DindyService extends Service {
 		filter.addAction(SMS_RECEIVED_ACTION);
 		registerReceiver(mBroadcastReceiver, filter);
 		mPreferencesHelper = ProfilePreferencesHelper.instance();
-		mPendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0,
-			DindyService.getStopServiceBroadcastIntent(), 0);	
+		mStopServicePendingIntent = PendingIntent.getService(getApplicationContext(), 0,
+				DindyService.getStopServiceIntentForPendingIntent(getApplicationContext()), 0);
 
 		mLogic =
 			new DindyLogic(getApplicationContext(), getContentResolver(), mSettings, mAuM, mPM);
@@ -78,6 +78,13 @@ public class DindyService extends Service {
 			if (extras == null) {
 				if (Consts.DEBUG) {
 					Log.d(Consts.LOGTAG, "error! no extras sent to service");
+				}
+				stopSelf();
+				return START_STICKY;
+			}
+			if (extras.getBoolean(Consts.EXTRA_STOP_SERVICE, false)) {
+				if (Consts.DEBUG) {
+					Log.d(Consts.LOGTAG, "Asked to stop the service");
 				}
 				stopSelf();
 				return START_STICKY;
@@ -123,11 +130,11 @@ public class DindyService extends Service {
 		saveLastUsedProfileId();
 
 		mLogic.start(restartAfterKill);
-		mAlM.cancel(mPendingIntent);
+		mAlM.cancel(mStopServicePendingIntent);
 		final long absoluteTimeLimitMillis = startupSettings.getLong(
 			Consts.Prefs.Main.KEY_LAST_STARTUP_INTENT_ABS_TIME_LIMIT_MILLIS); 
 		if (absoluteTimeLimitMillis != Consts.NOT_A_TIME_LIMIT) {
-			mAlM.set(AlarmManager.RTC_WAKEUP, absoluteTimeLimitMillis, mPendingIntent);
+			mAlM.set(AlarmManager.RTC_WAKEUP, absoluteTimeLimitMillis, mStopServicePendingIntent);
 		}
 
 		if (Consts.DEBUG) {
@@ -173,7 +180,7 @@ public class DindyService extends Service {
 
 		// Stop listening to call state change events
 		//mHandler.removeCallbacks(mStopServiceCallback);
-		mAlM.cancel(mPendingIntent);
+		mAlM.cancel(mStopServicePendingIntent);
 		unregisterReceiver(mBroadcastReceiver);
 		mTM.listen(mStateListener, PhoneStateListener.LISTEN_NONE);
 		stopForeground(true);
@@ -220,20 +227,21 @@ public class DindyService extends Service {
 	
 	public static Intent getStartServiceIntent(Context context,
 			long profileId, String profileName, int source,
-			long timeLimitMillis) {
+			long timeLimitMillis, boolean stopService) {
 		return prepareStartServiceIntent(
 				new Intent(context, DindyService.class), profileId, profileName,
-					source, timeLimitMillis);
+					source, timeLimitMillis, stopService);
 	}
 	
 	public static Intent prepareStartServiceIntent(
 			Intent intent, long profileId, String profileName, int source,
-			long timeLimitMillis) {
+			long timeLimitMillis, boolean stopService) {
 		if (profileName == null) {
 			// Try to find out the profile name from the preferences
 			profileName = ProfilePreferencesHelper.instance().getProfielNameFromId(profileId);
 		}
 		return intent
+			.putExtra(Consts.EXTRA_STOP_SERVICE, stopService)
 			.putExtra(Consts.EXTRA_PROFILE_ID, profileId)
 			.putExtra(Consts.EXTRA_PROFILE_NAME, profileName)
 			.putExtra(Consts.EXTRA_INTENT_TIME_LIMIT_MILLIS, timeLimitMillis)
@@ -244,8 +252,9 @@ public class DindyService extends Service {
 				String.valueOf(profileId)));
 	}
 
-	public static Intent getStopServiceBroadcastIntent() {
-		return new Intent(Consts.ACTION_STOP_DINDY_SERVICE);
+	public static Intent getStopServiceIntentForPendingIntent(Context context) {
+		return getStartServiceIntent(context, Consts.NOT_A_PROFILE_ID, null,
+				Consts.INTENT_SOURCE_UNKNOWN, Consts.NOT_A_TIME_LIMIT, true);
 	}
 	
 	public static Intent getStopServiceIntent(Context context) {
@@ -267,8 +276,8 @@ public class DindyService extends Service {
 		final CharSequence text = getText(R.string.dindy_service_started);
 		final PendingIntent mainPendingIntent =
 				Dindy.getPendingIntent(getApplicationContext());
-		final PendingIntent stopPendingIntent = PendingIntent.getBroadcast(
-				getApplicationContext(), 0, getStopServiceBroadcastIntent(), 0);
+		final PendingIntent stopPendingIntent = PendingIntent.getService(
+				getApplicationContext(), 0, getStopServiceIntentForPendingIntent(getApplicationContext()), 0);
 
 		final NotificationCompat.Builder builder =
 				new NotificationCompat.Builder(getApplicationContext());
@@ -632,7 +641,7 @@ public class DindyService extends Service {
 	private DindyServiceBroadcastReceiver mBroadcastReceiver = null;
 	private ProfilePreferencesHelper mPreferencesHelper = null;
 	private DindySettings mSettings = new DindySettings();
-	private PendingIntent mPendingIntent = null;
+	private PendingIntent mStopServicePendingIntent = null;
 	private static long mCurrentProfileId = Consts.NOT_A_PROFILE_ID;
 	private static boolean mIsRunning = false;
 	private final IBinder mBinder = new LocalBinder();

@@ -348,7 +348,7 @@ public class ProfilePreferencesFragment extends PreferenceFragment {
 						DindyService.getStartServiceIntent(getActivity()
 								.getApplicationContext(), mProfileId, null,
 								Consts.INTENT_SOURCE_APP_PROFILE_PREFS,
-								Consts.NOT_A_TIME_LIMIT));
+								Consts.NOT_A_TIME_LIMIT, false));
 			}
 		}
 	}
