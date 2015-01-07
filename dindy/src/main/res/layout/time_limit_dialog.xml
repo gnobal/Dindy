@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_height="fill_parent"
-    android:layout_width="fill_parent"
-    android:orientation="vertical">
+    android:layout_width="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center_horizontal">
     <RadioGroup
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/time_limit_radio_group">
+        android:id="@+id/time_limit_radio_group"
+        android:layout_gravity="left">
         <RadioButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/duration_radio_button_text"
-            android:id="@+id/duration_radio_button">
+            android:id="@+id/duration_radio_button"
+            >
         </RadioButton>
         <RadioButton
             android:layout_width="wrap_content"
@@ -23,6 +26,7 @@
     <TimePicker
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/time_limit_time_picker">
+        android:id="@+id/time_limit_time_picker"
+        android:foregroundGravity="center_horizontal">
     </TimePicker>
 </LinearLayout>
