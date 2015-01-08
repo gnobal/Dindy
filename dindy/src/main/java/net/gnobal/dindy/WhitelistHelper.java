@@ -46,14 +46,12 @@ class WhitelistHelper {
 						contentValues.put(Database.DbWhitelist.CONTACT_LOOKUP_KEY, contactLookupKey);
 						int numRows = db.update(Database.WHITELIST_TABLE_NAME, contentValues,
 								Database.DbWhitelist.CONTACT_ID + " = "+ contactId, null);
-						if (Consts.DEBUG) {
-							if (numRows == 1) {
-								Log.d(Consts.LOGTAG, "Successfully updated contact ID " + 
-										contactId + " with lookup key " + contactLookupKey);
-							} else {
-								Log.d(Consts.LOGTAG, "Failed to update contact ID " + 
-										contactId + " with lookup key " + contactLookupKey);
-							}
+						if (numRows == 1) {
+							Log.d(Consts.LOGTAG, "Successfully updated contact ID " +
+									contactId + " with lookup key " + contactLookupKey);
+						} else {
+							Log.e(Consts.LOGTAG, "Failed to update contact ID " +
+									contactId + " with lookup key " + contactLookupKey);
 						}
 					}
 				} catch (Throwable t) {

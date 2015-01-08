@@ -76,7 +76,7 @@ public class ProfileStarterActivity extends Activity {
 		selected.set(Calendar.MINUTE, toMinute);
 		if (c.get(Calendar.HOUR_OF_DAY) == toHour && 
 			c.get(Calendar.MINUTE) == toMinute) {
-				if (Consts.DEBUG) Log.d(Consts.LOGTAG, "current time selected");
+				Log.d(Consts.LOGTAG, "current time selected");
 				return 0;
 			}
 

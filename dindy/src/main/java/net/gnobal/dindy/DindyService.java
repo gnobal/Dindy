@@ -69,23 +69,17 @@ public class DindyService extends Service {
 		final boolean firstStart = (mCurrentProfileId == Consts.NOT_A_PROFILE_ID);
 		final boolean restartAfterKill = (intent == null);
 
-		if (Consts.DEBUG) {
-			Log.d(Consts.LOGTAG, "firstStart=" + firstStart + ", restartAfterKill=" + restartAfterKill);
-		}
+		Log.d(Consts.LOGTAG, "firstStart=" + firstStart + ", restartAfterKill=" + restartAfterKill);
 
 		if (!restartAfterKill) {
 			final Bundle extras = intent.getExtras();
 			if (extras == null) {
-				if (Consts.DEBUG) {
-					Log.d(Consts.LOGTAG, "error! no extras sent to service");
-				}
+				Log.e(Consts.LOGTAG, "error! no extras sent to service");
 				stopSelf();
 				return START_STICKY;
 			}
 			if (extras.getBoolean(Consts.EXTRA_STOP_SERVICE, false)) {
-				if (Consts.DEBUG) {
-					Log.d(Consts.LOGTAG, "Asked to stop the service");
-				}
+				Log.d(Consts.LOGTAG, "Asked to stop the service");
 				stopSelf();
 				return START_STICKY;
 			}
@@ -99,9 +93,7 @@ public class DindyService extends Service {
 		mCurrentProfileId = startupSettings.getLong(Consts.Prefs.Main.KEY_LAST_STARTUP_PROFILE_ID);
 		final String profileName = startupSettings.getString(Consts.Prefs.Main.KEY_LAST_STARTUP_PROFILE_NAME);
 		if (!mPreferencesHelper.profileExists(mCurrentProfileId)) {
-			if (Consts.DEBUG) {
-				Log.d(Consts.LOGTAG, "profile ID " + mCurrentProfileId + " doesn't exist");
-			}
+			Log.d(Consts.LOGTAG, "profile ID " + mCurrentProfileId + " doesn't exist");
 			if (firstStart) {
 				Toast.makeText(getApplicationContext(),
 					R.string.toast_text_profile_doesnt_exist_exit,
@@ -137,13 +129,11 @@ public class DindyService extends Service {
 			mAlM.set(AlarmManager.RTC_WAKEUP, absoluteTimeLimitMillis, mStopServicePendingIntent);
 		}
 
-		if (Consts.DEBUG) {
-			final long currentTimeMillis = System.currentTimeMillis();
-			Log.d(Consts.LOGTAG, "starting profile " + mCurrentProfileId +
-				", absolute time limit " + absoluteTimeLimitMillis +
-				" millis, current time millis " + currentTimeMillis + ", diff " +
-				(absoluteTimeLimitMillis - currentTimeMillis));
-		}
+		final long currentTimeMillis = System.currentTimeMillis();
+		Log.d(Consts.LOGTAG, "starting profile " + mCurrentProfileId +
+			", absolute time limit " + absoluteTimeLimitMillis +
+			" millis, current time millis " + currentTimeMillis + ", diff " +
+			(absoluteTimeLimitMillis - currentTimeMillis));
 
 		// Display a notification about us starting. We put an icon in the
 		// status bar.
@@ -170,10 +160,7 @@ public class DindyService extends Service {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-
-		if (Consts.DEBUG) {
-			Log.d(Consts.LOGTAG, "stopping profile " + mCurrentProfileId);
-		}
+		Log.d(Consts.LOGTAG, "stopping profile " + mCurrentProfileId);
 
 		DindySingleProfileAppWidgetProvider.updateAllSingleProfileWidgets(
 			getApplicationContext(), Consts.NOT_A_PROFILE_ID, mCurrentProfileId);
@@ -422,21 +409,15 @@ public class DindyService extends Service {
 				Bundle extras = intent.getExtras(); 
 				String phoneNumber = extras.getString(
 					Intent.EXTRA_PHONE_NUMBER);
-				if (Consts.DEBUG) {
-					Log.d(Consts.LOGTAG, "outgoing call number: " + phoneNumber);
-				}
+				Log.d(Consts.LOGTAG, "outgoing call number: " + phoneNumber);
 				mLogic.onOutgoingCall(phoneNumber);
 			} else if (Consts.ACTION_STOP_DINDY_SERVICE.equals(action)) {
 				DindyService.this.stopSelf();
 			} else if (SMS_RECEIVED_ACTION.equals(action)) {
-				if (Consts.DEBUG) {
-					Log.d(Consts.LOGTAG, "SMS message(s) received");
-				}
+				Log.d(Consts.LOGTAG, "SMS message(s) received");
 				String[] addresses = getAddressesFromSmsIntent(intent);
 				for (int i = 0; i < addresses.length; ++ i) {
-					if (Consts.DEBUG) {
-						Log.d(Consts.LOGTAG, "message: address=" + addresses[i]);
-					}
+					Log.d(Consts.LOGTAG, "message: address=" + addresses[i]);
 					mLogic.onSmsMessage(addresses[i]);
 				}
 			}
@@ -493,8 +474,7 @@ public class DindyService extends Service {
 		@Override
 		public void onChange(boolean selfChange) {
 			super.onChange(selfChange);
-			if (Consts.DEBUG)
-				Log.d(Consts.LOGTAG, "CallLog: database changed");
+			Log.d(Consts.LOGTAG, "CallLog: database changed");
 
 			requery();
 
@@ -508,26 +488,20 @@ public class DindyService extends Service {
 				// still update the previous cursor count to make this correct
 				// for the next time as well (for example if the user deleted
 				// one missed call from the calls log).
-				if (Consts.DEBUG) {
-					Log.d(Consts.LOGTAG, "CallLog: onChange: changing previous cursor count "
+				Log.d(Consts.LOGTAG, "CallLog: onChange: changing previous cursor count "
 						+ "from " + mPreviousCursorCount + " to " + currentCursorCount);
-				}
 				mPreviousCursorCount = currentCursorCount;
 				return;
 			}
 			mPreviousCursorCount = currentCursorCount;
 
 			if (!mCursor.moveToNext()) {
-				if (Consts.DEBUG) {
-					Log.d(Consts.LOGTAG, "CallLog: moveToNext() failed. No missed calls");
-				}
+				Log.d(Consts.LOGTAG, "CallLog: moveToNext() failed. No missed calls");
 				return;
 			}
 
 			int callType = mCursor.getInt(CALL_LOG_FIELD_TYPE);
-			if (Consts.DEBUG) {
-				Log.d(Consts.LOGTAG, "CallLog: callType=" + callType);
-			}
+			Log.d(Consts.LOGTAG, "CallLog: callType=" + callType);
 			switch (callType) {
 			case CallLog.Calls.MISSED_TYPE:
 				mLogic.onMissedCall(mCursor.getString(CALL_LOG_FIELD_NUMBER));

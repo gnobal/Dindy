@@ -82,8 +82,7 @@ public class Dindy extends Activity implements ProfileNameDialogFragment.Listene
 						Consts.Prefs.Main.LAST_USED_PROFILE_ID,
 						Consts.NOT_A_PROFILE_ID);
 			} catch (Exception e) {
-				if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-						"getting last used profile as int for backward compatibility");
+				Log.i(Consts.LOGTAG, "getting last used profile as int for backward compatibility");
 				lastSelectedProfile = preferences.getInt(
 						Consts.Prefs.Main.LAST_USED_PROFILE_ID,
 						(int) Consts.NOT_A_PROFILE_ID);
@@ -277,8 +276,7 @@ public class Dindy extends Activity implements ProfileNameDialogFragment.Listene
 		// NOT_A_PROFILE_ID if the service is running but the profile used to
 		// run it was deleted, so we can't trust mSelectedProfileId to tell
 		// us whether there are profile to choose from or not
-		if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-			"profile ID=" + mSelectedProfileId + ", name=" +
+		Log.d(Consts.LOGTAG, "profile ID=" + mSelectedProfileId + ", name=" +
 			mPreferencesHelper.getProfielNameFromId(mSelectedProfileId));
 
 		if (isDindyServiceRunning) {
@@ -372,8 +370,7 @@ public class Dindy extends Activity implements ProfileNameDialogFragment.Listene
 			break;
 
 		default:
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"Unknown dialog type " + type);
+			Log.e(Consts.LOGTAG, "Unknown dialog type " + type);
 			return;
 		}
 	}

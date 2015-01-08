@@ -147,13 +147,13 @@ public class ProfileNameDialogFragment extends DialogFragment {
 
 	private class CancelClickListener implements DialogInterface.OnClickListener {
 		public void onClick(DialogInterface dialog, int which) {
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG, "Cancel click");
+			Log.d(Consts.LOGTAG, "Cancel click");
 		}		
 	}
 
 	private class OkClickListener implements DialogInterface.OnClickListener {		
 		public void onClick(DialogInterface dialog, int which) {
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG, "OK click");
+			Log.d(Consts.LOGTAG, "OK click");
 
 			EditText edit = (EditText) ((AlertDialog) dialog).findViewById(
 					R.id.dialog_profile_name_edit_box);

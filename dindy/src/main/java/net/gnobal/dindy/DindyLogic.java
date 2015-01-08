@@ -82,9 +82,7 @@ class DindyLogic {
 	}
 
 	void start(boolean rebuildIncomingCalls) {
-		if (Consts.DEBUG) {
-			Log.d(Consts.LOGTAG, "start: rebuildIncomingCalls=" + rebuildIncomingCalls);
-		}
+		Log.d(Consts.LOGTAG, "start: rebuildIncomingCalls=" + rebuildIncomingCalls);
 		if (rebuildIncomingCalls) {
 			synchronized (mIncomingCalls) {
 				mIncomingCalls.rebuild();
@@ -92,10 +90,7 @@ class DindyLogic {
 				Iterator<String> it = mIncomingCalls.callerIdNumbersIterator(); 
 				while (it.hasNext()) {
 					final String callerIdNumber = it.next();
-					if (Consts.DEBUG) {
-						Log.d(Consts.LOGTAG, "start: rebuilding caller ID number " +
-							callerIdNumber);
-					}
+					Log.d(Consts.LOGTAG, "start: rebuilding caller ID number " + callerIdNumber);
 					final IncomingCallInfo callInfo = mIncomingCalls.get(callerIdNumber);
 					if (callInfo.getAbsoluteWakeupTimeMillis() == Consts.NOT_A_TIME_LIMIT) {
 						continue;
@@ -149,16 +144,12 @@ class DindyLogic {
 	}
 
 	void onCallStateChange(int newState, String number) {
-		if (Consts.DEBUG) {
-			Log.d(Consts.LOGTAG, "onCallStateChange: newState=" +
+		Log.d(Consts.LOGTAG, "onCallStateChange: newState=" +
 				Utils.incomingCallStateToString(newState) +	" number=" + number);
-		}
 		if (!mStarted) {
 			// can happen if the service is started with a non-existing profile
 			// and then stops itself
-			if (Consts.DEBUG) {
-				Log.d(Consts.LOGTAG,"onCallStateChange: called without being started");
-			}
+			Log.d(Consts.LOGTAG,"onCallStateChange: called without being started");
 			return;
 		}
 		switch (newState) {
@@ -179,9 +170,7 @@ class DindyLogic {
 			break;
 
 		default:
-			if (Consts.DEBUG) {
-				Log.d(Consts.LOGTAG, "onCallStateChange: unknown call state " + newState);
-			}
+			Log.d(Consts.LOGTAG, "onCallStateChange: unknown call state " + newState);
 			return;
 		}
 
@@ -192,9 +181,7 @@ class DindyLogic {
 		mWakeLock.acquire();
 		String callerIdNumber = getCallerIdNumber(number);
 		if (callerIdNumber == null) {
-			if (Consts.DEBUG) {
-				Log.d(Consts.LOGTAG, "onSmsMessage: number " + number + " returned null callerId");
-			}
+			Log.d(Consts.LOGTAG, "onSmsMessage: number " + number + " returned null callerId");
 			releaseWakeLockIfHeld("onSmsMessage");
 			return;
 		}
@@ -208,11 +195,9 @@ class DindyLogic {
 		final boolean shouldRemember = (numberProps.mIsKnown ||
 			Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_TEXTERS_AS_MOBILE_NO_SMS.equals(mSettings.mTreatUnknownTexters));
 		if (!shouldRemember) {
-			if (Consts.DEBUG) {
-				Log.d(Consts.LOGTAG, "onSmsMessage: number " + number +
-					" is not a number to remember. isMobile=" + numberProps.mIsMobile +
-					" isKnown=" + numberProps.mIsKnown);
-			}
+			Log.d(Consts.LOGTAG, "onSmsMessage: number " + number +
+				" is not a number to remember. isMobile=" + numberProps.mIsMobile +
+				" isKnown=" + numberProps.mIsKnown);
 			releaseWakeLockIfHeld("onSmsMessage");
 			return;
 		}
@@ -224,16 +209,13 @@ class DindyLogic {
 		if (shouldSendSms) {
 			sendTextMessage("onSmsMessage", number, mSettings.mMessageToTexters);
 		} else {
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"onSmsMessage: number " + number +
-					" need not be notified with SMS.");
+			Log.d(Consts.LOGTAG, "onSmsMessage: number " + number + " need not be notified with SMS.");
 			releaseWakeLockIfHeld("onSmsMessage");
 		}
 	}
 
 	private void sendTextMessage(final String context, final String number, final String message) {
-		if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-				context + ": number " + number + " has been notified with SMS.");
+		Log.d(Consts.LOGTAG, context + ": number " + number + " has been notified with SMS.");
 		final ArrayList<String> dividedMessage = mSM.divideMessage(message);
 		final ArrayList<PendingIntent> sentPendingIntents = new ArrayList<PendingIntent>(
 			Collections.nCopies(dividedMessage.size(), mSentPendingIntent));
@@ -247,19 +229,16 @@ class DindyLogic {
 		// because this is our last chance to do so
 		String callerIdNumber = getCallerIdNumber(number);
 		if (callerIdNumber == null) {
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-				"onMissedCall: number " + number + " returned null callerId");
+			Log.d(Consts.LOGTAG, "onMissedCall: number " + number + " returned null callerId");
 			releaseWakeLockIfHeld("onMissedCall");
 			return;
 		}
-		if (Consts.DEBUG) Log.d(Consts.LOGTAG, 
-			"onMissedCall: number " + number + ", callerIdNumber " + callerIdNumber);
+		Log.d(Consts.LOGTAG, "onMissedCall: number " + number + ", callerIdNumber " + callerIdNumber);
 
 		final NumberProperties numberProps = getNumberProperties(number);
 		if (numberProps.mIsInWhitelist &&
 			!Consts.Prefs.Profile.VALUE_TREAT_WHITELIST_CALLERS_AS_NO_PRIORITY.equals(mSettings.mTreatWhitelistCallers)) {
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG, 
-				"onMissedCall: callerIdNumber " + callerIdNumber + " is in whitelist");
+			Log.d(Consts.LOGTAG, "onMissedCall: callerIdNumber " + callerIdNumber + " is in whitelist");
 			releaseWakeLockIfHeld("onMissedCall");
 			return;
 		}
@@ -269,8 +248,7 @@ class DindyLogic {
 		// it's safe to say that we found a missed call and we should probably 
 		// send the SMS
 		if (!callerIdNumber.equals(mLastRingingNumber)) {
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-				"onMissedCall: callerIdNumber " + callerIdNumber +
+			Log.d(Consts.LOGTAG, "onMissedCall: callerIdNumber " + callerIdNumber +
 				" does not match last ringing number " + mLastRingingNumber);
 			releaseWakeLockIfHeld("onMissedCall");
 			return;
@@ -287,7 +265,7 @@ class DindyLogic {
 			(numberProps.mIsKnown && Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_MOBILE_NO_SMS.equals(mSettings.mTreatNonMobileCallers)) ||
 			(!numberProps.mIsKnown && Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_CALLERS_AS_MOBILE_NO_SMS.equals(mSettings.mTreatUnknownCallers));
 		if (!shouldRemember) {
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG,
+			Log.d(Consts.LOGTAG,
 				"onMissedCall: number " + number + " is not a number to remember. isMobile=" +
 				numberProps.mIsMobile + " isKnown=" + numberProps.mIsKnown + " nonMobileCallers=" +
 				mSettings.mTreatNonMobileCallers + " unknownCallers=" +
@@ -306,8 +284,7 @@ class DindyLogic {
 		if (shouldSendSms) {
 			sendTextMessage("onMissedCall", number, mSettings.mMessageToCallers);
 		} else {
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-				"onMissedCall: number " + number + " need not be notified with SMS.");
+			Log.d(Consts.LOGTAG, "onMissedCall: number " + number + " need not be notified with SMS.");
 			releaseWakeLockIfHeld("onMissedCall");
 		}
 	}
@@ -345,7 +322,7 @@ class DindyLogic {
 		// original time we inserted them into the map
 		if (newWakeupTimeMillis != Consts.INFINITE_TIME &&
 			oldWakeupTimeMillis == Consts.INFINITE_TIME) {
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG,
+			Log.d(Consts.LOGTAG,
 					"onWakeupTimeChanged: wakeup timeout changed from infinite "
 					+ "to " + newWakeupTimeMillis + ". Removing all numbers");
 			synchronized (mIncomingCalls) {
@@ -354,9 +331,7 @@ class DindyLogic {
 				while (it.hasNext()) {
 					// Each key is a caller ID number
 					String callerIdNumber = it.next();
-					if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-							"onWakeupTimeChanged: removing caller ID number " +
-							callerIdNumber);
+					Log.d(Consts.LOGTAG, "onWakeupTimeChanged: removing caller ID number " + callerIdNumber);
 					removeIncomingCallInfo(callerIdNumber);
 				}
 			}			
@@ -367,9 +342,8 @@ class DindyLogic {
 		synchronized (mIncomingCalls) {
 			//if (mIncomingCalls.containsKey(callerIdNumber)) {
 			if (mIncomingCalls.numberExists(callerIdNumber)) {
-				if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-						context + ": callerIdNumber " + callerIdNumber +
-						" already exists");
+				Log.d(Consts.LOGTAG,
+						context + ": callerIdNumber " + callerIdNumber + " already exists");
 				// TODO in this case should we extend the time during which we
 				// wait for the next call?
 				return true;
@@ -400,23 +374,19 @@ class DindyLogic {
 			mTimer.schedule(removalTask, mSettings.mWakeupTimeoutMillis);
 		}
 
-		if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-				context + ": number " + newCallInfo.getNumber() +
+		Log.d(Consts.LOGTAG, context + ": number " + newCallInfo.getNumber() +
 				", callerIdNumber " + newCallInfo.getCallerIdNumber() +
-				" has been added. Timeout is " +
-				mSettings.mWakeupTimeoutMillis);
+				" has been added. Timeout is " + mSettings.mWakeupTimeoutMillis);
 	}
 
 	
 	private void onRinging(String number) {
 		mWakeLock.acquire();
-		if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-				"onRinging: WakeLock acquired, " + mWakeLock.toString());
+		Log.d(Consts.LOGTAG, "onRinging: WakeLock acquired, " + mWakeLock.toString());
 		
 		String callerIdNumber = getCallerIdNumber(number);
 		if (callerIdNumber == null) {
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"onRinging: callerIdNumber is null for number " + number);
+			Log.d(Consts.LOGTAG, "onRinging: callerIdNumber is null for number " + number);
 			return;
 		}
 
@@ -432,8 +402,8 @@ class DindyLogic {
 			} else if (Consts.Prefs.Profile.VALUE_TREAT_WHITELIST_CALLERS_AS_NO_PRIORITY.equals(mSettings.mTreatWhitelistCallers)) {
 				// Simply let the code continue to apply the other settings to this call
 			} else {
-				if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-						"Code should never get here. Selected whitelist option: " + mSettings.mTreatWhitelistCallers);
+				Log.e(Consts.LOGTAG, "Code should never get here. Selected whitelist option: " +
+						mSettings.mTreatWhitelistCallers);
 				// Use the default
 				setRingerAndVibrateModes(mSettings.mSecondRingSettings);
 				return;
@@ -453,16 +423,13 @@ class DindyLogic {
 				long currentTimeMillis = System.currentTimeMillis();
 				if (currentCallInfo.getAbsoluteWakeupTimeMillis() != Consts.INFINITE_TIME &&
 					currentTimeMillis > currentCallInfo.getAbsoluteWakeupTimeMillis()) {
-					if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-							"onRinging: " + callerIdNumber + " will be removed "
+					Log.d(Consts.LOGTAG, "onRinging: " + callerIdNumber + " will be removed "
 							+ "because it wasn't removed by the timer thread " + 
-							"currentTimeMillis= " + currentTimeMillis +
-							" absoluteWakeupTime=" +
+							"currentTimeMillis= " + currentTimeMillis + " absoluteWakeupTime=" +
 							currentCallInfo.getAbsoluteWakeupTimeMillis());
 					removeIncomingCallInfo(callerIdNumber);
 				} else {
-					if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-							"onRinging: setting second ring parameters for " +
+					Log.d(Consts.LOGTAG, "onRinging: setting second ring parameters for " +
 							"callerId number " + callerIdNumber);
 					setRingerAndVibrateModes(mSettings.mSecondRingSettings);
 					return;
@@ -498,8 +465,7 @@ class DindyLogic {
 			return;
 		}
 		
-		if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-			"onRinging() - code should never get here");
+		Log.d(Consts.LOGTAG, "onRinging() - code should never get here");
 
 		// Should never get here, but just in case - let's behave
 		setRingerAndVibrateModes(mSettings.mFirstRingSettings);		
@@ -576,22 +542,17 @@ class DindyLogic {
 
 		if (props.mIsKnown) {
 			if (props.mIsMobile) {
-				if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"getNumberProperties: " + number + " is a known mobile number");
+				Log.d(Consts.LOGTAG, "getNumberProperties: " + number + " is a known mobile number");
 			} else {
-				if (Consts.DEBUG) Log.d(Consts.LOGTAG, 
-					"getNumberProperties: known non-mobile number " + number);
+				Log.d(Consts.LOGTAG, "getNumberProperties: known non-mobile number " + number);
 			}
 			if (props.mIsInWhitelist) {
-				if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"getNumberProperties: " + number + " is in the whitelist");
+				Log.d(Consts.LOGTAG, "getNumberProperties: " + number + " is in the whitelist");
 			} else {
-				if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"getNumberProperties: " + number + " is not in the whitelist");
+				Log.d(Consts.LOGTAG, "getNumberProperties: " + number + " is not in the whitelist");
 			}
 		} else {
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG, 
-				"getNumberProperties: unknown number " + number);
+			Log.d(Consts.LOGTAG, "getNumberProperties: unknown number " + number);
 		}
 
 		return props;
@@ -600,23 +561,20 @@ class DindyLogic {
 	private void setRingerAndVibrateModes(DindySettings.RingerVibrateSettings
 			settings) {
 		if (mAM.getRingerMode() != settings.mRingerMode) { 
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"setRingerAndVibrateModes: setting ringer=" +
+			Log.d(Consts.LOGTAG, "setRingerAndVibrateModes: setting ringer=" +
 					Utils.ringerModeToString(settings.mRingerMode));
 			mAM.setRingerMode(settings.mRingerMode);
 		}
 		if (AudioManagerCompat.getVibrateSetting(mAM, AudioManagerCompat.VIBRATE_TYPE_RINGER) !=
 			settings.mVibrateModeRinger) {
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"setRingerAndVibrateModes: setting vibrateRinger=" +
+			Log.d(Consts.LOGTAG, "setRingerAndVibrateModes: setting vibrateRinger=" +
 					Utils.vibrationSettingToString(settings.mVibrateModeRinger));
 			AudioManagerCompat.setVibrateSetting(mAM, AudioManagerCompat.VIBRATE_TYPE_RINGER,
 					settings.mVibrateModeRinger);
 		}
 		if (AudioManagerCompat.getVibrateSetting(mAM, AudioManagerCompat.VIBRATE_TYPE_NOTIFICATION) !=
 			settings.mVibrateModeNotification) {
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"setRingerAndVibrateModes: setting vibrateNotification=" +
+			Log.d(Consts.LOGTAG, "setRingerAndVibrateModes: setting vibrateNotification=" +
 					Utils.vibrationSettingToString(settings.mVibrateModeNotification));
 			AudioManagerCompat.setVibrateSetting(mAM, AudioManagerCompat.VIBRATE_TYPE_NOTIFICATION,
 					settings.mVibrateModeNotification);
@@ -641,12 +599,9 @@ class DindyLogic {
 			}
 		}
 		if (removedInfo != null) {
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"removeIncomingCallInfo: canceled for caller ID "
-					+ callerIdNumber);
+			Log.d(Consts.LOGTAG, "removeIncomingCallInfo: canceled for caller ID " + callerIdNumber);
 		} else {
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"removeIncomingCallInfo: call info for caller ID "
+			Log.d(Consts.LOGTAG, "removeIncomingCallInfo: call info for caller ID "
 					+ callerIdNumber + " not found");
 		}
 	}
@@ -654,8 +609,7 @@ class DindyLogic {
 	private void releaseWakeLockIfHeld(String context) {
 		while (mWakeLock.isHeld()) {
 			mWakeLock.release();
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG, 
-					context + ": WakeLock released, " + mWakeLock.toString());
+			Log.d(Consts.LOGTAG, context + ": WakeLock released, " + mWakeLock.toString());
 		}		
 	}
 
@@ -716,11 +670,9 @@ class DindyLogic {
 		public void onReceive(Context context, Intent intent) {
 			final int resultCode = getResultCode();
 			if (resultCode != Activity.RESULT_OK) {
-				if (Consts.DEBUG)
-					Log.e(Consts.LOGTAG, "onReceive: got error code on SMS send: " + resultCode);
+				Log.e(Consts.LOGTAG, "onReceive: got error code on SMS send: " + resultCode);
 			} else {
-				if (Consts.DEBUG)
-					Log.d(Consts.LOGTAG, "onReceive: SMS sent successfully");
+				Log.d(Consts.LOGTAG, "onReceive: SMS sent successfully");
 			}
 			// NOTE: Since we started dividing the SMS message, this intent might
 			// be called several times for each message, so we can't do anything

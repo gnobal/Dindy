@@ -14,13 +14,11 @@ import android.widget.RemoteViews;
 public class DindySingleProfileAppWidgetProvider extends AppWidgetProvider {
     @Override
 	public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
-		if (Consts.DEBUG) {
-			String ids = "";
-			for (int i = 0; i < appWidgetIds.length; ++i) {
-				ids += appWidgetIds[i] + ", ";
-			}
-			Log.d(Consts.LOGTAG, "onUpdate: " + ids);
+		String ids = "";
+		for (int i = 0; i < appWidgetIds.length; ++i) {
+			ids += appWidgetIds[i] + ", ";
 		}
+		Log.d(Consts.LOGTAG, "onUpdate: " + ids);
 
 		updateAllSingleProfileWidgets(context, Consts.NOT_A_PROFILE_ID, 
 				Consts.NOT_A_PROFILE_ID);
@@ -34,8 +32,7 @@ public class DindySingleProfileAppWidgetProvider extends AppWidgetProvider {
     		ProfilePreferencesHelper.instance();
     	final int N = appWidgetIds.length;
     	for (int i = 0; i < N; ++i) {
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"deleting widget ID " + appWidgetIds[i]);
+			Log.d(Consts.LOGTAG, "deleting widget ID " + appWidgetIds[i]);
    			prefsHelper.deleteWidgetSettings(widgetPrefs, appWidgetIds[i]);
     	}
 	}
@@ -72,10 +69,8 @@ public class DindySingleProfileAppWidgetProvider extends AppWidgetProvider {
     	String packageName = context.getPackageName();
     	final int N = appWidgetIds.length;
     	for (int i = N-1; i >=0; --i) {
-			if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-					"updating widget ID " + appWidgetIds[i] + 
-					" active profile ID " + activeProfileId + 
-					" previous profile ID " + previousProfileId);
+			Log.d(Consts.LOGTAG, "updating widget ID " + appWidgetIds[i] + " active profile ID "
+					+ activeProfileId + " previous profile ID " + previousProfileId);
     		DindySettings.WidgetSettings widgetSettings = 
     			prefsHelper.getWidgetSettings(widgetPrefs, appWidgetIds[i]);
     		if (widgetSettings == null) {
@@ -174,8 +169,7 @@ public class DindySingleProfileAppWidgetProvider extends AppWidgetProvider {
     		views.setOnClickPendingIntent(
     				R.id.single_profile_app_widget_image_button,
     				pendingIntent);
-    		if (Consts.DEBUG) Log.d(Consts.LOGTAG,
-    				"updating widget with profile " + profileName);
+    		Log.d(Consts.LOGTAG, "updating widget with profile " + profileName);
     		appWidgetManager.updateAppWidget(widgetId, views);
     	}
     }
