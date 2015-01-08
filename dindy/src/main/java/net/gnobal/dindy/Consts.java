@@ -149,7 +149,7 @@ public class Consts {
 	static final long MILLIS_IN_MINUTE = 60000;
 	static final long MINUTES_IN_HOUR = 60; 
 	static final String LOGTAG = "Dindy";
-	static final boolean DEBUG = true;
+	static final boolean DEBUG = false;
 	static final String EMPTY_STRING = "";
 	
 	static final String SERVICE_STARTED = "net.gnobal.dindy.action.SERVICE_STARTED";

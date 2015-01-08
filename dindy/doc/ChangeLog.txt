@@ -47,3 +47,7 @@
       Add accessibility enhancements
 1.3.1 Added whitelist (finally!)
 1.3.2 Better handling of contacts in whitelist
+1.3.3 Nicer (native) look for Lollipop
+      Lollipop fixes
+      Whitelist improvements
+      Other minor updates
