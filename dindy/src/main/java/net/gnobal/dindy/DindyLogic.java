@@ -217,7 +217,7 @@ class DindyLogic {
 	private void sendTextMessage(final String context, final String number, final String message) {
 		Log.d(Consts.LOGTAG, context + ": number " + number + " has been notified with SMS.");
 		final ArrayList<String> dividedMessage = mSM.divideMessage(message);
-		final ArrayList<PendingIntent> sentPendingIntents = new ArrayList<PendingIntent>(
+		final ArrayList<PendingIntent> sentPendingIntents = new ArrayList<>(
 			Collections.nCopies(dividedMessage.size(), mSentPendingIntent));
 		// The intents will release the WakeLock
 		mSM.sendMultipartTextMessage(number, null, dividedMessage, sentPendingIntents, null);
@@ -393,20 +393,22 @@ class DindyLogic {
 		final NumberProperties numberProps = getNumberProperties(number);
 		// Whitelist gets precedence
 		if (numberProps.mIsInWhitelist) {
-			if (Consts.Prefs.Profile.VALUE_TREAT_WHITELIST_CALLERS_AS_SECOND.equals(mSettings.mTreatWhitelistCallers)) {
-				setRingerAndVibrateModes(mSettings.mSecondRingSettings);
-				return;
-			} else if (Consts.Prefs.Profile.VALUE_TREAT_WHITELIST_CALLERS_AS_NORMAL.equals(mSettings.mTreatWhitelistCallers)) {
-				setRingerAndVibrateModes(mSettings.mUserSettings);
-				return;
-			} else if (Consts.Prefs.Profile.VALUE_TREAT_WHITELIST_CALLERS_AS_NO_PRIORITY.equals(mSettings.mTreatWhitelistCallers)) {
-				// Simply let the code continue to apply the other settings to this call
-			} else {
-				Log.e(Consts.LOGTAG, "Code should never get here. Selected whitelist option: " +
-						mSettings.mTreatWhitelistCallers);
-				// Use the default
-				setRingerAndVibrateModes(mSettings.mSecondRingSettings);
-				return;
+			switch (mSettings.mTreatWhitelistCallers) {
+				case Consts.Prefs.Profile.VALUE_TREAT_WHITELIST_CALLERS_AS_SECOND:
+					setRingerAndVibrateModes(mSettings.mSecondRingSettings);
+					return;
+				case Consts.Prefs.Profile.VALUE_TREAT_WHITELIST_CALLERS_AS_NORMAL:
+					setRingerAndVibrateModes(mSettings.mUserSettings);
+					return;
+				case Consts.Prefs.Profile.VALUE_TREAT_WHITELIST_CALLERS_AS_NO_PRIORITY:
+					// Simply let the code continue to apply the other settings to this call
+					break;
+				default:
+					Log.e(Consts.LOGTAG, "Code should never get here. Selected whitelist option: " +
+							mSettings.mTreatWhitelistCallers);
+					// Use the default
+					setRingerAndVibrateModes(mSettings.mSecondRingSettings);
+					return;
 			}
 		}
 
@@ -465,7 +467,7 @@ class DindyLogic {
 			return;
 		}
 		
-		Log.d(Consts.LOGTAG, "onRinging() - code should never get here");
+		Log.e(Consts.LOGTAG, "onRinging() - code should never get here");
 
 		// Should never get here, but just in case - let's behave
 		setRingerAndVibrateModes(mSettings.mFirstRingSettings);		
@@ -486,6 +488,7 @@ class DindyLogic {
 				removeIncomingCallInfo(mLastRingingNumber);
 				mLastRingingNumber = NOT_A_PHONE_NUMBER;
 			}
+			//noinspection UnnecessaryReturnStatement
 			return;
 		}
 	}
@@ -585,7 +588,7 @@ class DindyLogic {
 		if (callerIdNumber == null || callerIdNumber.length() <= 0) {
 			return;
 		}
-		IncomingCallInfo removedInfo = null;
+		IncomingCallInfo removedInfo;
 		synchronized (mIncomingCalls) {
 			removedInfo = mIncomingCalls.remove(callerIdNumber);
 			if (removedInfo != null) {
@@ -639,7 +642,7 @@ class DindyLogic {
 			mTimer.purge();
 		}
 
-		private String mNumberToRemove;
+		private final String mNumberToRemove;
 	}
 
 	private static final String NOT_A_PHONE_NUMBER = "NOT_A_PHONE_NUMBER";
@@ -651,10 +654,10 @@ class DindyLogic {
 	private boolean mStarted = false;
 	private DindySettings mSettings = null;
 	private SmsManager mSM = null;
-	private Timer mTimer = new Timer();
+	private final Timer mTimer = new Timer();
 	//private HashMap<String, IncomingCallInfo> mIncomingCalls =
 	//	new HashMap<String, IncomingCallInfo>();
-	private IncomingCalls mIncomingCalls;
+	private final IncomingCalls mIncomingCalls;
 	private int mPreviousCallState = Consts.IncomingCallState.IDLE;
 	private Context mContext;
 	private WhitelistHelper mWhitelistHelper;

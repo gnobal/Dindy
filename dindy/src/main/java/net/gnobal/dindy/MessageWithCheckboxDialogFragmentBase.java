@@ -13,10 +13,10 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 
 abstract class MessageWithCheckboxDialogFragmentBase extends DialogFragment {
-	protected MessageWithCheckboxDialogFragmentBase(
-		int dialogTextResId,
-		int dialogTitleResId,
-		String dialogPreferenceKey) {
+	MessageWithCheckboxDialogFragmentBase(
+			int dialogTextResId,
+			int dialogTitleResId,
+			String dialogPreferenceKey) {
 		mDialogTextResId = dialogTextResId;
 		mDialogTitleResId = dialogTitleResId;
 		mDialogPreferenceKey = dialogPreferenceKey;			
@@ -46,7 +46,7 @@ abstract class MessageWithCheckboxDialogFragmentBase extends DialogFragment {
 		return dialog;
 	}
 
-	protected void onPositiveButtonClicked(DialogInterface dialog) {
+	void onPositiveButtonClicked(DialogInterface dialog) {
 		SharedPreferences preferences = getActivity().getSharedPreferences(
 				Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
 		CheckBox checkBox = (CheckBox) 
@@ -57,7 +57,7 @@ abstract class MessageWithCheckboxDialogFragmentBase extends DialogFragment {
 		editor.putBoolean(
 				mDialogPreferenceKey,
 				!checkBox.isChecked());
-		editor.commit();
+		editor.apply();
 	}
 	
 	private final int mDialogTextResId;

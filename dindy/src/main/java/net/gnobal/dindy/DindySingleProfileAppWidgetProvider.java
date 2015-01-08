@@ -15,8 +15,8 @@ public class DindySingleProfileAppWidgetProvider extends AppWidgetProvider {
     @Override
 	public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
 		String ids = "";
-		for (int i = 0; i < appWidgetIds.length; ++i) {
-			ids += appWidgetIds[i] + ", ";
+		for (int appWidgetId : appWidgetIds) {
+			ids += appWidgetId + ", ";
 		}
 		Log.d(Consts.LOGTAG, "onUpdate: " + ids);
 
@@ -27,14 +27,12 @@ public class DindySingleProfileAppWidgetProvider extends AppWidgetProvider {
     @Override
 	public void onDeleted(Context context, int[] appWidgetIds) {
     	SharedPreferences widgetPrefs = context.getSharedPreferences(
-    			Consts.Prefs.Widget.NAME, Context.MODE_PRIVATE);
-    	ProfilePreferencesHelper prefsHelper = 
-    		ProfilePreferencesHelper.instance();
-    	final int N = appWidgetIds.length;
-    	for (int i = 0; i < N; ++i) {
-			Log.d(Consts.LOGTAG, "deleting widget ID " + appWidgetIds[i]);
-   			prefsHelper.deleteWidgetSettings(widgetPrefs, appWidgetIds[i]);
-    	}
+				Consts.Prefs.Widget.NAME, Context.MODE_PRIVATE);
+    	ProfilePreferencesHelper prefsHelper = ProfilePreferencesHelper.instance();
+		for (int appWidgetId : appWidgetIds) {
+			Log.d(Consts.LOGTAG, "deleting widget ID " + appWidgetId);
+			prefsHelper.deleteWidgetSettings(widgetPrefs, appWidgetId);
+		}
 	}
 
     // See
@@ -89,8 +87,8 @@ public class DindySingleProfileAppWidgetProvider extends AppWidgetProvider {
     		ProfilePreferencesHelper prefsHelper,
     		DindySettings.WidgetSettings widgetSettings, int widgetId,
     		long activeProfileId, long previousProfileId) {
-    	RemoteViews views = null;
-    	PendingIntent pendingIntent = null;
+    	RemoteViews views;
+    	PendingIntent pendingIntent;
     	boolean profileExists = true;
     	// NOTE: the order of this if-else clause matters:
     	// First, we want to check whether the widget's profile ID is the active
@@ -154,7 +152,7 @@ public class DindySingleProfileAppWidgetProvider extends AppWidgetProvider {
     	}
     	
     	if (pendingIntent != null) {
-    		String profileName = null;
+    		String profileName;
     		if (profileExists) {
     			profileName = ProfilePreferencesHelper.instance().getProfielNameFromId(
     					widgetSettings.mProfileId);

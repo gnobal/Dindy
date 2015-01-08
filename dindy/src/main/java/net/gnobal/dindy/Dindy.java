@@ -60,10 +60,11 @@ public class Dindy extends Activity implements ProfileNameDialogFragment.Listene
 		mPreferencesHelper = ProfilePreferencesHelper.instance();
 		// See:
 		// http://wptrafficanalyzer.in/blog/adding-drop-down-navigation-to-action-bar-in-android/
-		mProfileNames = new LinkedList<String>(mPreferencesHelper.getAllProfileNamesSorted());
-		mProfilesAdapter = new ArrayAdapter<String>(getBaseContext(),
+		mProfileNames = new LinkedList<>(mPreferencesHelper.getAllProfileNamesSorted());
+		mProfilesAdapter = new ArrayAdapter<>(getBaseContext(),
 				android.R.layout.simple_spinner_dropdown_item, mProfileNames);
 		ActionBar actionBar = getActionBar();
+		assert actionBar != null;
 		actionBar.setDisplayShowTitleEnabled(false);
 		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
 		actionBar.setListNavigationCallbacks(mProfilesAdapter, mNavigationListener);
@@ -109,8 +110,7 @@ public class Dindy extends Activity implements ProfileNameDialogFragment.Listene
 		final boolean userPreferenceShowMessage =
 			preferences.getBoolean(Consts.Prefs.Main.KEY_SHOW_STARTUP_MESSAGE, true);
 		final boolean thisInstanceShowMessage =
-			savedInstanceState == null ? true :
-				savedInstanceState.getBoolean(Consts.Prefs.Main.KEY_SHOW_STARTUP_MESSAGE, true);
+				savedInstanceState == null || savedInstanceState.getBoolean(Consts.Prefs.Main.KEY_SHOW_STARTUP_MESSAGE, true);
 		if (userPreferenceShowMessage && thisInstanceShowMessage &&
 			!DindyService.isRunning()) {
 			StartupMessageDialogFragment.newInstance().show(getFragmentManager(), "startup_message");
@@ -137,21 +137,16 @@ public class Dindy extends Activity implements ProfileNameDialogFragment.Listene
 	}
 	
 	static PendingIntent getPendingIntent(Context context) {
-		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0,
+		return PendingIntent.getActivity(context, 0,
 				new Intent(context, Dindy.class)
 					.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
 							| Intent.FLAG_ACTIVITY_CLEAR_TOP)
 					.setAction(Intent.ACTION_MAIN), 0);
-		return pendingIntent;
 	}
 	
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
-		if (outState == null) {
-			return;
-		}
-		
 		outState.putBoolean(Consts.Prefs.Main.KEY_SHOW_STARTUP_MESSAGE, false);
 	}
 
@@ -315,7 +310,7 @@ public class Dindy extends Activity implements ProfileNameDialogFragment.Listene
 		}
 	}
 
-	private OnClickListener mStartStopListener = new OnClickListener() {
+	private final OnClickListener mStartStopListener = new OnClickListener() {
 		public void onClick(View v) {
 			final boolean isServiceRunning = DindyService.isRunning();
 			if (isServiceRunning) {
@@ -371,12 +366,13 @@ public class Dindy extends Activity implements ProfileNameDialogFragment.Listene
 
 		default:
 			Log.e(Consts.LOGTAG, "Unknown dialog type " + type);
+			//noinspection UnnecessaryReturnStatement
 			return;
 		}
 	}
 
 	
-	private ActionBar.OnNavigationListener mNavigationListener = new OnNavigationListener() {
+	private final ActionBar.OnNavigationListener mNavigationListener = new OnNavigationListener() {
 		@Override
 		public boolean onNavigationItemSelected(int itemPosition, long itemId) {
 			setSelectedProfileId(mPreferencesHelper.getProfileIdFromName(
@@ -432,7 +428,7 @@ public class Dindy extends Activity implements ProfileNameDialogFragment.Listene
 
 	private LinkedList<String> mProfileNames;
 	private ArrayAdapter<String> mProfilesAdapter;
-	private DindyBroadcastReceiver mBroadcastReceiver = new DindyBroadcastReceiver();
+	private final DindyBroadcastReceiver mBroadcastReceiver = new DindyBroadcastReceiver();
 	private ProfilePreferencesHelper mPreferencesHelper = null;
 	private long mSelectedProfileId = Consts.NOT_A_PROFILE_ID;
 

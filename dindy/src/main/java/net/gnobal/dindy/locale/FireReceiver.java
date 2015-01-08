@@ -27,7 +27,7 @@ public class FireReceiver extends BroadcastReceiver {
 		final Bundle bundle = intent.getBundleExtra(com.twofortyfouram.locale.Intent.EXTRA_BUNDLE);
 		
 		final String action = bundle.getString(Consts.EXTRA_EXTERNAL_ACTION);
-		Intent serviceIntent = null;
+		Intent serviceIntent;
 		if (Consts.EXTRA_EXTERNAL_ACTION_START_SERVICE.equals(action)) {
 			final long profileId = bundle.getLong(Consts.EXTRA_PROFILE_ID, Consts.NOT_A_PROFILE_ID);
 			if (profileId == Consts.NOT_A_PROFILE_ID) {
@@ -60,7 +60,6 @@ public class FireReceiver extends BroadcastReceiver {
 //		} else if (Consts.EXTRA_EXTERNAL_ACTION_STOP_SERVICE.equals(action)) {
 //			context.stopService(DindyService.getStopServiceIntent(context));
 //		} 
-		
-		return;
+
 	}
 }

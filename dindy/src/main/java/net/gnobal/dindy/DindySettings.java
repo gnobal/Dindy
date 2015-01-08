@@ -13,9 +13,9 @@ class DindySettings {
 		long mProfileId = Consts.NOT_A_PROFILE_ID;
 	}
 	
-	RingerVibrateSettings mUserSettings = new RingerVibrateSettings(); 
-	RingerVibrateSettings mFirstRingSettings = new RingerVibrateSettings(); 
-	RingerVibrateSettings mSecondRingSettings = new RingerVibrateSettings(); 
+	final RingerVibrateSettings mUserSettings = new RingerVibrateSettings();
+	final RingerVibrateSettings mFirstRingSettings = new RingerVibrateSettings();
+	final RingerVibrateSettings mSecondRingSettings = new RingerVibrateSettings();
 	boolean mEnableSmsReplyToCall;
 	String mMessageToCallers;
 	boolean mEnableSmsReplyToSms;

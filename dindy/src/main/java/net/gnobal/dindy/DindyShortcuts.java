@@ -96,7 +96,7 @@ public class DindyShortcuts extends ExternalSourceSelectionActivity {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
 					String text = mListItems.get(which);
-					Intent shortcutIntent = null;
+					Intent shortcutIntent;
 			        Intent returnIntent = new Intent();
 					if (which == STOP_DINDY_ITEM_POSITION) {
 						shortcutIntent = new Intent(Consts.ACTION_STOP_DINDY_SERVICE)

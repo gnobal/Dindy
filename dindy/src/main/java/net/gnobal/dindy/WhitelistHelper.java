@@ -55,6 +55,7 @@ class WhitelistHelper {
 						}
 					}
 				} catch (Throwable t) {
+					Log.e(Consts.LOGTAG, "updateIdsToLookupKeys() caught an exception", t);
 				} finally {
 					if (cursorLookupKey != null) {
 						cursorLookupKey.close();
@@ -63,6 +64,7 @@ class WhitelistHelper {
 				}
 			}
 		} catch (Throwable t) {
+			Log.e(Consts.LOGTAG, "updateIdsToLookupKeys() caught an exception", t);
 		} finally {
 			if (cursorRowsWithoutKey != null) {
 				cursorRowsWithoutKey.close();
@@ -78,7 +80,7 @@ class WhitelistHelper {
 	List<String> getAllContactLookupKeys() {
 		SQLiteDatabase db = null;
 		Cursor cursor = null;
-		final ArrayList<String> contactLookupKeys = new ArrayList<String>();
+		final ArrayList<String> contactLookupKeys = new ArrayList<>();
 
 		try {
 			db = mDb.getWritableDatabase();
@@ -88,6 +90,7 @@ class WhitelistHelper {
 				contactLookupKeys.add(cursor.getString(CONTACT_LOOKUP_KEY_INDEX));
 			}
 		} catch (Throwable t) {
+			Log.e(Consts.LOGTAG, "getAllContactLookupKeys() caught an exception", t);
 		} finally {
 			if (cursor != null) {
 				cursor.close();
@@ -134,6 +137,7 @@ class WhitelistHelper {
 			db.delete(Database.WHITELIST_TABLE_NAME, Database.DbWhitelist.CONTACT_LOOKUP_KEY
 					+ " = '" + contactLookupKey + "'", null);
 		} catch (Throwable t) {
+			Log.e(Consts.LOGTAG, "removeContact() caught an exception", t);
 		} finally {
 			if (db != null) {
 				db.close();
@@ -167,5 +171,5 @@ class WhitelistHelper {
 	private static final String[] CONTACT_LOOKUP_KEY_COLUMNS = { Database.DbWhitelist.CONTACT_LOOKUP_KEY };
 	private static final int CONTACT_LOOKUP_KEY_INDEX = 0;
 
-	private Database mDb;
+	private final Database mDb;
 }

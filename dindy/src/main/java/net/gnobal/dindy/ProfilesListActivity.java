@@ -14,7 +14,7 @@ public class ProfilesListActivity extends ListActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		mPreferencesHelper = ProfilePreferencesHelper.instance();
-		mArrayAdapter = new ArrayAdapter<String>(this,
+		mArrayAdapter = new ArrayAdapter<>(this,
 				android.R.layout.simple_list_item_1, mListItems);
 		setListAdapter(mArrayAdapter);
 	}
@@ -46,7 +46,7 @@ public class ProfilesListActivity extends ListActivity {
 		finish();
 	}
 
-	private LinkedList<String> mListItems = new LinkedList<String>();
+	private final LinkedList<String> mListItems = new LinkedList<>();
 	private ArrayAdapter<String> mArrayAdapter = null;
 	private ProfilePreferencesHelper mPreferencesHelper = null;
 }

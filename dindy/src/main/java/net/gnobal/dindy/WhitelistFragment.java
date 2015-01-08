@@ -20,7 +20,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -50,11 +49,10 @@ public class WhitelistFragment extends ListFragment implements
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
 
-		mWhitelistView = getListView();
 		mDbHelper = new WhitelistHelper(getActivity());
 		mAdapter = new WhitelistCursorAdapter(
-				getActivity(), R.layout.whitelist_item, null, FROM_COLUMNS, TO_IDS, 0);
-		mWhitelistView.setAdapter(mAdapter);
+				getActivity());
+		getListView().setAdapter(mAdapter);
 		getLoaderManager().initLoader(WHITELIST_LOADER_ID, null, this);
 	}
 
@@ -143,9 +141,9 @@ public class WhitelistFragment extends ListFragment implements
 	}
 
 	private class WhitelistCursorAdapter extends SimpleCursorAdapter {
-		public WhitelistCursorAdapter(Context context, int layout, Cursor c,
-				String[] from, int[] to, int flags) {
-			super(context, layout, c, from, to, flags);
+		public WhitelistCursorAdapter(Context context) {
+			super(context, R.layout.whitelist_item, null, WhitelistFragment.FROM_COLUMNS,
+					WhitelistFragment.TO_IDS, 0);
 		}
 
 		@Override
@@ -166,7 +164,7 @@ public class WhitelistFragment extends ListFragment implements
 		}
 	}
 
-	private View.OnClickListener mRemoveClickListener = new View.OnClickListener() {
+	private final View.OnClickListener mRemoveClickListener = new View.OnClickListener() {
 		@Override
 		public void onClick(View v) {
 			final String contactLookupKey = (String) v.getTag();
@@ -194,7 +192,6 @@ public class WhitelistFragment extends ListFragment implements
 	private static final int WHITELIST_LOADER_ID = 0;
 	private static final int PICK_CONTACT_REQUEST_CODE = 0;
 
-	private ListView mWhitelistView;
 	private WhitelistCursorAdapter mAdapter;
 	private WhitelistHelper mDbHelper;
 }

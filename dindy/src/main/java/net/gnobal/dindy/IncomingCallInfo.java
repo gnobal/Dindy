@@ -31,9 +31,9 @@ class IncomingCallInfo {
 		return mAbsoluteWakeupTimeMillis;
 	}
 	
-	private String mNumber;
-	private String mCallerIdNumber;
+	private final String mNumber;
+	private final String mCallerIdNumber;
 	// private boolean mHasBeenNotifiedWithSMS = false;
 	private RemoveCallInfoTask mAssociatedRemovalTask;
-	private long mAbsoluteWakeupTimeMillis;
+	private final long mAbsoluteWakeupTimeMillis;
 }

@@ -32,12 +32,11 @@ public class ProfilePreferencesFragment extends PreferenceFragment {
 		mProfileId = getArguments().getLong("profile_id");
 		// TODO maybe use a shared resource after all, as in here:
 		// http://google.com/codesearch/p?hl=en&sa=N&cd=3&ct=rc#kZ0MkhnKNzw/trunk/Photostream/src/com/google/android/photostream/SettingsActivity.java&q=setSharedPreferencesName&l=30
-		mHelper = ProfilePreferencesHelper.instance();
+		ProfilePreferencesHelper helper = ProfilePreferencesHelper.instance();
 
 		// Root
 		PreferenceManager pm = getPreferenceManager();
-		final String sharedPreferencesName = mHelper
-				.getPreferencesFileNameForProfileId(mProfileId);
+		final String sharedPreferencesName = helper.getPreferencesFileNameForProfileId(mProfileId);
 		pm.setSharedPreferencesName(sharedPreferencesName);
 		SharedPreferences sharedPreferences = getActivity()
 				.getSharedPreferences(sharedPreferencesName,
@@ -321,8 +320,8 @@ public class ProfilePreferencesFragment extends PreferenceFragment {
 			return true;
 		}
 
-		String mSharedPrefsName;
-		String mMessageKey;
+		final String mSharedPrefsName;
+		final String mMessageKey;
 	}
 
 	@Override
@@ -376,15 +375,14 @@ public class ProfilePreferencesFragment extends PreferenceFragment {
 			return true;
 		}
 
-		private int mStringResourceId;
+		private final int mStringResourceId;
 	}
 
 	private void setListPrefernceSummaryWithValue(ListPreference listPref,
 			int stringResourceId, CharSequence value) {
-		listPref.setSummary(new StringBuilder(getString(stringResourceId))
-				.append(" (")
-				.append(getString(R.string.preferences_profile_list_preference_current_prefix))
-				.append(" ").append(value).append(")").toString());
+		listPref.setSummary(getString(stringResourceId) + " (" +
+				getString(R.string.preferences_profile_list_preference_current_prefix) + " " +
+				value + ")");
 	}
 
 	private void setPreferencesDefaultsIfNeeded(
@@ -465,10 +463,9 @@ public class ProfilePreferencesFragment extends PreferenceFragment {
 			editor.putString(Consts.Prefs.Profile.KEY_TREAT_UNKNOWN_TEXTERS,
 					Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_TEXTERS_DEFAULT);
 		}
-		editor.commit();
+		editor.apply();
 		editor = null;
 	}
 
 	private long mProfileId = Consts.NOT_A_PROFILE_ID;
-	private ProfilePreferencesHelper mHelper = null;
 }

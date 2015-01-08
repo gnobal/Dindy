@@ -135,8 +135,8 @@ class IncomingCalls {
 		return mCallsMap.keySet().iterator();
 	}
 
-	private HashMap<String, IncomingCallInfo> mCallsMap = new HashMap<String, IncomingCallInfo>();
-	private Database mDatabaseHelper;
+	private final HashMap<String, IncomingCallInfo> mCallsMap = new HashMap<>();
+	private final Database mDatabaseHelper;
 
 	private static final String[] INCOMING_CALLS_COLUMNS =
 		{

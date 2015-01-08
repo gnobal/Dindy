@@ -40,7 +40,7 @@ public class ProfileNameDialogFragment extends DialogFragment {
 
 	@Override
 	public Dialog onCreateDialog(Bundle savedInstanceState) {
-		return buildProfileNameDialog(getActivity(), android.R.drawable.ic_dialog_info);
+		return buildProfileNameDialog(getActivity());
 	}
 
 	@Override
@@ -55,13 +55,13 @@ public class ProfileNameDialogFragment extends DialogFragment {
 		mListener = (Listener) activity;
 	}
 	
-	private Dialog buildProfileNameDialog(Context context, int iconResource) {
+	private Dialog buildProfileNameDialog(Context context) {
 		LayoutInflater factory = LayoutInflater.from(context);
 		final View textEntryView = factory.inflate(
 				R.layout.profile_name_dialog, null);
 		
 		AlertDialog dialog = new AlertDialog.Builder(context)
-				.setIcon(iconResource)
+				.setIcon(android.R.drawable.ic_dialog_info)
 				.setTitle(getArguments().getString("title"))
 				.setView(textEntryView)
 				.setPositiveButton(R.string.dialog_profile_name_ok,
@@ -139,9 +139,9 @@ public class ProfileNameDialogFragment extends DialogFragment {
 				int count) {
 		}
 
-		private Button mOkButton;
-		private ProfilePreferencesHelper mPreferencesHelper;
-		private EditText mProfileNameEditBox;
+		private final Button mOkButton;
+		private final ProfilePreferencesHelper mPreferencesHelper;
+		private final EditText mProfileNameEditBox;
 		private boolean mIsFirstChange = true;
 	}
 

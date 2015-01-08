@@ -193,6 +193,7 @@ public class DindyService extends Service {
 	 * Class for clients to access. Because we know this service always runs in
 	 * the same process as its clients, we don't need to deal with IPC.
 	 */
+	@SuppressWarnings("WeakerAccess")
 	public class LocalBinder extends Binder {
 		public DindyService getService() {
 			return DindyService.this;
@@ -253,7 +254,7 @@ public class DindyService extends Service {
 			Consts.Prefs.Main.NAME, Context.MODE_PRIVATE);
 		SharedPreferences.Editor editor = preferences.edit();
 		editor.putLong(Consts.Prefs.Main.LAST_USED_PROFILE_ID, mCurrentProfileId);
-		editor.commit();
+		editor.apply();
 		editor = null;
 		preferences = null;
 	}
@@ -284,7 +285,7 @@ public class DindyService extends Service {
 	private void refreshSettings(long selectedProfileId, boolean rememberUserSettings,
 		Bundle startupSettings) {
 		SharedPreferences profilePreferences = mPreferencesHelper.getPreferencesForProfile(
-			this, selectedProfileId, Context.MODE_PRIVATE);
+			this, selectedProfileId);
 
 		final boolean firstRingSound = profilePreferences.getBoolean(
 			Consts.Prefs.Profile.KEY_FIRST_EVENT_SOUND, false);
@@ -405,27 +406,35 @@ public class DindyService extends Service {
 	public class DindyServiceBroadcastReceiver extends BroadcastReceiver {
 		public void onReceive(final Context context, final Intent intent) {
 			final String action = intent.getAction();
-			if (Intent.ACTION_NEW_OUTGOING_CALL.equals(action)) {
-				Bundle extras = intent.getExtras(); 
-				String phoneNumber = extras.getString(
-					Intent.EXTRA_PHONE_NUMBER);
-				Log.d(Consts.LOGTAG, "outgoing call number: " + phoneNumber);
-				mLogic.onOutgoingCall(phoneNumber);
-			} else if (Consts.ACTION_STOP_DINDY_SERVICE.equals(action)) {
-				DindyService.this.stopSelf();
-			} else if (SMS_RECEIVED_ACTION.equals(action)) {
-				Log.d(Consts.LOGTAG, "SMS message(s) received");
-				String[] addresses = getAddressesFromSmsIntent(intent);
-				for (int i = 0; i < addresses.length; ++ i) {
-					Log.d(Consts.LOGTAG, "message: address=" + addresses[i]);
-					mLogic.onSmsMessage(addresses[i]);
-				}
+			switch (action) {
+				case Intent.ACTION_NEW_OUTGOING_CALL:
+					Bundle extras = intent.getExtras();
+					String phoneNumber = extras.getString(
+							Intent.EXTRA_PHONE_NUMBER);
+					Log.d(Consts.LOGTAG, "outgoing call number: " + phoneNumber);
+					mLogic.onOutgoingCall(phoneNumber);
+					break;
+				case Consts.ACTION_STOP_DINDY_SERVICE:
+					DindyService.this.stopSelf();
+					break;
+				case SMS_RECEIVED_ACTION:
+					Log.d(Consts.LOGTAG, "SMS message(s) received");
+					String[] addresses = getAddressesFromSmsIntent(intent);
+					for (String address : addresses) {
+						Log.d(Consts.LOGTAG, "message: address=" + address);
+						mLogic.onSmsMessage(address);
+					}
+					break;
+				default:
+					Log.e(Consts.LOGTAG, "Unexpected action in onReceive() + " + action);
+					//noinspection UnnecessaryReturnStatement
+					return;
 			}
 		}
 	}
 
 	private abstract class AbstractObserver extends ContentObserver {
-		protected AbstractObserver() {
+		AbstractObserver() {
 			super(new Handler());
 			createCursor();
 		}
@@ -434,7 +443,7 @@ public class DindyService extends Service {
 			destroyCursor();
 		}
 
-		protected void requery() {
+		void requery() {
 			destroyCursor();
 			createCursor();
 		}
@@ -456,7 +465,7 @@ public class DindyService extends Service {
 		abstract String getQuery();
 		abstract String getSortOrder();
 		
-		protected Cursor mCursor = null;
+		Cursor mCursor = null;
 	}
 
 	private class CallLogObserver extends AbstractObserver {
@@ -525,7 +534,7 @@ public class DindyService extends Service {
 		@Override
 		protected String getSortOrder() { return CALL_LOG_SORT_ORDER; } 
 
-		protected int mPreviousCursorCount = Integer.MAX_VALUE;
+		int mPreviousCursorCount = Integer.MAX_VALUE;
 	}
 
     private String[] getAddressesFromSmsIntent(Intent intent) {
@@ -536,13 +545,8 @@ public class DindyService extends Service {
             pduObjs[i] = (byte[]) messages[i];
         }
         byte[][] pdus = new byte[pduObjs.length][];
-        int pduCount = pdus.length;
-        for (int i = 0; i < pduCount; i++) {
-            pdus[i] = pduObjs[i];
-        }
-        
-        final String[] addresses = SmsHelper.getAddressesFromSmsPdus(pdus);
-        return addresses;
+        System.arraycopy(pduObjs, 0, pdus, 0, pdus.length);
+        return SmsHelper.getAddressesFromSmsPdus(pdus);
     }
 
 	private void storeLastStartupSettings(boolean firstStart, Bundle startupExtras) {
@@ -572,7 +576,7 @@ public class DindyService extends Service {
 			editor.putInt(Consts.Prefs.Main.KEY_LAST_STARTUP_RINGER_MODE, mAuM.getRingerMode());
 		}
 
-		editor.commit();
+		editor.apply();
 		editor = null;
 		preferences = null;
 	}
@@ -614,7 +618,7 @@ public class DindyService extends Service {
 	private CallStateChangeListener mStateListener = null;
 	private DindyServiceBroadcastReceiver mBroadcastReceiver = null;
 	private ProfilePreferencesHelper mPreferencesHelper = null;
-	private DindySettings mSettings = new DindySettings();
+	private final DindySettings mSettings = new DindySettings();
 	private PendingIntent mStopServicePendingIntent = null;
 	private static long mCurrentProfileId = Consts.NOT_A_PROFILE_ID;
 	private static boolean mIsRunning = false;

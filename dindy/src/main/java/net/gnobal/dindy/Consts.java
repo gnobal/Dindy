@@ -53,7 +53,7 @@ public class Consts {
 			    // Never change these values - they're kept in preferences
 			    final static int INVALID = -1;
 			    final static int SINGLE_PROFILE = 1;
-			    final static int ALL_PROFILES = 2;
+			    //final static int ALL_PROFILES = 2;
 			}
 		}
 		

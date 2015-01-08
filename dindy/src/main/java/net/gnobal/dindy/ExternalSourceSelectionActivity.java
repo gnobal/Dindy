@@ -2,6 +2,7 @@ package net.gnobal.dindy;
 
 import java.util.LinkedList;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -10,7 +11,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
 
-public class ExternalSourceSelectionActivity extends Activity {
+public abstract class ExternalSourceSelectionActivity extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -51,10 +52,10 @@ public class ExternalSourceSelectionActivity extends Activity {
 		public void onAttach(Activity activity) {
 			super.onAttach(activity);
 
-			mListItems = new LinkedList<String>();
-			mArrayAdapter = new ArrayAdapter<String>(activity,
+			mListItems = new LinkedList<>();
+			mArrayAdapter = new ArrayAdapter<>(activity,
 				android.R.layout.select_dialog_item, mListItems);			
-		};
+		}
 		
 		@Override
 		public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -87,7 +88,7 @@ public class ExternalSourceSelectionActivity extends Activity {
 		protected static final int STOP_DINDY_ITEM_POSITION = 0; 
 
 		private ArrayAdapter<String> mArrayAdapter = null;
-		private DialogInterface.OnClickListener mOnCancelListener =
+		private final DialogInterface.OnClickListener mOnCancelListener =
 			new  DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {

@@ -169,15 +169,14 @@ public class ProfilePreferencesHelper {
 		boolean success = true;
 
 		try {
-			profilePreferences = getPreferencesForProfile(context, name,
-					Context.MODE_PRIVATE);
+			profilePreferences = getPreferencesForProfile(context, name);
 			db = mDatabaseHelper.getWritableDatabase();
 			/* int numDeleted = */db.delete(Database.PROFILES_TABLE_NAME, Database.Profiles.NAME
 					+ " = '" + name + "'", null);
 			// TODO check that numDelete == 1
 			editor = profilePreferences.edit();
 			editor.clear();
-			editor.commit();
+			editor.apply();
 		} catch (Throwable t) {
 			success = false;
 		} finally {
@@ -265,7 +264,7 @@ public class ProfilePreferencesHelper {
 					getWidgetPrefKey(widgetId, Consts.Prefs.Widget.KEY_PROFILE_ID),
 					settings.mProfileId);
 
-			editor.commit();
+			editor.apply();
 		} finally {
 			editor = null;
 		}
@@ -282,7 +281,7 @@ public class ProfilePreferencesHelper {
 			editor.remove(getWidgetPrefKey(widgetId,
 					Consts.Prefs.Widget.KEY_PROFILE_ID));
 
-			editor.commit();
+			editor.apply();
 		} finally {
 			editor = null;
 		}
@@ -301,10 +300,9 @@ public class ProfilePreferencesHelper {
 		return Consts.Prefs.Profile.PREFIX + profileId;
 	}
 
-	SharedPreferences getPreferencesForProfile(Context context, long profileId,
-			int mode) {
+	SharedPreferences getPreferencesForProfile(Context context, long profileId) {
 		return context.getSharedPreferences(
-				getPreferencesFileNameForProfileId(profileId), mode);
+				getPreferencesFileNameForProfileId(profileId), Context.MODE_PRIVATE);
 	}
 
 	private boolean loadCache() {
@@ -340,10 +338,9 @@ public class ProfilePreferencesHelper {
 		return success;
 	}
 
-	private SharedPreferences getPreferencesForProfile(Context context,
-			String profileName,	int mode) {
+	private SharedPreferences getPreferencesForProfile(Context context, String profileName) {
 		return context.getSharedPreferences(
-				getPreferencesFileNameForProfile(profileName), mode);
+				getPreferencesFileNameForProfile(profileName), Context.MODE_PRIVATE);
 	}
 
 	private ProfilePreferencesHelper(Context context) {
@@ -359,10 +356,10 @@ public class ProfilePreferencesHelper {
 	private static final String ANY_PROFILES_EXIST_QUERY =  
 		"SELECT COUNT(*) FROM " + Database.PROFILES_TABLE_NAME;
 
-	private Database mDatabaseHelper;
+	private final Database mDatabaseHelper;
 	// private Context mContext;
 	private boolean mCacheIsOutdated = true;
-	private LinkedList<String> mCachedNames = new LinkedList<String>(); 
+	private final LinkedList<String> mCachedNames = new LinkedList<>();
 
 	private static ProfilePreferencesHelper mInstance = null;
 }

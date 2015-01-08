@@ -15,7 +15,7 @@ public class DindyApplication extends Application {
 		if (preferences.getBoolean(Consts.Prefs.Main.KEY_FIRST_STARTUP, true)) {
 			SharedPreferences.Editor editor = preferences.edit();
 			editor.putBoolean(Consts.Prefs.Main.KEY_FIRST_STARTUP, false);
-			editor.commit();
+			editor.apply();
 			createProfile(R.string.default_profile_away_name,
 					R.string.default_profile_away_sms_message_callers,
 					R.string.default_profile_away_sms_message_callers,
@@ -81,9 +81,7 @@ public class DindyApplication extends Application {
 		if (newProfileId == Consts.NOT_A_PROFILE_ID) {
 			return;
 		}
-		SharedPreferences newProfilePrefs =
-			prefsHelper.getPreferencesForProfile(this, newProfileId,
-					MODE_PRIVATE);
+		SharedPreferences newProfilePrefs = prefsHelper.getPreferencesForProfile(this, newProfileId);
 		SharedPreferences.Editor editor = newProfilePrefs.edit();
 		editor.putBoolean(Consts.Prefs.Profile.KEY_ENABLE_SMS_CALLERS, true);
 		editor.putString(Consts.Prefs.Profile.KEY_SMS_MESSAGE_CALLERS,
@@ -113,6 +111,6 @@ public class DindyApplication extends Application {
 		editor.putInt(Consts.Prefs.Profile.KEY_LAST_TIME_LIMIT_TYPE, timeLimitType);
 		editor.putLong(Consts.Prefs.Profile.KEY_LAST_TIME_LIMIT_HOURS, hour);
 		editor.putLong(Consts.Prefs.Profile.KEY_LAST_TIME_LIMIT_MINUTES, minute);
-		editor.commit();
+		editor.apply();
 	}
 }
