@@ -21,6 +21,7 @@ import android.provider.CallLog;
 import android.support.v4.app.NotificationCompat;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
+import android.text.format.DateUtils;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -138,7 +139,7 @@ public class DindyService extends Service {
 		// Display a notification about us starting. We put an icon in the
 		// status bar.
 		if (firstStart) {
-			startForegroundWithNotification();
+			startForegroundWithNotification(absoluteTimeLimitMillis);
 		} else {
 			String refreshText = getString(R.string.dindy_service_refreshed_text);
 			if (profileName != null && profileName.length() > 0) {
@@ -257,9 +258,13 @@ public class DindyService extends Service {
 		editor.apply();
 	}
 
-	private void startForegroundWithNotification() {
+	private void startForegroundWithNotification(long absoluteTimeLimitMillis) {
 		final CharSequence title = getText(R.string.dindy_service_label);
-		final CharSequence text = getText(R.string.dindy_service_started);
+		String text = getString(R.string.dindy_service_started);
+		if (absoluteTimeLimitMillis != Consts.NOT_A_TIME_LIMIT) {
+			text += " until " + DateUtils.formatDateTime(
+				getApplicationContext(), absoluteTimeLimitMillis, DateUtils.FORMAT_SHOW_TIME);
+		}
 		final PendingIntent mainPendingIntent =
 				Dindy.getPendingIntent(getApplicationContext());
 		final PendingIntent stopPendingIntent = PendingIntent.getService(
