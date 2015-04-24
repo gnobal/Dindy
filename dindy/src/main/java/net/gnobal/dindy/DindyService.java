@@ -255,8 +255,6 @@ public class DindyService extends Service {
 		SharedPreferences.Editor editor = preferences.edit();
 		editor.putLong(Consts.Prefs.Main.LAST_USED_PROFILE_ID, mCurrentProfileId);
 		editor.apply();
-		editor = null;
-		preferences = null;
 	}
 
 	private void startForegroundWithNotification() {
@@ -577,8 +575,6 @@ public class DindyService extends Service {
 		}
 
 		editor.apply();
-		editor = null;
-		preferences = null;
 	}
 
 	private Bundle retrieveLastStartupSettings() {
@@ -605,7 +601,6 @@ public class DindyService extends Service {
 		startupSettings.putInt(Consts.Prefs.Main.KEY_LAST_STARTUP_RINGER_MODE, preferences.getInt(
 			Consts.Prefs.Main.KEY_LAST_STARTUP_RINGER_MODE,
 			AudioManager.RINGER_MODE_NORMAL));
-		preferences = null;
 
 		return startupSettings;
 	}

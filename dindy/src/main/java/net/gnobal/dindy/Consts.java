@@ -119,10 +119,10 @@ public class Consts {
 			// Default values for profile preferences
 			static final boolean VALUE_ENABLE_SMS_CALLERS_DEFAULT = true; 
 			static final boolean VALUE_ENABLE_SMS_TEXTERS_DEFAULT = true; 
-			static final boolean VALUE_FIRST_EVENT_SOUND_DEFAULT = false; 
-			static final boolean VALUE_FIRST_EVENT_VIBRATE_DEFAULT = false; 
-			static final boolean VALUE_SECOND_EVENT_SOUND_DEFAULT = true; 
-			static final boolean VALUE_SECOND_EVENT_VIBRATE_DEFAULT = true; 
+			static final boolean VALUE_FIRST_EVENT_SOUND_DEFAULT = false;
+			static final boolean VALUE_FIRST_EVENT_VIBRATE_DEFAULT = false;
+			static final boolean VALUE_SECOND_EVENT_SOUND_DEFAULT = true;
+			static final boolean VALUE_SECOND_EVENT_VIBRATE_DEFAULT = true;
 			// NOTE the following value must be one of the values in the array
 			// resource time_between_calls_array_values
 			static final String VALUE_TIME_BETWEEN_EVENTS_DEFAULT = "5";
