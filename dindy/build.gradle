@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 21
-    buildToolsVersion "21.1.2"
+    compileSdkVersion 22
+    buildToolsVersion "22.0.1"
 
     defaultConfig {
         applicationId "net.gnobal.dindy"
         minSdkVersion 15
-        targetSdkVersion 21
+        targetSdkVersion 22
     }
 
     buildTypes {
@@ -20,5 +20,5 @@ android {
 
 dependencies {
     compile project(':localeapinolocalization')
-    compile 'com.android.support:support-v4:21.0.3'
+    compile 'com.android.support:support-v4:22.1.0'
 }
