@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_height="fill_parent"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+<LinearLayout
+    android:layout_height="wrap_content"
     android:layout_width="wrap_content"
     android:orientation="vertical"
     android:gravity="center_horizontal">
+
     <RadioGroup
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -23,10 +27,19 @@
             android:text="@string/time_of_day_radio_button_text">
         </RadioButton>
     </RadioGroup>
+
     <TimePicker
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/time_limit_time_picker"
-        android:foregroundGravity="center_horizontal">
+        android:layout_gravity="center_horizontal">
     </TimePicker>
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/auto_use_time_limit_dialog_text"
+        android:id="@+id/auto_use_time_limit_checkbox"
+        android:checked="false"/>
 </LinearLayout>
+</ScrollView>

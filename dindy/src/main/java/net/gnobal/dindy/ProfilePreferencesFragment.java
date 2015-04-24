@@ -38,7 +38,7 @@ public class ProfilePreferencesFragment extends PreferenceFragment {
 		PreferenceManager pm = getPreferenceManager();
 		final String sharedPreferencesName = helper.getPreferencesFileNameForProfileId(mProfileId);
 		pm.setSharedPreferencesName(sharedPreferencesName);
-		SharedPreferences sharedPreferences = getActivity()
+		final SharedPreferences sharedPreferences = getActivity()
 				.getSharedPreferences(sharedPreferencesName,
 						Context.MODE_PRIVATE);
 		PreferenceScreen root = pm.createPreferenceScreen(getActivity());
@@ -292,8 +292,46 @@ public class ProfilePreferencesFragment extends PreferenceFragment {
 				.setTitle(R.string.preferences_profile_use_time_limit_title);
 		useTimeLimitPref
 				.setSummary(R.string.preferences_profile_use_time_limit_summary);
+		useTimeLimitPref
+			.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+				@Override
+				public boolean onPreferenceClick(Preference preference) {
+					disableAutoUseTimeLimit(sharedPreferences);
+					return false;
+				}
+			});
 		generalCat.addPreference(useTimeLimitPref);
+
+		mResetAutoTimeLimitPref = new Preference(getActivity());
+		mResetAutoTimeLimitPref
+			.setKey(Consts.Prefs.Profile.KEY_AUTO_USE_LAST_TIME_LIMIT);
+		mResetAutoTimeLimitPref
+			.setTitle(R.string.preferences_profile_reset_use_auto_time_limit_title);
+		mResetAutoTimeLimitPref
+			.setSummary(R.string.preferences_profile_reset_use_auto_time_limit_summary);
+		mResetAutoTimeLimitPref.setEnabled(sharedPreferences.getBoolean(
+			Consts.Prefs.Profile.KEY_AUTO_USE_LAST_TIME_LIMIT,
+			Consts.Prefs.Profile.VALUE_AUTO_USE_LAST_TIME_LIMIT_DEFAULT));
+		mResetAutoTimeLimitPref
+			.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+				@Override
+				public boolean onPreferenceClick(Preference preference) {
+					disableAutoUseTimeLimit(sharedPreferences);
+					return true;
+				}
+			});
+		generalCat.addPreference(mResetAutoTimeLimitPref);
+		mResetAutoTimeLimitPref
+			.setDependency(Consts.Prefs.Profile.KEY_USE_TIME_LIMIT);
 	}
+
+    private void disableAutoUseTimeLimit(SharedPreferences sharedPreferences) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean(Consts.Prefs.Profile.KEY_AUTO_USE_LAST_TIME_LIMIT,
+	        Consts.Prefs.Profile.VALUE_USE_TIME_LIMIT_DEFAULT);
+        editor.apply();
+        mResetAutoTimeLimitPref.setEnabled(false);
+    }
 
 	private class SmsMessageChangeListener implements
 			Preference.OnPreferenceChangeListener {
@@ -464,8 +502,8 @@ public class ProfilePreferencesFragment extends PreferenceFragment {
 					Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_TEXTERS_DEFAULT);
 		}
 		editor.apply();
-		editor = null;
 	}
 
 	private long mProfileId = Consts.NOT_A_PROFILE_ID;
+	private Preference mResetAutoTimeLimitPref;
 }

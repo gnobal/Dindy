@@ -108,6 +108,8 @@ public class DindyApplication extends Application {
 		editor.putString(Consts.Prefs.Profile.KEY_TREAT_UNKNOWN_TEXTERS,
 				Consts.Prefs.Profile.VALUE_TREAT_UNKNOWN_TEXTERS_IGNORE);
 		editor.putBoolean(Consts.Prefs.Profile.KEY_USE_TIME_LIMIT, useTimeLimit);
+		editor.putBoolean(Consts.Prefs.Profile.KEY_AUTO_USE_LAST_TIME_LIMIT,
+			Consts.Prefs.Profile.VALUE_AUTO_USE_LAST_TIME_LIMIT_DEFAULT);
 		editor.putInt(Consts.Prefs.Profile.KEY_LAST_TIME_LIMIT_TYPE, timeLimitType);
 		editor.putLong(Consts.Prefs.Profile.KEY_LAST_TIME_LIMIT_HOURS, hour);
 		editor.putLong(Consts.Prefs.Profile.KEY_LAST_TIME_LIMIT_MINUTES, minute);

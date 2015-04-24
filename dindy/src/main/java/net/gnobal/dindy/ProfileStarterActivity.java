@@ -8,10 +8,10 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.format.DateFormat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TimePicker;
@@ -58,36 +58,14 @@ public class ProfileStarterActivity extends Activity {
 	}
 
 	private static int[] durationFrom(Calendar c, int hour, int minute) {
-		final long diffMinutes = diffTimeMillis(c,
-				hour, minute, false) / Consts.MILLIS_IN_MINUTE;
-		
+		final long diffMinutes = Utils.diffTimeMillis(c,
+			hour, minute, false) / Consts.MILLIS_IN_MINUTE;
+
 		// Adjust to duration
 		hour = ((int) (diffMinutes / Consts.MINUTES_IN_HOUR));
 		minute = ((int) (diffMinutes % Consts.MINUTES_IN_HOUR));
-		
+
 		return new int[]{hour, minute};
-	}
-
-	static private long diffTimeMillis(Calendar c, int toHour, int toMinute,
-			boolean adjustToMinuteStart) {
-		Calendar selected = Calendar.getInstance();
-		selected.set(Calendar.HOUR_OF_DAY, toHour);
-		selected.set(Calendar.MINUTE, toMinute);
-		if (c.get(Calendar.HOUR_OF_DAY) == toHour && 
-			c.get(Calendar.MINUTE) == toMinute) {
-				Log.d(Consts.LOGTAG, "current time selected");
-				return 0;
-			}
-
-		if (adjustToMinuteStart) {
-			selected.set(Calendar.SECOND, 0);
-			selected.set(Calendar.MILLISECOND, 0);
-		}
-		if (selected.before(c)) {
-			selected.add(Calendar.DATE, 1);
-		}
-
-		return selected.getTimeInMillis() - c.getTimeInMillis();
 	}
 
 	private void startDindyServiceWithTimeLimit() {
@@ -95,26 +73,43 @@ public class ProfileStarterActivity extends Activity {
 			mPreferencesHelper.getPreferencesForProfile(getApplicationContext(),
 				mSelectedProfileId);
 		boolean usesTimeLimit = profilePreferences.getBoolean(
-				Consts.Prefs.Profile.KEY_USE_TIME_LIMIT, false);
+			Consts.Prefs.Profile.KEY_USE_TIME_LIMIT,
+			Consts.Prefs.Profile.VALUE_USE_TIME_LIMIT_DEFAULT);
+		boolean autoUseTimeLimit = profilePreferences.getBoolean(
+			Consts.Prefs.Profile.KEY_AUTO_USE_LAST_TIME_LIMIT,
+			Consts.Prefs.Profile.VALUE_AUTO_USE_LAST_TIME_LIMIT_DEFAULT);
 		if (usesTimeLimit) {
 			mTimeLimitType = Consts.Prefs.Profile.VALUE_LAST_TIME_LIMIT_DEFAULT_TYPE;
 			mTimeLimitMinutes = Consts.Prefs.Profile.VALUE_LAST_TIME_LIMIT_DEFAULT_MINUTES;
 			mTimeLimitHours = Consts.Prefs.Profile.VALUE_LAST_TIME_LIMIT_DEFAULT_HOURS;
 			if (profilePreferences.contains(Consts.Prefs.Profile.KEY_LAST_TIME_LIMIT_TYPE)) {
 				mTimeLimitType = profilePreferences.getInt(Consts.Prefs.Profile.KEY_LAST_TIME_LIMIT_TYPE,
-						Consts.Prefs.Profile.VALUE_LAST_TIME_LIMIT_DEFAULT_TYPE);
+					Consts.Prefs.Profile.VALUE_LAST_TIME_LIMIT_DEFAULT_TYPE);
 				mTimeLimitMinutes = profilePreferences.getLong(
-						Consts.Prefs.Profile.KEY_LAST_TIME_LIMIT_MINUTES,
-						Consts.Prefs.Profile.VALUE_LAST_TIME_LIMIT_DEFAULT_MINUTES);
+					Consts.Prefs.Profile.KEY_LAST_TIME_LIMIT_MINUTES,
+					Consts.Prefs.Profile.VALUE_LAST_TIME_LIMIT_DEFAULT_MINUTES);
 				mTimeLimitHours = profilePreferences.getLong(
-						Consts.Prefs.Profile.KEY_LAST_TIME_LIMIT_HOURS,
-						Consts.Prefs.Profile.VALUE_LAST_TIME_LIMIT_DEFAULT_HOURS);
+					Consts.Prefs.Profile.KEY_LAST_TIME_LIMIT_HOURS,
+					Consts.Prefs.Profile.VALUE_LAST_TIME_LIMIT_DEFAULT_HOURS);
 			}
 
-			TimeLimitDialogFragment.newInstance().show(getFragmentManager(), "time_limit_dialog");
-			return;
+			if (autoUseTimeLimit) {
+				final long timeLimitMillis = Utils.getTimeLimitMillis(mTimeLimitType,
+					(int) mTimeLimitHours, (int) mTimeLimitMinutes);
+				if (timeLimitMillis == 0) {
+					finish();
+					return;
+				}
+
+				startDindyServiceWithSelectedProfileId(timeLimitMillis);
+				finish();
+				return;
+			} else {
+				TimeLimitDialogFragment.newInstance().show(getFragmentManager(), "time_limit_dialog");
+				return;
+			}
 		}
-		
+
 		startDindyServiceWithSelectedProfileId(Consts.NOT_A_TIME_LIMIT);
 		finish();
 	}
@@ -131,8 +126,8 @@ public class ProfileStarterActivity extends Activity {
 		public Dialog onCreateDialog(Bundle savedInstanceState) {
 			LayoutInflater factory = LayoutInflater.from(getActivity());
 			View timeLimitView = factory.inflate(R.layout.time_limit_dialog, null);
-			
-			final TimeLimitDialogListener listener = new TimeLimitDialogListener(); 
+
+			final TimeLimitDialogListener listener = new TimeLimitDialogListener();
 			final AlertDialog dialog = new AlertDialog.Builder(getActivity())
 				.setIcon(android.R.drawable.ic_dialog_alert)
 				.setTitle(R.string.time_limit_dialog_title)
@@ -188,7 +183,7 @@ public class ProfileStarterActivity extends Activity {
 			timePicker.setOnTimeChangedListener(new TimeChangedListener(
 				radioGroup, okButton, timeOfDayButton));
 		}
-		
+
 		private class TimeLimitDialogListener implements DialogInterface.OnClickListener {
 			TimeLimitDialogListener() {
 				mParentActivity = (ProfileStarterActivity) getActivity();
@@ -203,7 +198,7 @@ public class ProfileStarterActivity extends Activity {
 					onPositiveButtonClicked(dialog);
 					break;
 				case DialogInterface.BUTTON_NEGATIVE:
-					onNegativeButtonClicked(dialog);
+					onNegativeButtonClicked();
 					break;
 				default:
 					//noinspection UnnecessaryReturnStatement
@@ -211,7 +206,7 @@ public class ProfileStarterActivity extends Activity {
 				}
 			}
 
-			private void onNegativeButtonClicked(DialogInterface dialog) {
+			private void onNegativeButtonClicked() {
 				mParentActivity.startDindyServiceWithSelectedProfileId(Consts.NOT_A_TIME_LIMIT);
 				mParentActivity.finish();
 			}
@@ -219,9 +214,8 @@ public class ProfileStarterActivity extends Activity {
 			private void onPositiveButtonClicked(DialogInterface dialog) {
 				TimePicker timePicker = (TimePicker) ((AlertDialog) dialog).findViewById(
 						R.id.time_limit_time_picker);
-				final long selectedTimeLimitHours = timePicker.getCurrentHour();
-				final long selectedTimeLimitMinutes = timePicker.getCurrentMinute();
-
+				boolean autoUseTimeLimit = ((CheckBox) ((AlertDialog) dialog).findViewById(
+					R.id.auto_use_time_limit_checkbox)).isChecked();
 				RadioGroup radioGroup = (RadioGroup) ((AlertDialog) dialog).findViewById(
 						R.id.time_limit_radio_group);
 				int selectedTimeLimitType = Consts.Prefs.Profile.TimeLimitType.TIME_OF_DAY;
@@ -229,30 +223,14 @@ public class ProfileStarterActivity extends Activity {
 					selectedTimeLimitType = Consts.Prefs.Profile.TimeLimitType.DURATION;
 				}
 
-				long newTimeLimitMillis = Consts.NOT_A_TIME_LIMIT;
-				if (selectedTimeLimitType == Consts.Prefs.Profile.TimeLimitType.DURATION) {
-					newTimeLimitMillis = (selectedTimeLimitHours * Consts.MINUTES_IN_HOUR
-											+ selectedTimeLimitMinutes) * Consts.MILLIS_IN_MINUTE;
-					if (newTimeLimitMillis == 0) {
-						mParentActivity.finish();
-						return;
-					}
-				} else {
-					Calendar now = Calendar.getInstance();
-					newTimeLimitMillis = ProfileStarterActivity.diffTimeMillis(
-							now, 
-							timePicker.getCurrentHour(),
-							timePicker.getCurrentMinute(),
-							true);
-					if (newTimeLimitMillis == 0) {
-						mParentActivity.finish();
-						return;
-					} else {
-						// Adding 3 seconds to the calculation, to make sure the minute  
-						// doesn't switch exactly when the user starts the profile, 
-						// causing Dindy to stop only )after nearly 24 hours
-						newTimeLimitMillis += 3000;
-					}
+				final int selectedTimeLimitHours = timePicker.getCurrentHour();
+				final int selectedTimeLimitMinutes = timePicker.getCurrentMinute();
+				final long newTimeLimitMillis = Utils.getTimeLimitMillis(selectedTimeLimitType,
+					selectedTimeLimitHours, selectedTimeLimitMinutes);
+
+				if (newTimeLimitMillis == 0) {
+					mParentActivity.finish();
+					return;
 				}
 
 				// Everything is OK, save the user's preferences
@@ -262,18 +240,18 @@ public class ProfileStarterActivity extends Activity {
 					);
 				SharedPreferences.Editor editor = profilePrefs.edit();
 				editor.putLong(Consts.Prefs.Profile.KEY_LAST_TIME_LIMIT_HOURS,
-						selectedTimeLimitHours);
+					selectedTimeLimitHours);
 				editor.putInt(Consts.Prefs.Profile.KEY_LAST_TIME_LIMIT_TYPE,
-						selectedTimeLimitType);
+					selectedTimeLimitType);
 				editor.putLong(Consts.Prefs.Profile.KEY_LAST_TIME_LIMIT_MINUTES,
-						selectedTimeLimitMinutes);
-				editor.commit();
-				editor = null;
+					selectedTimeLimitMinutes);
+				editor.putBoolean(Consts.Prefs.Profile.KEY_AUTO_USE_LAST_TIME_LIMIT, autoUseTimeLimit);
+				editor.apply();
 
 				mParentActivity.startDindyServiceWithSelectedProfileId(newTimeLimitMillis);
 				mParentActivity.finish();
 			}
-			
+
 			private final ProfileStarterActivity mParentActivity;
 		}
 
@@ -334,7 +312,7 @@ public class ProfileStarterActivity extends Activity {
 
 		private boolean mButtonClicked = false;
 	}
-	
+
 	private void startDindyServiceWithSelectedProfileId(long timeLimitMillis) {
 		startService(DindyService.getStartServiceIntent(getApplicationContext(),
 				mSelectedProfileId, null, mIntentSource,

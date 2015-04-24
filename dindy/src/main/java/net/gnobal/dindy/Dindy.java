@@ -16,7 +16,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.text.Html;
+import android.text.format.DateUtils;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -127,6 +129,8 @@ public class Dindy extends Activity implements ProfileNameDialogFragment.Listene
 		if (DindyService.isRunning()) {
 			mSelectedProfileId = DindyService.getCurrentProfileId();
 			setSelectedProfileId(mSelectedProfileId);
+		} else {
+			setDynamicButtons(false);
 		}
 	}
 
@@ -145,7 +149,7 @@ public class Dindy extends Activity implements ProfileNameDialogFragment.Listene
 	}
 	
 	@Override
-	protected void onSaveInstanceState(Bundle outState) {
+	protected void onSaveInstanceState(@NonNull Bundle outState) {
 		super.onSaveInstanceState(outState);
 		outState.putBoolean(Consts.Prefs.Main.KEY_SHOW_STARTUP_MESSAGE, false);
 	}
@@ -258,12 +262,8 @@ public class Dindy extends Activity implements ProfileNameDialogFragment.Listene
 	private void setDynamicButtons(boolean isDindyServiceRunning) {
 		ImageButton powerButton = (ImageButton) 
 			findViewById(R.id.main_power_button);
-		TextView startStopTextView = (TextView) findViewById(
-				R.id.main_start_stop_text);
-		TextView profileTextView = (TextView) findViewById(
-				R.id.main_profile_text);
-		TextView profileNameView = (TextView) findViewById(
-				R.id.main_profile_name);
+		TextView mainTextView = (TextView) findViewById(R.id.main_text);
+        TextView timeLimitTextView = (TextView) findViewById(R.id.main_time_limit_text);
 		// TODO rework this. Now that both buttons are almost always enabled,
 		// it matters less whether the service is running or not.
 
@@ -274,40 +274,65 @@ public class Dindy extends Activity implements ProfileNameDialogFragment.Listene
 		Log.d(Consts.LOGTAG, "profile ID=" + mSelectedProfileId + ", name=" +
 			mPreferencesHelper.getProfielNameFromId(mSelectedProfileId));
 
+		String mainText;
+		String timeLimitText = Consts.EMPTY_STRING;
 		if (isDindyServiceRunning) {
-			startStopTextView.setText(getString(R.string.stop));
-
+			mainText = getString(R.string.stop);
 			if (mSelectedProfileId != Consts.NOT_A_PROFILE_ID) {
-				profileTextView.setText(" " + getString(R.string.main_profile) 
-						+ " ");
-				profileNameView.setText(mPreferencesHelper.getProfielNameFromId(
-						mSelectedProfileId)); 
-			} else {
-				profileTextView.setText(Consts.EMPTY_STRING);
-				profileNameView.setText(Consts.EMPTY_STRING);
+				mainText += " " + getString(R.string.main_profile) + " " +
+						mPreferencesHelper.getProfielNameFromId(mSelectedProfileId);
 			}
 			powerButton.setEnabled(true);
 			powerButton.setImageResource(R.drawable.power_button_selector_off);
 			powerButton.setContentDescription(getString(R.string.stop));
 		} else {
 			if (mSelectedProfileId != Consts.NOT_A_PROFILE_ID) {
-				startStopTextView.setText(getString(R.string.start));
-				profileTextView.setText(" " + getString(R.string.main_profile) +
-						" ");
-				profileNameView.setText(
-						mPreferencesHelper.getProfielNameFromId(
-								mSelectedProfileId));
+				SharedPreferences profilePreferences = mPreferencesHelper.getPreferencesForProfile(
+						getApplicationContext(), mSelectedProfileId);
+				boolean useTimeLimit = profilePreferences.getBoolean(
+						Consts.Prefs.Profile.KEY_USE_TIME_LIMIT, false);
+				if (useTimeLimit) {
+					boolean autoUseLastTimeLimit = profilePreferences.getBoolean(
+							Consts.Prefs.Profile.KEY_AUTO_USE_LAST_TIME_LIMIT,
+							Consts.Prefs.Profile.VALUE_AUTO_USE_LAST_TIME_LIMIT_DEFAULT);
+					if (!autoUseLastTimeLimit) {
+						timeLimitText = getString(R.string.main_with_time_limit);
+					} else {
+						int timeLimitType = profilePreferences.getInt(
+								Consts.Prefs.Profile.KEY_LAST_TIME_LIMIT_TYPE,
+								Consts.Prefs.Profile.VALUE_LAST_TIME_LIMIT_DEFAULT_TYPE);
+						long timeLimitMinutes = profilePreferences.getLong(
+								Consts.Prefs.Profile.KEY_LAST_TIME_LIMIT_MINUTES,
+								Consts.Prefs.Profile.VALUE_LAST_TIME_LIMIT_DEFAULT_MINUTES);
+						long timeLimitHours = profilePreferences.getLong(
+								Consts.Prefs.Profile.KEY_LAST_TIME_LIMIT_HOURS,
+								Consts.Prefs.Profile.VALUE_LAST_TIME_LIMIT_DEFAULT_HOURS);
+						if (timeLimitType == Consts.Prefs.Profile.TimeLimitType.DURATION) {
+							timeLimitText = "for " + timeLimitHours + "h " + timeLimitMinutes + "m";
+						} else {
+							long timeLimitMillis = Utils.getTimeLimitMillis(
+									timeLimitType, (int) timeLimitHours, (int) timeLimitMinutes);
+							timeLimitText = "until " + DateUtils.formatDateTime(
+									getApplicationContext(), System.currentTimeMillis() + timeLimitMillis,
+									DateUtils.FORMAT_SHOW_TIME);
+						}
+					}
+				}
+
+				mainText = getString(R.string.start);
+				mainText += " " + getString(R.string.main_profile) + " " +
+						mPreferencesHelper.getProfielNameFromId(mSelectedProfileId);
 				powerButton.setEnabled(true);
 				powerButton.setImageResource(R.drawable.power_button_selector_on);
 				powerButton.setContentDescription(getString(R.string.start));
 			} else {
-				startStopTextView.setText(R.string.main_no_available_profile);
-				profileTextView.setText(Consts.EMPTY_STRING);
-				profileNameView.setText(Consts.EMPTY_STRING);
+				mainText = getString(R.string.main_no_available_profile);
 				powerButton.setEnabled(false);
 				powerButton.setImageResource(R.drawable.power_button_disabled);
-			}			
+			}
 		}
+		mainTextView.setText(mainText);
+		timeLimitTextView.setText(timeLimitText);
 	}
 
 	private final OnClickListener mStartStopListener = new OnClickListener() {

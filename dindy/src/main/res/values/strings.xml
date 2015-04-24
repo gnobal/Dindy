@@ -20,6 +20,7 @@
 <string name="start">Start</string>
 <string name="stop">Stop</string>
 <string name="main_no_available_profile">No profiles defined</string>
+<string name="main_with_time_limit">with time limit</string>
 <string name="preferences_profile_enable_sms_reply_to_call_title">Enable SMS reply-to-call</string>
 <string name="preferences_profile_sms_reply_to_call">SMS reply-to-call</string>
 <string name="preferences_profile_time_between_events_dialog_title">Time between events</string>
@@ -72,9 +73,12 @@
 <string name="preferences_profile_non_mobile_caller_behavior_summary">Settings to use for a known non-mobile contact</string>
 <string name="preferences_profile_use_time_limit_title">Use time limit</string>
 <string name="preferences_profile_use_time_limit_summary">When starting the profile ask for a time limit, after which the profile will be stopped</string>
+<string name="preferences_profile_reset_use_auto_time_limit_title">Reset auto time limit</string>
+<string name="preferences_profile_reset_use_auto_time_limit_summary">You previously selected to automatically use a pre-set time limit for this profile. Tap here to be asked again the next time the profile is started.</string>
 <string name="time_limit_dialog_title">Profile time limit</string>
 <string name="time_limit_dialog_ok_text">Set</string>
 <string name="time_limit_dialog_cancel_text">No limit</string>
+<string name="auto_use_time_limit_dialog_text">Use this time limit for this profile from now on (you can reset this in profile settings)</string>
 <string name="duration_radio_button_text">Duration (HH:MM)</string>
 <string name="time_of_day_radio_button_text">End time</string>
 <string name="dialog_profile_name_illegal_name_reason_empty">Profile name cannot be empty</string>

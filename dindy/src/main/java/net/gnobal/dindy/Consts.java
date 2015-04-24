@@ -115,6 +115,7 @@ public class Consts {
 				"last_time_limit_hours";
 			static final String KEY_LAST_TIME_LIMIT_MINUTES =
 				"last_time_limit_minutes";
+			static final String KEY_AUTO_USE_LAST_TIME_LIMIT = "auto_use_last_time_limit";
 			
 			// Default values for profile preferences
 			static final boolean VALUE_ENABLE_SMS_CALLERS_DEFAULT = true; 
@@ -123,6 +124,8 @@ public class Consts {
 			static final boolean VALUE_FIRST_EVENT_VIBRATE_DEFAULT = false;
 			static final boolean VALUE_SECOND_EVENT_SOUND_DEFAULT = true;
 			static final boolean VALUE_SECOND_EVENT_VIBRATE_DEFAULT = true;
+			static final boolean VALUE_USE_TIME_LIMIT_DEFAULT = false;
+			static final boolean VALUE_AUTO_USE_LAST_TIME_LIMIT_DEFAULT = false;
 			// NOTE the following value must be one of the values in the array
 			// resource time_between_calls_array_values
 			static final String VALUE_TIME_BETWEEN_EVENTS_DEFAULT = "5";
